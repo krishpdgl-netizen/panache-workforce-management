@@ -125,8 +125,18 @@ body{
 }
 
 .btn:hover{
-    background:#1d4ed8;
+.edit-btn{
+background:#f59e0b;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:6px;
+cursor:pointer;
 }
+
+.edit-btn:hover{
+background:#d97706;
+}}
 
 /* TABLE */
 
@@ -266,12 +276,13 @@ Panache WMS
 
 <h2>Recent Tasks</h2>
 
-<button class="btn">
+<button
+class="btn"
+onclick="window.location.href='create-task.html'">
 + Create Task
 </button>
-
 <br><br>
-
+    
 <table>
 
 <tr>
@@ -280,6 +291,7 @@ Panache WMS
 <th>Priority</th>
 <th>Status</th>
 <th>Due Date</th>
+<th>Action</th>
 </tr>
 
 <tr>
@@ -326,24 +338,48 @@ Panache WMS
 </tr>
 
 <tr>
+<td>Website Redesign</td>
 <td>Amit</td>
-<td>Development</td>
-<td>8</td>
-<td>92%</td>
+<td>High</td>
+<td>In Progress</td>
+<td>25 Jun</td>
+<td>
+<button
+class="edit-btn"
+onclick="editTask('Website Redesign')">
+Edit
+</button>
+</td>
 </tr>
 
 <tr>
+<td>CRM Cleanup</td>
 <td>Priya</td>
-<td>Marketing</td>
-<td>5</td>
-<td>89%</td>
+<td>Medium</td>
+<td>Review</td>
+<td>22 Jun</td>
+<td>
+<button
+class="edit-btn"
+onclick="editTask('CRM Cleanup')">
+Edit
+</button>
+</td>
 </tr>
 
 <tr>
+<td>Client Proposal</td>
 <td>Rahul</td>
-<td>Sales</td>
-<td>6</td>
-<td>95%</td>
+<td>Critical</td>
+<td>Todo</td>
+<td>20 Jun</td>
+<td>
+<button
+class="edit-btn"
+onclick="editTask('Client Proposal')">
+Edit
+</button>
+</td>
 </tr>
 
 </table>
