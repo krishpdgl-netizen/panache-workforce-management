@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panache Workforce Management</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#2563eb,#1e3a8a);
+}
+
+.container{
+    width:900px;
+    height:550px;
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    display:flex;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.left{
+    flex:1;
+    background:#111827;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:50px;
+}
+
+.left h1{
+    font-size:38px;
+    margin-bottom:20px;
+}
+
+.left p{
+    color:#d1d5db;
+    line-height:1.6;
+}
+
+.right{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px;
+}
+
+.form-box{
+    width:100%;
+    max-width:350px;
+}
+
+.form-box h2{
+    margin-bottom:10px;
+}
+
+.form-box p{
+    color:gray;
+    margin-bottom:30px;
+}
+
+input,select{
+    width:100%;
+    padding:14px;
+    margin-bottom:15px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    outline:none;
+}
+
+input:focus{
+    border-color:#2563eb;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.footer{
+    text-align:center;
+    margin-top:15px;
+    color:gray;
+    font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<h1>Panache Workforce Management</h1>
+
+<p>
+Manage tasks, workflows, employees, reports and AI-powered productivity insights from one unified platform.
+</p>
+
+</div>
+
+<div class="right">
+
+<div class="form-box">
+
+<h2>Welcome Back</h2>
+
+<p>Login to continue</p>
+
+<form>
+
+<select>
+<option>Manager</option>
+<option>Employee</option>
+<option>Admin</option>
+</select>
+
+<input type="email" placeholder="Email Address">
+
+<input type="password" placeholder="Password">
+
+<button type="submit">
+Login
+</button>
+
+</form>
+
+<div class="footer">
+Panache Internal Platform
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
