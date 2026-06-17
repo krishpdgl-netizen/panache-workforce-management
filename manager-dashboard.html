@@ -214,7 +214,17 @@ th{
 
 </style>
 </head>
+<script>
 
+function editTask(taskName){
+
+localStorage.setItem("selectedTask", taskName);
+
+window.location.href = "create-task.html";
+
+}
+
+</script>
 <body>
 
 <div class="sidebar">
