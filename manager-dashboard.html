@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager Dashboard | Panache</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    display:flex;
+    background:#f4f6f9;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:260px;
+    height:100vh;
+    background:#111827;
+    color:white;
+    position:fixed;
+    left:0;
+    top:0;
+    padding:20px;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:30px;
+}
+
+.menu a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:12px;
+    margin-bottom:8px;
+    border-radius:8px;
+    transition:0.3s;
+}
+
+.menu a:hover{
+    background:#2563eb;
+}
+
+/* MAIN */
+
+.main{
+    margin-left:260px;
+    width:100%;
+    padding:25px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.header h1{
+    color:#111827;
+}
+
+.profile{
+    background:white;
+    padding:10px 20px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+/* CARDS */
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    margin-bottom:25px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.card h2{
+    color:#2563eb;
+    margin-bottom:10px;
+}
+
+/* SECTION */
+
+.section{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.section h2{
+    margin-bottom:15px;
+}
+
+/* BUTTON */
+
+.btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+/* TABLE */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    text-align:left;
+}
+
+th{
+    background:#f3f4f6;
+}
+
+/* WORKFLOW */
+
+.workflow{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+}
+
+.column{
+    background:#f3f4f6;
+    border-radius:10px;
+    padding:15px;
+}
+
+.task{
+    background:white;
+    padding:10px;
+    margin-top:10px;
+    border-radius:8px;
+}
+
+/* AI */
+
+.ai{
+    background:#eef4ff;
+    border-left:5px solid #2563eb;
+    padding:15px;
+    border-radius:10px;
+}
+
+/* NOTIFICATIONS */
+
+.notification{
+    padding:12px;
+    margin-bottom:10px;
+    background:#f9fafb;
+    border-left:4px solid #2563eb;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+.sidebar{
+    width:200px;
+}
+
+.main{
+    margin-left:200px;
+}
+
+.workflow{
+    grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+Panache WMS
+</div>
+
+<div class="menu">
+<a href="#">Dashboard</a>
+<a href="#">Create Task</a>
+<a href="#">Team Members</a>
+<a href="#">Workflow</a>
+<a href="#">Reports</a>
+<a href="#">AI Assistant</a>
+<a href="#">Notifications</a>
+<a href="#">Settings</a>
+</div>
+
+</div>
+
+<div class="main">
+
+<!-- HEADER -->
+
+<div class="header">
+<h1>Manager Dashboard</h1>
+<div class="profile">Manager</div>
+</div>
+
+<!-- CARDS -->
+
+<div class="cards">
+
+<div class="card">
+<h2>50</h2>
+<p>Total Employees</p>
+</div>
+
+<div class="card">
+<h2>128</h2>
+<p>Active Tasks</p>
+</div>
+
+<div class="card">
+<h2>432</h2>
+<p>Completed Tasks</p>
+</div>
+
+<div class="card">
+<h2>7</h2>
+<p>Overdue Tasks</p>
+</div>
+
+</div>
+
+<!-- TASK MANAGEMENT -->
+
+<div class="section">
+
+<h2>Recent Tasks</h2>
+
+<button class="btn">
++ Create Task
+</button>
+
+<br><br>
+
+<table>
+
+<tr>
+<th>Task</th>
+<th>Employee</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Due Date</th>
+</tr>
+
+<tr>
+<td>Website Redesign</td>
+<td>Amit</td>
+<td>High</td>
+<td>In Progress</td>
+<td>25 Jun</td>
+</tr>
+
+<tr>
+<td>CRM Cleanup</td>
+<td>Priya</td>
+<td>Medium</td>
+<td>Review</td>
+<td>22 Jun</td>
+</tr>
+
+<tr>
+<td>Client Proposal</td>
+<td>Rahul</td>
+<td>Critical</td>
+<td>Todo</td>
+<td>20 Jun</td>
+</tr>
+
+</table>
+
+</div>
+
+<!-- TEAM -->
+
+<div class="section">
+
+<h2>Team Members</h2>
+
+<table>
+
+<tr>
+<th>Name</th>
+<th>Department</th>
+<th>Tasks</th>
+<th>Performance</th>
+</tr>
+
+<tr>
+<td>Amit</td>
+<td>Development</td>
+<td>8</td>
+<td>92%</td>
+</tr>
+
+<tr>
+<td>Priya</td>
+<td>Marketing</td>
+<td>5</td>
+<td>89%</td>
+</tr>
+
+<tr>
+<td>Rahul</td>
+<td>Sales</td>
+<td>6</td>
+<td>95%</td>
+</tr>
+
+</table>
+
+</div>
+
+<!-- WORKFLOW -->
+
+<div class="section">
+
+<h2>Workflow Board</h2>
+
+<div class="workflow">
+
+<div class="column">
+<h3>Todo</h3>
+<div class="task">Client Proposal</div>
+</div>
+
+<div class="column">
+<h3>In Progress</h3>
+<div class="task">Website Redesign</div>
+</div>
+
+<div class="column">
+<h3>Review</h3>
+<div class="task">CRM Cleanup</div>
+</div>
+
+<div class="column">
+<h3>Completed</h3>
+<div class="task">Marketing Report</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- AI -->
+
+<div class="section">
+
+<h2>AI Assistant</h2>
+
+<div class="ai">
+
+<p><b>Today's Suggestions:</b></p>
+
+<br>
+
+<ul>
+<li>Prioritize Client Proposal (Critical)</li>
+<li>Website Redesign is nearing deadline</li>
+<li>Rahul is overloaded with tasks</li>
+<li>Priya has capacity for 2 more tasks</li>
+</ul>
+
+</div>
+
+</div>
+
+<!-- NOTIFICATIONS -->
+
+<div class="section">
+
+<h2>Notifications</h2>
+
+<div class="notification">
+New task assigned to Amit.
+</div>
+
+<div class="notification">
+Client Proposal due tomorrow.
+</div>
+
+<div class="notification">
+Marketing Report completed.
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
