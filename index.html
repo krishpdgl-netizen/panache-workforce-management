@@ -8,123 +8,117 @@
 <style>
 
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Segoe UI',sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
 }
 
 body{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:linear-gradient(135deg,#2563eb,#1e3a8a);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#2563eb,#1e3a8a);
 }
 
 .container{
-    width:950px;
-    height:550px;
-    background:white;
-    border-radius:20px;
-    overflow:hidden;
-    display:flex;
-    box-shadow:0 15px 40px rgba(0,0,0,.25);
+width:1000px;
+height:600px;
+background:white;
+border-radius:20px;
+overflow:hidden;
+display:flex;
+box-shadow:0 15px 40px rgba(0,0,0,.25);
 }
 
 .left{
-    flex:1;
-    background:#111827;
-    color:white;
-    padding:60px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+flex:1;
+background:#111827;
+color:white;
+padding:50px;
+display:flex;
+flex-direction:column;
+justify-content:center;
 }
 
 .left h1{
-    font-size:42px;
-    margin-bottom:20px;
+font-size:42px;
+margin-bottom:20px;
 }
 
 .left p{
-    color:#d1d5db;
-    line-height:1.8;
+line-height:1.8;
+color:#d1d5db;
 }
 
 .features{
-    margin-top:25px;
+margin-top:25px;
 }
 
 .features div{
-    margin-bottom:12px;
+margin-bottom:12px;
 }
 
 .right{
-    flex:1;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:40px;
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:40px;
 }
 
 .login-box{
-    width:100%;
-    max-width:350px;
+width:100%;
+max-width:400px;
 }
 
 .login-box h2{
-    margin-bottom:10px;
-    color:#111827;
+margin-bottom:10px;
 }
 
 .login-box p{
-    color:gray;
-    margin-bottom:25px;
+margin-bottom:25px;
+color:gray;
 }
 
-input, select{
-    width:100%;
-    padding:14px;
-    margin-bottom:15px;
-    border:1px solid #ddd;
-    border-radius:10px;
-    outline:none;
-    font-size:15px;
-}
-
-input:focus,
-select:focus{
-    border-color:#2563eb;
+input,
+select{
+width:100%;
+padding:14px;
+margin-bottom:15px;
+border:1px solid #ddd;
+border-radius:10px;
+outline:none;
 }
 
 button{
-    width:100%;
-    padding:14px;
-    background:#2563eb;
-    color:white;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    cursor:pointer;
-    transition:.3s;
+width:100%;
+padding:14px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-size:16px;
 }
 
 button:hover{
-    background:#1d4ed8;
+background:#1d4ed8;
 }
 
-.footer{
-    text-align:center;
-    margin-top:20px;
-    color:gray;
-    font-size:14px;
+.demo{
+margin-top:20px;
+padding:15px;
+background:#f3f4f6;
+border-radius:10px;
+font-size:14px;
 }
 
 .logo{
-    font-size:22px;
-    font-weight:bold;
-    margin-bottom:25px;
+font-size:24px;
+font-weight:bold;
+margin-bottom:20px;
 }
 
 </style>
@@ -140,21 +134,21 @@ button:hover{
 Panache Workforce Management
 </div>
 
-<h1>Welcome Back</h1>
+<h1>Smart Workforce Platform</h1>
 
 <p>
 Manage employees, assign tasks, track workflows,
-monitor productivity, and leverage AI-powered
-workforce insights from one centralized platform.
+monitor performance and leverage AI-powered insights
+through one centralized platform.
 </p>
 
 <div class="features">
-<div>✓ Task Management</div>
-<div>✓ Workflow Tracking</div>
 <div>✓ Employee Management</div>
-<div>✓ AI Productivity Assistant</div>
+<div>✓ Task Assignment</div>
+<div>✓ Workflow Tracking</div>
 <div>✓ Reports & Analytics</div>
-<div>✓ Notifications Center</div>
+<div>✓ Notifications</div>
+<div>✓ AI Workforce Assistant</div>
 </div>
 
 </div>
@@ -165,20 +159,20 @@ workforce insights from one centralized platform.
 
 <h2>Login</h2>
 
-<p>Sign in to continue</p>
+<p>Access your workspace</p>
 
 <form onsubmit="login(event)">
 
-<select required>
+<select id="role" required>
 <option value="">Select Role</option>
-<option>Admin</option>
-<option>Manager</option>
-<option>Employee</option>
+<option value="admin">Admin</option>
+<option value="manager">Manager</option>
+<option value="employee">Employee</option>
 </select>
 
 <input
 type="email"
-placeholder="Email Address"
+placeholder="Email"
 required
 >
 
@@ -194,8 +188,22 @@ Login
 
 </form>
 
-<div class="footer">
-Panache Internal Platform © 2025
+<div class="demo">
+
+<b>Demo Roles:</b>
+
+<br><br>
+
+Admin → admin-dashboard.html
+
+<br>
+
+Manager → manager-dashboard.html
+
+<br>
+
+Employee → employee-dashboard.html
+
 </div>
 
 </div>
@@ -207,9 +215,27 @@ Panache Internal Platform © 2025
 <script>
 
 function login(event){
-    event.preventDefault();
 
-    window.location.href = "dashboard.html";
+event.preventDefault();
+
+const role = document.getElementById("role").value;
+
+if(role === "admin"){
+window.location.href = "admin-dashboard.html";
+}
+
+else if(role === "manager"){
+window.location.href = "manager-dashboard.html";
+}
+
+else if(role === "employee"){
+window.location.href = "employee-dashboard.html";
+}
+
+else{
+alert("Please select a role");
+}
+
 }
 
 </script>
