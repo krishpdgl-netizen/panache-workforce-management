@@ -88,8 +88,8 @@ font-weight:600;
 
 <input
 type="text"
-id="username"
-placeholder="Username"
+id="fullname"
+placeholder="fullname"
 required
 
 >
@@ -141,7 +141,7 @@ Create User
 async function registerUser(){
 
     const fullname =
-    document.getElementById("username").value;
+    document.getElementById("fullname").value;
 
     const email =
     document.getElementById("email").value;
@@ -155,7 +155,7 @@ async function registerUser(){
     try {
 
         const response = await fetch(
-        `http://127.0.0.1:8000/register?username=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+        `http://127.0.0.1:8000/register?fullname=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
         {
             method:"POST"
         });
