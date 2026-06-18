@@ -239,20 +239,18 @@ const data = await response.json();
 
 if(data.success){
 
-if(data.role === "admin"){
-window.location.href = "admin-dashboard.html";
-}
-else if(data.role === "manager"){
-window.location.href = "manager-dashboard.html";
-}
-else{
-window.location.href = "employee-dashboard.html";
-}
+    localStorage.setItem("userRole", data.role);
+    localStorage.setItem("userEmail", email);
 
-}
-else{
-alert("Invalid email or password");
-}
+    if(data.role === "admin"){
+        window.location.href = "admin-dashboard.html";
+    }
+    else if(data.role === "manager"){
+        window.location.href = "manager-dashboard.html";
+    }
+    else{
+        window.location.href = "employee-dashboard.html";
+    }
 
 }
 catch(error){
