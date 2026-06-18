@@ -218,47 +218,53 @@ Employee → employee-dashboard.html
 
 async function login(event){
 
-event.preventDefault();
+    event.preventDefault();
 
-const email =
-document.getElementById("email").value;
+    const email =
+    document.getElementById("email").value;
 
-const password =
-document.getElementById("password").value;
+    const password =
+    document.getElementById("password").value;
 
-try {
+    try {
 
-const response = await fetch(
-`http://127.0.0.1:8000/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-{
-method:"POST"
-}
-);
+        const response = await fetch(
+        `http://127.0.0.1:8000/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        {
+            method:"POST"
+        }
+        );
 
-const data = await response.json();
-console.log(data);
-if(data.success){
+        const data = await response.json();
+        console.log(data);
 
-    localStorage.setItem("userRole", data.role);
-    localStorage.setItem("userEmail", email);
+        if(data.success){
 
-    if(data.role === "admin"){
-        window.location.href = "admin-dashboard.html";
+            localStorage.setItem("userRole", data.role);
+            localStorage.setItem("userEmail", email);
+
+            if(data.role === "admin"){
+                window.location.href = "admin-dashboard.html";
+            }
+            else if(data.role === "manager"){
+                window.location.href = "manager-dashboard.html";
+            }
+            else{
+                window.location.href = "employee-dashboard.html";
+            }
+
+        } else {
+
+            alert("Invalid email or password");
+
+        }
+
+    } catch(error){
+
+        console.error(error);
+        alert("Cannot connect to server");
+
     }
-    else if(data.role === "manager"){
-        window.location.href = "manager-dashboard.html";
-    }
-    else{
-        window.location.href = "employee-dashboard.html";
-    }
-
-}
-catch(error){
-
-console.error(error);
-alert("Cannot connect to server");
-
-}
 
 }
 
