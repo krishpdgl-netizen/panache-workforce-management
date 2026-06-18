@@ -140,7 +140,7 @@ Create User
 
 async function registerUser(){
 
-    const username =
+    const fullname =
     document.getElementById("username").value;
 
     const email =
@@ -155,7 +155,7 @@ async function registerUser(){
     try {
 
         const response = await fetch(
-        `http://127.0.0.1:8000/register?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+        `http://127.0.0.1:8000/register?username=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
         {
             method:"POST"
         });
