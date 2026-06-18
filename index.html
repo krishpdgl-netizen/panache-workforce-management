@@ -171,12 +171,14 @@ through one centralized platform.
 </select>
 
 <input
+id="email"
 type="email"
 placeholder="Email"
 required
 >
 
 <input
+id="password"
 type="password"
 placeholder="Password"
 required
@@ -214,26 +216,50 @@ Employee → employee-dashboard.html
 
 <script>
 
-function login(event){
+async function login(event){
 
 event.preventDefault();
 
-const role = document.getElementById("role").value;
+const email =
+document.getElementById("email").value;
 
-if(role === "admin"){
+const password =
+document.getElementById("password").value;
+
+try {
+
+const response = await fetch(
+`http://127.0.0.1:8000/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+{
+method:"POST"
+}
+);
+
+const data = await response.json();
+
+if(data.success){
+
+if(data.role === "admin"){
 window.location.href = "admin-dashboard.html";
 }
-
-else if(role === "manager"){
+else if(data.role === "manager"){
 window.location.href = "manager-dashboard.html";
 }
-
-else if(role === "employee"){
+else{
 window.location.href = "employee-dashboard.html";
 }
 
+}
 else{
-alert("Please select a role");
+alert("Invalid email or password");
+}
+
+}
+catch(error){
+
+console.error(error);
+alert("Cannot connect to server");
+
 }
 
 }
