@@ -214,6 +214,42 @@ Employee → employee-dashboard.html
 
 </div>
 
+<button type="button" onclick="showRegister()">
+Register User
+</button>
+
+    <div id="registerForm" style="display:none">
+
+<input
+type="text"
+id="regUsername"
+placeholder="Username"
+>
+
+<input
+type="email"
+id="regEmail"
+placeholder="Email"
+>
+
+<input
+type="password"
+id="regPassword"
+placeholder="Password"
+>
+
+<select id="regRole">
+<option value="employee">Employee</option>
+<option value="manager">Manager</option>
+<option value="admin">Admin</option>
+</select>
+
+<button onclick="registerUser()">
+Create User
+</button>
+
+</div>
+
 <script>
 
 async function login(event){
@@ -267,41 +303,7 @@ async function login(event){
     }
 
 }
-<button type="button" onclick="showRegister()">
-Register User
-</button>
 
-    <div id="registerForm" style="display:none">
-
-<input
-type="text"
-id="regUsername"
-placeholder="Username"
->
-
-<input
-type="email"
-id="regEmail"
-placeholder="Email"
->
-
-<input
-type="password"
-id="regPassword"
-placeholder="Password"
->
-
-<select id="regRole">
-<option value="employee">Employee</option>
-<option value="manager">Manager</option>
-<option value="admin">Admin</option>
-</select>
-
-<button onclick="registerUser()">
-Create User
-</button>
-
-</div>
 
 function showRegister(){
     document.getElementById("registerForm").style.display = "block";
@@ -337,7 +339,51 @@ async function registerUser(){
         alert(data.message);
     }
 }
-    
+
+
+async function registerUser(){
+
+    const username =
+    document.getElementById("regUsername").value;
+
+    const email =
+    document.getElementById("regEmail").value;
+
+    const password =
+    document.getElementById("regPassword").value;
+
+    const role =
+    document.getElementById("regRole").value;
+
+    try {
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/register?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+            {
+                method:"POST"
+            }
+        );
+
+        const data = await response.json();
+
+        if(data.success){
+            alert("User created successfully");
+
+            document.getElementById("regUsername").value = "";
+            document.getElementById("regEmail").value = "";
+            document.getElementById("regPassword").value = "";
+        }
+        else{
+            alert(data.message);
+        }
+
+    } catch(error){
+
+        console.error(error);
+        alert("Cannot connect to server");
+
+    }
+}
 </script>
 
 </body>
