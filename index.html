@@ -393,6 +393,16 @@ async function registerUser(){
 
     }
 }
+
+if(data.success){
+
+    localStorage.setItem("userId", data.id);
+    localStorage.setItem("userName", data.name);
+    localStorage.setItem("userEmail", data.email);
+    localStorage.setItem("userRole", data.role);
+
+    ...
+}
 </script>
 
 </body>
