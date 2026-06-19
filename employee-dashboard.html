@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script> const role = localStorage.getItem("userRole"); if(!role){ window.location.href = "index.html"; } </script>
+<script>
+
+const role = localStorage.getItem("userRole");
+
+if(role !== "employee"){
+window.location.href="index.html";
+}
+
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Employee Dashboard | Panache</title>
@@ -137,6 +145,19 @@ width:72%;
 background:#2563eb;
 }
 
+.header button{
+background:#dc2626;
+padding:10px 15px;
+border:none;
+color:white;
+border-radius:8px;
+cursor:pointer;
+margin-left:15px;
+}
+
+.header button:hover{
+background:#b91c1c;
+}
 </style>
 </head>
 
@@ -162,8 +183,36 @@ Panache WMS
 <div class="main">
 
 <div class="header">
+
 <h1>Employee Dashboard</h1>
-<div class="profile" id="profileName">Loading...</div>
+
+<div>
+
+<div class="profile">
+
+<b id="profileName">Loading...</b>
+
+<br>
+
+<span id="profileEmail"></span>
+
+</div>
+  <script>
+
+document.getElementById("profileName").innerHTML =
+localStorage.getItem("userName");
+
+document.getElementById("profileEmail").innerHTML =
+localStorage.getItem("userEmail");
+
+</script>
+
+<button onclick="logout()">
+Logout
+</button>
+
+</div>
+
 </div>
 
 <div class="cards">
@@ -287,6 +336,16 @@ CRM Cleanup moved to review stage.
 </div>
 
 </div>
+<script>
 
+function logout(){
+
+    localStorage.clear();
+
+    window.location.href="index.html";
+
+}
+
+</script>
 </body>
 </html>
