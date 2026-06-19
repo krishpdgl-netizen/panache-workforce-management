@@ -359,6 +359,7 @@ async function loadTasks(){
 
     const userId =
     localStorage.getItem("userId");
+    console.log(userId);
 
     const response = await fetch(
     `https://backend-production-53f3.up.railway.app/my-tasks?user_id=${userId}`
@@ -367,6 +368,7 @@ async function loadTasks(){
     const tasks = await response.json();
     document.getElementById("assignedTasks").innerHTML =
 tasks.length;
+  console.log(tasks);
 
 let completed = 0;
 
