@@ -5,7 +5,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manager Dashboard | Panache</title>
+<script>
 
+const role = localStorage.getItem("userRole");
+
+if(role !== "manager"){
+    window.location.href="index.html";
+}
+
+<div class="profile">
+
+<b id="profileName">Loading...</b>
+
+<br>
+
+<span id="profileEmail"></span>
+
+<br>
+
+<span id="profileId"></span>
+
+</div>
+
+<button onclick="logout()">
+Logout
+</button>
+
+</script>
 <style>
 
 *{
@@ -251,23 +277,23 @@ Panache WMS
 <div class="cards">
 
 <div class="card">
-<h2>50</h2>
-<p>Total Employees</p>
+<h2 id="employeeCount">0</h2>
+<p>Employees</p>
 </div>
 
 <div class="card">
-<h2>128</h2>
-<p>Active Tasks</p>
+<h2 id="taskCount">0</h2>
+<p>Total Tasks</p>
 </div>
 
 <div class="card">
-<h2>432</h2>
+<h2 id="completedCount">0</h2>
 <p>Completed Tasks</p>
 </div>
 
 <div class="card">
-<h2>7</h2>
-<p>Overdue Tasks</p>
+<h2 id="productivityScore">0%</h2>
+<p>Team Productivity</p>
 </div>
 
 </div>
@@ -473,6 +499,47 @@ localStorage.setItem("selectedTask", taskName);
 window.location.href = "create-task.html";
 
 }
+document.getElementById("profileName").innerHTML =
+localStorage.getItem("userName");
+
+document.getElementById("profileEmail").innerHTML =
+localStorage.getItem("userEmail");
+
+document.getElementById("profileId").innerHTML =
+"Manager ID : " + localStorage.getItem("userId");
+
+function logout(){
+
+    localStorage.clear();
+
+    window.location.href="index.html";
+
+}
+
+async function loadStats(){
+
+    const response = await fetch(
+    "https://backend-production-53f3.up.railway.app/manager-stats"
+    );
+
+    const data = await response.json();
+
+    document.getElementById("employeeCount").innerHTML =
+    data.employees;
+
+    document.getElementById("taskCount").innerHTML =
+    data.total_tasks;
+
+    document.getElementById("completedCount").innerHTML =
+    data.completed_tasks;
+
+    document.getElementById("productivityScore").innerHTML =
+    data.productivity + "%";
+
+}
+
+loadStats();
+
 
 </script>
 </body>
