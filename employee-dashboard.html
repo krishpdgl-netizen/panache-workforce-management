@@ -266,6 +266,7 @@ Logout
 <th>Priority</th>
 <th>Status</th>
 <th>Due Date</th>
+<th>Action</th>
 </tr>
   
 <tbody id="taskTable">
@@ -381,27 +382,63 @@ tasks.length - completed;
 
     tasks.forEach(task => {
 
-        html += `
-        <tr>
+    let button = "";
 
-        <td>${task.title}</td>
+    if(task.status.toLowerCase() !== "completed"){
 
-        <td>${task.priority}</td>
-
-        <td>${task.status}</td>
-
-        <td>${task.due_date}</td>
-
-        </tr>
+        button = `
+        <button onclick="completeTask(${task.id})">
+        Complete
+        </button>
         `;
 
-    });
+    }
+
+    html += `
+    <tr>
+
+    <td>${task.title}</td>
+
+    <td>${task.priority}</td>
+
+    <td>${task.status}</td>
+
+    <td>${task.due_date}</td>
+
+    <td>${button}</td>
+
+    </tr>
+    `;
+
+});
 
     document.getElementById("taskTable").innerHTML = html;
 
 }
 
 loadTasks();
+
+
+async function completeTask(taskId){
+
+    const response = await fetch(
+    `https://backend-production-53f3.up.railway.app/complete-task?task_id=${taskId}`,
+    {
+        method:"POST"
+    });
+
+    const data = await response.json();
+
+    if(data.success){
+
+        alert("Task completed");
+
+        loadTasks();
+
+    }
+
+}
+
 
 </script>
 </body>
