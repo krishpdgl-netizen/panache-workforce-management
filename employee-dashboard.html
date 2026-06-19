@@ -379,78 +379,42 @@ document.getElementById("profileId").innerHTML =
 
 async function loadTasks(){
 
-    const userId =
-    localStorage.getItem("userId");
-    console.log(userId);
+    const userId = localStorage.getItem("userId");
 
     const response = await fetch(
     `https://backend-production-53f3.up.railway.app/my-tasks?user_id=${userId}`
     );
 
     const tasks = await response.json();
-    document.getElementById("assignedTasks").innerHTML =
-tasks.length;
-  console.log(tasks);
-
-let completed = 0;
-
-tasks.forEach(task=>{
-
-    if(task.status.toLowerCase()=="completed"){
-        completed++;
-    }
-
-});
-
-document.getElementById("completedTasks").innerHTML =
-completed;
-
-document.getElementById("dueTasks").innerHTML =
-tasks.length - completed;
 
     let html = "";
 
     tasks.forEach(task => {
 
-    let button = "";
+        html += `
+        <tr>
 
-    if(task.status.toLowerCase() !== "completed"){
+        <td>${task.id}</td>
 
-    button = `
-    <button class="complete-btn"
-    onclick="completeTask(${task.id})">
-    Complete
-    </button>
-    `;
+        <td>${task.title}</td>
 
-}
-else{
+        <td>${task.priority}</td>
 
-    button = `
-    <span class="completed-label">
-    ✓ Completed
-    </span>
-    `;
+        <td>${task.status}</td>
 
-}
-    html += `
-    <tr>
-    <td>${task.id}</td>
-    
-    <td>${task.title}</td>
+        <td>${task.due_date}</td>
 
-    <td>${task.priority}</td>
+        <td>
+        <button class="complete-btn"
+        onclick="completeTask(${task.id})">
+        Complete
+        </button>
+        </td>
 
-    <td>${task.status}</td>
+        </tr>
+        `;
 
-    <td>${task.due_date}</td>
-
-    <td>${button}</td>
-
-    </tr>
-    `;
-
-});
+    });
 
     document.getElementById("taskTable").innerHTML = html;
 
@@ -497,7 +461,16 @@ async function loadProductivity(){
     document.getElementById("progressBar").style.width =
     data.score + "%";
 
+    document.getElementById("assignedTasks").innerHTML =
+    data.total_tasks;
+
+    document.getElementById("completedTasks").innerHTML =
+    data.completed_tasks;
+
+    document.getElementById("dueTasks").innerHTML =
+    data.total_tasks - data.completed_tasks;
 }
+
 loadTasks();
 loadProductivity();
 
