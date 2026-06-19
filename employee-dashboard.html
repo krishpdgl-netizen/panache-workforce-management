@@ -179,7 +179,30 @@ display:grid;
 grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 }
 
-  
+.complete-btn{
+background:#2563eb;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+font-size:14px;
+font-weight:500;
+transition:.3s;
+}
+
+.complete-btn:hover{
+background:#1d4ed8;
+}
+
+.completed-label{
+background:#dcfce7;
+color:#15803d;
+padding:8px 14px;
+border-radius:20px;
+font-size:14px;
+font-weight:600;
+}
 </style>
 </head>
 
@@ -393,14 +416,23 @@ tasks.length - completed;
 
     if(task.status.toLowerCase() !== "completed"){
 
-        button = `
-        <button onclick="completeTask(${task.id})">
-        Complete
-        </button>
-        `;
+    button = `
+    <button class="complete-btn"
+    onclick="completeTask(${task.id})">
+    Complete
+    </button>
+    `;
 
-    }
+}
+else{
 
+    button = `
+    <span class="completed-label">
+    ✓ Completed
+    </span>
+    `;
+
+}
     html += `
     <tr>
     <td>${task.id}</td>
