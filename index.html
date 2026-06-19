@@ -205,11 +205,10 @@ async function login(event){
     try {
 
         const response = await fetch(
-        `http://127.0.0.1:8000/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-        {
-            method:"POST"
-        }
-        );
+`https://backend-production-53f3.up.railway.app/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+{
+    method:"POST"
+});
 
         const data = await response.json();
         console.log(data);
