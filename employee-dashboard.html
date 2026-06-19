@@ -251,10 +251,9 @@ Logout
 </div>
 
 <div class="card">
-<h2>72%</h2>
+<h2 id="productivityScore">0%</h2>
 <p>Productivity Score</p>
 </div>
-
 </div>
 
 <div class="section">
@@ -287,8 +286,7 @@ Logout
 <p>Weekly Completion Rate</p>
 
 <div class="progress-bar">
-<div class="progress"></div>
-</div>
+<div class="progress" id="progressBar"></div></div>
 
 </div>
 
@@ -444,8 +442,28 @@ async function completeTask(taskId){
         alert("Task completed");
 
         loadTasks();
+        loadProductivity();
 
     }
+
+}
+
+async function loadProductivity(){
+
+    const userId =
+    localStorage.getItem("userId");
+
+    const response = await fetch(
+    `https://backend-production-53f3.up.railway.app/productivity-score?user_id=${userId}`
+    );
+
+    const data = await response.json();
+
+    document.getElementById("productivityScore").innerHTML =
+    data.score + "%";
+
+    document.getElementById("progressBar").style.width =
+    data.score + "%";
 
 }
 
