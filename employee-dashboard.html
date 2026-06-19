@@ -442,6 +442,7 @@ async function completeTask(taskId){
         alert("Task completed");
 
         loadTasks();
+        loadProductivity();
 
     }
 
@@ -463,10 +464,10 @@ async function loadProductivity(){
 
     document.getElementById("progressBar").style.width =
     data.score + "%";
-        loadProductivity();
 
 }
-
+loadTasks();
+loadProductivity();
 
 </script>
 </body>
