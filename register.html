@@ -155,10 +155,10 @@ async function registerUser(){
     try {
 
         const response = await fetch(
-        `http://127.0.0.1:8000/register?fullname=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
-        {
-            method:"POST"
-        });
+`https://backend-production-53f3.up.railway.app/register?fullname=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+{
+    method:"POST"
+});
 
         const data = await response.json();
 
