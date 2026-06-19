@@ -197,15 +197,6 @@ Panache WMS
 <span id="profileEmail"></span>
 
 </div>
-  <script>
-
-document.getElementById("profileName").innerHTML =
-localStorage.getItem("userName");
-
-document.getElementById("profileEmail").innerHTML =
-localStorage.getItem("userEmail");
-
-</script>
 
 <button onclick="logout()">
 Logout
@@ -218,23 +209,25 @@ Logout
 <div class="cards">
 
 <div class="card">
-<h2>8</h2>
+<h2 id="assignedTasks">0</h2>
 <p>Assigned Tasks</p>
 </div>
 
 <div class="card">
-<h2>3</h2>
-<p>Completed This Week</p>
+<h2 id="completedTasks">0</h2>
+<p>Completed Tasks</p>
 </div>
 
 <div class="card">
-<h2>2</h2>
-<p>Due Today</p>
+<h2 id="dueTasks">0</h2>
+<p>Pending Tasks</p>
 </div>
 
 <div class="card">
 <h2>72%</h2>
 <p>Productivity Score</p>
+</div>
+
 </div>
 
 </div>
@@ -246,34 +239,15 @@ Logout
 <br>
 
 <table>
-
 <tr>
 <th>Task</th>
 <th>Priority</th>
 <th>Status</th>
 <th>Due Date</th>
 </tr>
-
-<tr>
-<td>Website Redesign</td>
-<td>High</td>
-<td>In Progress</td>
-<td>25 Jun</td>
-</tr>
-
-<tr>
-<td>CRM Cleanup</td>
-<td>Medium</td>
-<td>Review</td>
-<td>22 Jun</td>
-</tr>
-
-<tr>
-<td>Client Proposal</td>
-<td>Critical</td>
-<td>Todo</td>
-<td>20 Jun</td>
-</tr>
+  
+<tbody id="taskTable">
+</tbody>
 
 </table>
 
@@ -345,6 +319,67 @@ function logout(){
     window.location.href="index.html";
 
 }
+
+document.getElementById("profileName").innerHTML =
+localStorage.getItem("userName");
+
+document.getElementById("profileEmail").innerHTML =
+localStorage.getItem("userEmail");
+
+async function loadTasks(){
+
+    const userId =
+    localStorage.getItem("userId");
+
+    const response = await fetch(
+    `https://backend-production-53f3.up.railway.app/my-tasks?user_id=${userId}`
+    );
+
+    const tasks = await response.json();
+    document.getElementById("assignedTasks").innerHTML =
+tasks.length;
+
+let completed = 0;
+
+tasks.forEach(task=>{
+
+    if(task.status.toLowerCase()=="completed"){
+        completed++;
+    }
+
+});
+
+document.getElementById("completedTasks").innerHTML =
+completed;
+
+document.getElementById("dueTasks").innerHTML =
+tasks.length - completed;
+
+    let html = "";
+
+    tasks.forEach(task => {
+
+        html += `
+        <tr>
+
+        <td>${task.title}</td>
+
+        <td>${task.priority}</td>
+
+        <td>${task.status}</td>
+
+        <td>${task.due_date}</td>
+
+        </tr>
+        `;
+
+    });
+
+    document.getElementById("taskTable").innerHTML = html;
+
+}
+
+loadTasks();
 
 </script>
 </body>
