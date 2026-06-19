@@ -163,13 +163,6 @@ through one centralized platform.
 
 <form onsubmit="login(event)">
 
-<select id="role" required>
-<option value="">Select Role</option>
-<option value="admin">Admin</option>
-<option value="manager">Manager</option>
-<option value="employee">Employee</option>
-</select>
-
 <input
 id="email"
 type="email"
@@ -202,24 +195,6 @@ Register New User
 </a>
     
 </form>
-
-<div class="demo">
-
-<b>Demo Roles:</b>
-
-<br><br>
-
-Admin → admin-dashboard.html
-
-<br>
-
-Manager → manager-dashboard.html
-
-<br>
-
-Employee → employee-dashboard.html
-
-</div>
 
 </div>
 
@@ -255,8 +230,11 @@ async function login(event){
 
         if(data.success){
 
+            localStorage.setItem("userId", data.id);
+            localStorage.setItem("userName", data.name);
+            localStorage.setItem("userEmail", data.email);
             localStorage.setItem("userRole", data.role);
-            localStorage.setItem("userEmail", email);
+
 
             if(data.role === "admin"){
                 window.location.href = "admin-dashboard.html";
