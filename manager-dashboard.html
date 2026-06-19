@@ -140,6 +140,67 @@ body{
     margin-bottom:15px;
 }
 
+.assign-btn{
+
+background:#2563eb;
+color:white;
+border:none;
+padding:14px 25px;
+border-radius:10px;
+cursor:pointer;
+
+}
+
+.assign-btn:hover{
+
+background:#1d4ed8;
+
+}
+
+.edit-btn{
+
+background:#2563eb;
+color:white;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+.delete-btn{
+
+background:#dc2626;
+color:white;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+.review-btn{
+
+background:#f59e0b;
+color:white;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
+.approve-btn{
+
+background:#16a34a;
+color:white;
+border:none;
+padding:8px 15px;
+border-radius:8px;
+cursor:pointer;
+
+}
+
 /* BUTTON */
 
 .btn{
@@ -252,24 +313,55 @@ Panache WMS
 </div>
 
 <div class="menu">
-<a href="manager-dashboard.html">Dashboard</a>
-<a href="create-task.html">Create Task</a>
-<a href="employee-management.html">Team Members</a>
-<a href="workflow-board.html">Workflow</a>
+
+<a href="#">Dashboard</a>
+
+<details>
+
+<summary>Team Details</summary>
+
+<a href="team-members.html">Team Members</a>
+
+<a href="performance-report.html">Performance Report</a>
+
+<a href="task-history.html">Task History</a>
+
+</details>
+
 <a href="reports.html">Reports</a>
-<a href="reports.html">Analytics</a>
+
 <a href="settings.html">Settings</a>
-<a href="index.html">Logout</a>
+
+<a href="#" onclick="logout()">Logout</a>
+
 </div>
 
 </div>
-<div class="main">
 
 <!-- HEADER -->
 
 <div class="header">
+
 <h1>Manager Dashboard</h1>
-<div class="profile">Manager</div>
+
+<div class="profile">
+
+<b id="profileName">
+Loading...
+</b>
+
+<br>
+
+<span id="profileEmail">
+</span>
+
+<br>
+
+<span id="profileId">
+</span>
+
+</div>
+
 </div>
 
 <!-- CARDS -->
@@ -277,79 +369,149 @@ Panache WMS
 <div class="cards">
 
 <div class="card">
-<h2 id="employeeCount">0</h2>
-<p>Employees</p>
+
+<h2 id="teamCount">
+0
+</h2>
+
+<p>
+Team Members
+</p>
+
 </div>
 
 <div class="card">
-<h2 id="taskCount">0</h2>
-<p>Total Tasks</p>
+
+<h2 id="pendingTasks">
+0
+</h2>
+
+<p>
+Pending Tasks
+</p>
+
 </div>
 
 <div class="card">
-<h2 id="completedCount">0</h2>
-<p>Completed Tasks</p>
+
+<h2 id="reviewTasks">
+0
+</h2>
+
+<p>
+Pending Reviews
+</p>
+
 </div>
 
 <div class="card">
-<h2 id="productivityScore">0%</h2>
-<p>Team Productivity</p>
-</div>
+
+<h2 id="teamProductivity">
+0%
+</h2>
+
+<p>
+Team Productivity
+</p>
 
 </div>
 
+</div>
 <!-- TASK MANAGEMENT -->
 
 <div class="section">
 
-<h2>Recent Tasks</h2>
+<h2>
+Task Management
+</h2>
 
-<button
-class="btn"
+<br>
+
+<button class="assign-btn"
 onclick="window.location.href='create-task.html'">
-+ Create Task
+
+Assign New Task
+
 </button>
-<br><br>
-    
+
+</div>
+
+<!-- ASSIGNED TASKS-->
+
+<div class="section">
+
+<h2>
+Assigned Tasks
+</h2>
+
+<br>
+
 <table>
 
 <tr>
+
+<th>ID</th>
+
 <th>Task</th>
+
 <th>Employee</th>
+
 <th>Priority</th>
+
 <th>Status</th>
+
 <th>Due Date</th>
-<th>Action</th>
+
+<th>Edit</th>
+
+<th>Delete</th>
+
 </tr>
 
-<tr>
-<td>Website Redesign</td>
-<td>Amit</td>
-<td>High</td>
-<td>In Progress</td>
-<td>25 Jun</td>
-</tr>
+<tbody id="taskTable">
 
-<tr>
-<td>CRM Cleanup</td>
-<td>Priya</td>
-<td>Medium</td>
-<td>Review</td>
-<td>22 Jun</td>
-</tr>
-
-<tr>
-<td>Client Proposal</td>
-<td>Rahul</td>
-<td>Critical</td>
-<td>Todo</td>
-<td>20 Jun</td>
-</tr>
+</tbody>
 
 </table>
 
 </div>
 
+
+<!-- PENDING TASKS SECTION-->
+
+<div class="section">
+
+<h2>
+Tasks Pending Review
+</h2>
+
+<br>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+
+<th>Task</th>
+
+<th>Employee</th>
+
+<th>Submitted On</th>
+
+<th>Review</th>
+
+<th>Approve</th>
+
+</tr>
+
+<tbody id="reviewTable">
+
+</tbody>
+
+</table>
+
+</div>
 <!-- TEAM -->
 
 <div class="section">
@@ -539,6 +701,7 @@ async function loadStats(){
 }
 
 loadStats();
+
 
 
 </script>
