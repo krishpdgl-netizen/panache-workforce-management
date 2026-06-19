@@ -264,6 +264,7 @@ Logout
 
 <table>
 <tr>
+<th>ID</th>
 <th>Task</th>
 <th>Priority</th>
 <th>Status</th>
@@ -351,6 +352,9 @@ localStorage.getItem("userName");
 document.getElementById("profileEmail").innerHTML =
 localStorage.getItem("userEmail");
 
+document.getElementById("profileId").innerHTML =
+"Employee ID : " + localStorage.getItem("userId");
+
 async function loadTasks(){
 
     const userId =
@@ -398,7 +402,8 @@ tasks.length - completed;
 
     html += `
     <tr>
-
+    <td>${task.id}</td>
+    
     <td>${task.title}</td>
 
     <td>${task.priority}</td>
