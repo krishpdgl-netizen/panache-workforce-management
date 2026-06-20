@@ -481,7 +481,19 @@
         try {
             const res = await fetch(`${BASE}/manager-stats`);
             const data = await res.json();
-            document.getElementById("teamCount").innerHTML = data.employees;
+            const managerId =
+localStorage.getItem("userId");
+
+const teamResponse =
+await fetch(
+`${BASE}/team?manager_id=${managerId}`
+);
+
+const team =
+await teamResponse.json();
+
+document.getElementById("teamCount").innerHTML =
+team.length;
             document.getElementById("pendingTasks").innerHTML = data.total_tasks;
             document.getElementById("reviewTasks").innerHTML = data.completed_tasks;
             document.getElementById("teamProductivity").innerHTML = data.productivity + "%";
