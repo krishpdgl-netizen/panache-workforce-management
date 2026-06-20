@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<script>
+
+const role = (localStorage.getItem("userRole") || "").toLowerCase();
+
+if(role !== "manager"){
+window.location.href = "index.html";
+}
+
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Members | Panache</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+display:flex;
+background:#f4f6f9;
+}
+
+.sidebar{
+width:250px;
+height:100vh;
+background:#111827;
+color:white;
+padding:20px;
+position:fixed;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+margin-bottom:30px;
+}
+
+.menu a{
+display:block;
+color:white;
+text-decoration:none;
+padding:12px;
+margin-bottom:10px;
+border-radius:8px;
+}
+
+.menu a:hover{
+background:#2563eb;
+}
+
+.main{
+margin-left:250px;
+padding:25px;
+width:100%;
+}
+
+.section{
+background:white;
+padding:20px;
+border-radius:15px;
+margin-bottom:25px;
+box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+margin-bottom:25px;
+align-items:center;
+}
+
+.header button{
+background:#dc2626;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.header button:hover{
+background:#b91c1c;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:12px;
+border-bottom:1px solid #eee;
+text-align:left;
+}
+
+th{
+background:#f3f4f6;
+}
+
+select{
+padding:10px;
+border:1px solid #ddd;
+border-radius:8px;
+width:300px;
+margin-right:15px;
+}
+
+.add-btn{
+background:#2563eb;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.add-btn:hover{
+background:#1d4ed8;
+}
+
+.remove-btn{
+background:#dc2626;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.remove-btn:hover{
+background:#b91c1c;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+Panache WMS
+</div>
+
+<div class="menu">
+
+<a href="manager-dashboard.html">Dashboard</a>
+<a href="team-members.html">Team Members</a>
+<a href="settings.html">Settings</a>
+
+</div>
+
+</div>
+
+<div class="main">
+
+<div class="header">
+
+<h1>Team Members</h1>
+
+<button onclick="logout()">
+Logout
+</button>
+
+</div>
+
+
+<div class="section">
+
+<h2>Add Employee To Team</h2>
+
+<br>
+
+<select id="employeeSelect">
+
+<option value="">
+Select Employee
+</option>
+
+</select>
+
+<button class="add-btn"
+onclick="addMember()">
+
+Add Member
+
+</button>
+
+</div>
+
+
+<div class="section">
+
+<h2>Current Team</h2>
+
+<br>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Active Tasks</th>
+<th>Remove</th>
+
+</tr>
+
+<tbody id="teamTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script>
+
+const BASE =
+"https://backend-production-53f3.up.railway.app";
+
+const managerId =
+localStorage.getItem("userId");
+
+
+function logout(){
+
+localStorage.clear();
+
+window.location.href="index.html";
+
+}
+
+
+
+async function loadEmployees(){
+
+const response =
+await fetch(`${BASE}/employees`);
+
+const employees =
+await response.json();
+
+let html =
+`<option value="">Select Employee</option>`;
+
+employees.forEach(emp=>{
+
+html += `
+<option value="${emp.id}">
+${emp.full_name}
+</option>
+`;
+
+});
+
+document.getElementById("employeeSelect").innerHTML =
+html;
+
+}
+
+
+
+async function loadTeam(){
+
+const response =
+await fetch(
+`${BASE}/team?manager_id=${managerId}`
+);
+
+const team =
+await response.json();
+
+let html = "";
+
+team.forEach(emp=>{
+
+html += `
+
+<tr>
+
+<td>${emp.id}</td>
+
+<td>${emp.full_name}</td>
+
+<td>${emp.email}</td>
+
+<td>${emp.task_count}</td>
+
+<td>
+
+<button
+class="remove-btn"
+onclick="removeMember(${emp.id})">
+
+Remove
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("teamTable").innerHTML =
+html;
+
+}
+
+
+
+async function addMember(){
+
+const employeeId =
+document.getElementById("employeeSelect").value;
+
+if(employeeId==""){
+
+alert("Select an employee");
+
+return;
+
+}
+
+const response =
+await fetch(
+
+`${BASE}/team/add?manager_id=${managerId}&employee_id=${employeeId}`,
+
+{
+method:"POST"
+}
+
+);
+
+const data =
+await response.json();
+
+if(data.success){
+
+alert("Member added");
+
+loadTeam();
+
+loadEmployees();
+
+}
+
+}
+
+
+
+async function removeMember(employeeId){
+
+if(!confirm("Remove employee from team?"))
+return;
+
+const response =
+await fetch(
+
+`${BASE}/team/remove?manager_id=${managerId}&employee_id=${employeeId}`,
+
+{
+method:"POST"
+}
+
+);
+
+const data =
+await response.json();
+
+if(data.success){
+
+alert("Employee removed");
+
+loadTeam();
+
+loadEmployees();
+
+}
+
+}
+
+
+loadEmployees();
+
+loadTeam();
+
+</script>
+
+</body>
+</html>
