@@ -330,6 +330,23 @@
             .sidebar { width: 200px; }
             .main { margin-left: 200px; }
         }
+
+    .review-btn{
+
+    background:#16a34a;
+    color:white;
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+
+}
+
+.review-btn:hover{
+
+    background:#15803d;
+
+}
     </style>
 </head>
 
@@ -417,6 +434,33 @@
             <tbody id="taskTable"></tbody>
         </table>
     </div>
+
+    <div class="section">
+    <div class="section-header">
+        <h2>Tasks Pending Review</h2>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Task</th>
+                <th>Employee</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Review</th>
+            </tr>
+        </thead>
+
+        <tbody id="reviewTable">
+            <tr>
+                <td colspan="6" style="text-align:center;">
+                    Loading tasks...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
     <!-- TEAM MEMBERS -->
     <!-- end .main -->
@@ -940,6 +984,126 @@ localStorage.getItem("userId");
 
     // Render on load so existing notes show immediately
     renderNotes();
+
+
+
+async function loadReviewTasks() {
+
+    try {
+
+        const response =
+        await fetch(
+            `${BASE}/review-tasks?manager_id=${managerId}`
+        );
+
+        const tasks =
+        await response.json();
+
+        let html = "";
+
+        if(tasks.length===0){
+
+            html = `
+            <tr>
+                <td colspan="6" style="text-align:center;">
+                    No tasks pending review
+                </td>
+            </tr>
+            `;
+
+        }
+
+        tasks.forEach(task=>{
+
+            html += `
+            <tr>
+
+                <td>${task.id}</td>
+
+                <td>${task.title}</td>
+
+                <td>
+                    ${task.employee_name || task.assigned_to}
+                </td>
+
+                <td>${task.priority}</td>
+
+                <td>${task.status}</td>
+
+                <td>
+
+                    <button class="review-btn"
+                    onclick="approveTask(${task.id})">
+
+                        Approve
+
+                    </button>
+
+                </td>
+
+            </tr>
+            `;
+
+        });
+
+        document.getElementById("reviewTable").innerHTML =
+        html;
+
+    }
+
+    catch(error){
+
+        console.error(
+            "loadReviewTasks:",
+            error
+        );
+
+    }
+
+}
+
+async function approveTask(taskId){
+
+    if(!confirm("Approve this task?"))
+        return;
+
+    try{
+
+        const response =
+        await fetch(
+
+            `${BASE}/approve-task?task_id=${taskId}`,
+
+            {
+                method:"POST"
+            }
+
+        );
+
+        const data =
+        await response.json();
+
+        if(data.success){
+
+            loadTasks();
+
+            loadReviewTasks();
+
+            loadStats();
+
+        }
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+    }
+
+}
+
+
 </script>
 
 <!-- ============================================================
