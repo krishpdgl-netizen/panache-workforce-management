@@ -621,6 +621,21 @@
     }
 
 }
+function renderManagers(list) {
+        if (!list.length) {
+            document.getElementById("managerTable").innerHTML =
+                `<tr><td colspan="5" class="no-data">No managers found.</td></tr>`;
+            return;
+        }
+        document.getElementById("managerTable").innerHTML = list.map(m => `
+            <tr>
+                <td>${m.id}</td>
+                <td><b>${m.full_name}</b></td>
+                <td>${m.email}</td>
+                <td><span class="badge badge-blue">Manager</span></td>
+                <td><button class="btn-danger" onclick="deleteUser(${m.id}, '${m.full_name}')">Delete</button></td>
+            </tr>`).join("");
+    }
 
     
     // ── LOAD ALL TASKS ────────────────────────────────────────
