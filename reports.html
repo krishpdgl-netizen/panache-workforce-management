@@ -291,11 +291,11 @@
     <div class="cards">
         <div class="card">
             <h2 id="statEmployees">—</h2>
-            <p>Total Employees</p>
+            <p>Team members</p>
         </div>
         <div class="card">
             <h2 id="statTotal">—</h2>
-            <p>Total Tasks</p>
+            <p>Assigned Tasks</p>
         </div>
         <div class="card green">
             <h2 id="statCompleted">—</h2>
@@ -307,7 +307,7 @@
         </div>
         <div class="card">
             <h2 id="statProductivity">—</h2>
-            <p>Team Productivity</p>
+            <p>Completion Rate</p>
         </div>
     </div>
 
@@ -373,28 +373,35 @@
     }
 
     // ── MANAGER STATS ────────────────────────────────────────
-    async function loadStats() {
-        try {
-            const res  = await fetch(`${BASE}/manager-stats`);
-            const data = await res.json();
+    async function loadStats(){
 
-            document.getElementById("statEmployees").innerHTML   = data.employees;
-            document.getElementById("statTotal").innerHTML       = data.total_tasks;
-            document.getElementById("statCompleted").innerHTML   = data.completed_tasks;
-            document.getElementById("statProductivity").innerHTML = data.productivity + "%";
+    const managerId =
+    localStorage.getItem("userId");
 
-            // Pending = total - completed (approximate, backend doesn't return pending separately)
-            document.getElementById("statPending").innerHTML =
-                data.total_tasks - data.completed_tasks;
+    const response =
+    await fetch(
+    `${BASE}/manager-report?manager_id=${managerId}`
+    );
 
-            // Status breakdown pills
-            document.getElementById("bTotal").innerHTML     = data.total_tasks;
-            document.getElementById("bCompleted").innerHTML = data.completed_tasks;
-            document.getElementById("bPending").innerHTML   = data.total_tasks - data.completed_tasks;
-        } catch (e) {
-            console.error("loadStats error:", e);
-        }
-    }
+    const data =
+    await response.json();
+
+    document.getElementById("statEmployees").innerHTML =
+    data.team_members;
+
+    document.getElementById("statTotal").innerHTML =
+    data.assigned_tasks;
+
+    document.getElementById("statCompleted").innerHTML =
+    data.completed_tasks;
+
+    document.getElementById("statPending").innerHTML =
+    data.pending_tasks;
+
+    document.getElementById("statProductivity").innerHTML =
+    data.completion_rate + "%";
+
+}
 
     // ── REVIEW TASKS COUNT ───────────────────────────────────
     async function loadReviewCount() {
