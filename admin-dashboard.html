@@ -598,43 +598,31 @@
 
     // ── LOAD MANAGERS ─────────────────────────────────────────
     async function loadManagers() {
-        try {
-            // No dedicated /managers endpoint — fetch all users and filter by role
-            const res   = await fetch(`${BASE}/employees`);
-            // employees endpoint only returns employees; we need all users
-            // Use search-employee with empty-ish query as workaround,
-            // or call /dashboard-summary and show what we have.
-            // Best available: use /search-employee with a broad query
-            const res2  = await fetch(`${BASE}/search-employee?name=`);
-            const users = await res2.json();
 
-            allManagers = users.filter(u => u.role === "manager");
-            document.getElementById("cardManagers").innerHTML = allManagers.length;
-            renderManagers(allManagers);
-        } catch(e) {
-            // Fallback: show empty state gracefully
-            console.error("loadManagers:", e);
-            document.getElementById("managerTable").innerHTML =
-                `<tr><td colspan="5" class="no-data">Add a <code>/managers</code> endpoint to the backend to show manager data here.</td></tr>`;
-        }
+    try {
+
+        const res = await fetch(`${BASE}/managers`);
+
+        const managers = await res.json();
+
+        allManagers = managers;
+
+        document.getElementById("cardManagers").innerHTML =
+        managers.length;
+
+        renderManagers(allManagers);
+
     }
 
-    function renderManagers(list) {
-        if (!list.length) {
-            document.getElementById("managerTable").innerHTML =
-                `<tr><td colspan="5" class="no-data">No managers found.</td></tr>`;
-            return;
-        }
-        document.getElementById("managerTable").innerHTML = list.map(m => `
-            <tr>
-                <td>${m.id}</td>
-                <td><b>${m.full_name}</b></td>
-                <td>${m.email}</td>
-                <td><span class="badge badge-blue">Manager</span></td>
-                <td><button class="btn-danger" onclick="deleteUser(${m.id}, '${m.full_name}')">Delete</button></td>
-            </tr>`).join("");
+    catch(e){
+
+        console.error("loadManagers:", e);
+
     }
 
+}
+
+    
     // ── LOAD ALL TASKS ────────────────────────────────────────
     async function loadTasks() {
         try {
