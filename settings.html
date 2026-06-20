@@ -1,265 +1,673 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script> const role = localStorage.getItem("userRole"); if(!role){ window.location.href = "index.html"; } </script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Settings | Panache WMS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Panache WMS</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role) { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
 
-<style>
+        body { display:flex; background:#f4f6f9; }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px; height:100vh; background:#111827;
+            color:white; position:fixed; padding:20px;
+            display:flex; flex-direction:column;
+        }
+        .logo { font-size:22px; font-weight:bold; margin-bottom:30px; }
+        .nav-menu a {
+            display:block; color:white; text-decoration:none;
+            padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
+        }
+        .nav-menu a:hover { background:#2563eb; }
 
-body{
-background:#f4f6f9;
-padding:25px;
-}
+        /* SETTINGS NAV (left panel inside main) */
+        .main { margin-left:260px; width:100%; padding:25px; }
 
-.header{
-margin-bottom:25px;
-}
+        .header {
+            display:flex; justify-content:space-between;
+            align-items:center; margin-bottom:25px;
+        }
+        .header h1 { color:#111827; }
+        .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
+        .logout-btn { background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:#b91c1c; }
 
-.header h1{
-color:#111827;
-}
+        /* LAYOUT */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 20px;
+        }
 
-.container{
-display:grid;
-grid-template-columns:250px 1fr;
-gap:20px;
-}
+        /* SETTINGS SIDEBAR */
+        .settings-nav {
+            background: white; border-radius:15px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+            height: fit-content;
+            position: sticky; top: 0;
+        }
 
-.sidebar{
-background:white;
-padding:20px;
-border-radius:15px;
-box-shadow:0 2px 10px rgba(0,0,0,.08);
-height:fit-content;
-}
+        .settings-nav a {
+            display: flex; align-items: center; gap:10px;
+            padding: 11px 14px; text-decoration:none;
+            color: #374151; border-radius:9px;
+            font-size: 14px; font-weight:500;
+            margin-bottom: 4px; transition:.2s;
+        }
+        .settings-nav a:hover { background:#f3f4f6; color:#111827; }
+        .settings-nav a.active { background:#eff6ff; color:#2563eb; font-weight:600; }
+        .settings-nav .nav-icon { font-size:16px; width:20px; text-align:center; }
 
-.sidebar a{
-display:block;
-padding:12px;
-text-decoration:none;
-color:#111827;
-border-radius:8px;
-margin-bottom:8px;
-}
+        /* SECTIONS */
+        .settings-content { display:flex; flex-direction:column; gap:20px; }
 
-.sidebar a:hover{
-background:#2563eb;
-color:white;
-}
+        .card {
+            background:white; padding:28px; border-radius:15px;
+            box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
 
-.content{
-display:flex;
-flex-direction:column;
-gap:20px;
-}
+        .card-header {
+            display:flex; align-items:center; gap:12px;
+            margin-bottom:22px; padding-bottom:16px;
+            border-bottom:1px solid #f3f4f6;
+        }
+        .card-header-icon {
+            width:38px; height:38px; border-radius:10px;
+            background:#eff6ff; display:flex; align-items:center;
+            justify-content:center; font-size:18px;
+        }
+        .card-header h2 { font-size:17px; color:#111827; }
+        .card-header p  { font-size:13px; color:#6b7280; margin-top:2px; }
 
-.card{
-background:white;
-padding:25px;
-border-radius:15px;
-box-shadow:0 2px 10px rgba(0,0,0,.08);
-}
+        /* FORM */
+        .form-group { margin-bottom:18px; }
+        label { display:block; margin-bottom:6px; font-weight:600; color:#374151; font-size:13px; }
 
-.card h2{
-margin-bottom:20px;
-}
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        select {
+            width:100%; padding:11px 14px;
+            border:1.5px solid #e5e7eb; border-radius:9px;
+            font-size:14px; color:#111827;
+            transition:border-color .2s, box-shadow .2s;
+        }
+        input:focus, select:focus {
+            outline:none; border-color:#2563eb;
+            box-shadow:0 0 0 3px rgba(37,99,235,0.1);
+        }
+        input:disabled { background:#f9fafb; color:#9ca3af; cursor:not-allowed; }
 
-.form-group{
-margin-bottom:15px;
-}
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
-label{
-display:block;
-margin-bottom:8px;
-font-weight:600;
-}
+        /* BUTTONS */
+        .btn-save {
+            background:#2563eb; color:white; border:none;
+            padding:11px 24px; border-radius:9px; cursor:pointer;
+            font-size:14px; font-weight:600; transition:.2s;
+        }
+        .btn-save:hover:not(:disabled) { background:#1d4ed8; }
+        .btn-save:disabled { background:#93c5fd; cursor:not-allowed; }
 
-input,
-select{
-width:100%;
-padding:12px;
-border:1px solid #ddd;
-border-radius:8px;
-}
+        .btn-danger {
+            background:#fee2e2; color:#dc2626; border:none;
+            padding:8px 16px; border-radius:8px; cursor:pointer;
+            font-size:13px; font-weight:600;
+        }
+        .btn-danger:hover { background:#fecaca; }
 
-button{
-background:#2563eb;
-color:white;
-border:none;
-padding:12px 20px;
-border-radius:8px;
-cursor:pointer;
-}
+        /* TOGGLE SWITCHES */
+        .toggle-row {
+            display:flex; justify-content:space-between;
+            align-items:center; padding:14px 0;
+            border-bottom:1px solid #f3f4f6;
+        }
+        .toggle-row:last-child { border-bottom:none; padding-bottom:0; }
+        .toggle-label { font-size:14px; color:#374151; font-weight:500; }
+        .toggle-desc  { font-size:12px; color:#9ca3af; margin-top:2px; }
 
-button:hover{
-background:#1d4ed8;
-}
+        .toggle-switch { position:relative; width:46px; height:26px; }
+        .toggle-switch input { opacity:0; width:0; height:0; }
+        .toggle-slider {
+            position:absolute; inset:0; background:#d1d5db;
+            border-radius:99px; cursor:pointer; transition:.3s;
+        }
+        .toggle-slider:before {
+            content:""; position:absolute;
+            width:20px; height:20px; left:3px; top:3px;
+            background:white; border-radius:50%; transition:.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background:#2563eb; }
+        .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
 
-.toggle{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:10px 0;
-border-bottom:1px solid #eee;
-}
+        /* ROLE TABLE */
+        .role-table { width:100%; border-collapse:collapse; }
+        .role-table th, .role-table td {
+            padding:12px 14px; border-bottom:1px solid #f3f4f6;
+            text-align:left; font-size:14px;
+        }
+        .role-table th { font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; background:#f9fafb; }
+        .role-table tr:hover td { background:#f9fafb; }
 
-.badge{
-padding:6px 12px;
-background:#10b981;
-color:white;
-border-radius:20px;
-font-size:12px;
-}
+        .badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; }
+        .badge-admin    { background:#f3e8ff; color:#7c3aed; }
+        .badge-manager  { background:#dbeafe; color:#1d4ed8; }
+        .badge-employee { background:#dcfce7; color:#15803d; }
 
-@media(max-width:900px){
+        .role-select {
+            padding:6px 10px; border:1px solid #d1d5db;
+            border-radius:7px; font-size:13px; cursor:pointer;
+        }
 
-.container{
-grid-template-columns:1fr;
-}
+        /* ALERT / SUCCESS */
+        .alert {
+            padding:12px 16px; border-radius:9px;
+            font-size:13px; margin-bottom:16px; display:none;
+        }
+        .alert.show { display:block; }
+        .alert-success { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+        .alert-error   { background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; }
 
-}
+        /* USER AVATAR */
+        .avatar {
+            width:72px; height:72px; border-radius:50%;
+            background:#2563eb; color:white; font-size:26px;
+            font-weight:700; display:flex; align-items:center;
+            justify-content:center; margin-bottom:16px;
+        }
 
-</style>
+        .role-pill {
+            display:inline-block; padding:4px 14px;
+            border-radius:99px; font-size:13px; font-weight:600;
+            margin-bottom:20px;
+        }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; right:30px;
+            background:#111827; color:white; padding:14px 22px;
+            border-radius:10px; font-size:14px; opacity:0;
+            transform:translateY(10px); transition:all .3s; z-index:9999;
+        }
+        .toast.show { opacity:1; transform:translateY(0); }
+
+        @media(max-width:900px) {
+            .sidebar { width:200px; }
+            .main { margin-left:200px; }
+            .settings-layout { grid-template-columns:1fr; }
+            .row { grid-template-columns:1fr; }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="header">
-<h1>Settings</h1>
-</div>
-
-<div class="container">
-
+<!-- APP SIDEBAR -->
 <div class="sidebar">
-
-<a href="#">Profile</a>
-<a href="#">Security</a>
-<a href="#">Notifications</a>
-<a href="#">Company</a>
-<a href="#">Departments</a>
-<a href="#">Roles</a>
-<a href="#">Integrations</a>
-
+    <div class="logo">Panache WMS</div>
+    <div class="nav-menu" id="appNav">
+        <!-- filled by JS based on role -->
+    </div>
 </div>
 
-<div class="content">
+<!-- MAIN -->
+<div class="main">
 
-<div class="card">
+    <div class="header">
+        <h1>Settings</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="profile">
+                <b id="profileName">Loading...</b><br>
+                <span id="profileEmail"></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
 
-<h2>Profile Settings</h2>
+    <div class="settings-layout">
 
-<div class="form-group">
-<label>Full Name</label>
-<input type="text" value="Admin User">
-</div>
+        <!-- SETTINGS NAV -->
+        <div class="settings-nav" id="settingsNav">
+            <a href="#profile"  class="active"><span class="nav-icon">👤</span> Profile</a>
+            <a href="#security"            ><span class="nav-icon">🔒</span> Security</a>
+            <a href="#notifications"       ><span class="nav-icon">🔔</span> Notifications</a>
+            <!-- Admin-only items added by JS -->
+        </div>
 
-<div class="form-group">
-<label>Email</label>
-<input type="email" value="admin@panache.com">
-</div>
+        <!-- SETTINGS CONTENT -->
+        <div class="settings-content">
 
-<button>Save Changes</button>
+            <!-- PROFILE -->
+            <div class="card" id="profile">
+                <div class="card-header">
+                    <div class="card-header-icon">👤</div>
+                    <div>
+                        <h2>Profile Settings</h2>
+                        <p>Update your name and email address</p>
+                    </div>
+                </div>
 
-</div>
+                <div id="avatarWrap">
+                    <div class="avatar" id="avatarInitial">?</div>
+                    <span class="role-pill" id="rolePill"></span>
+                </div>
 
-<div class="card">
+                <div class="alert alert-success" id="profileSuccess"></div>
+                <div class="alert alert-error"   id="profileError"></div>
 
-<h2>Security</h2>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profileFullName" placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="profileEmailInput" placeholder="your@email.com">
+                    </div>
+                </div>
 
-<div class="form-group">
-<label>Current Password</label>
-<input type="password">
-</div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="profileRole" disabled>
+                </div>
 
-<div class="form-group">
-<label>New Password</label>
-<input type="password">
-</div>
+                <button class="btn-save" id="profileSaveBtn" onclick="saveProfile()">Save Changes</button>
+            </div>
 
-<button>Update Password</button>
+            <!-- SECURITY -->
+            <div class="card" id="security">
+                <div class="card-header">
+                    <div class="card-header-icon">🔒</div>
+                    <div>
+                        <h2>Security</h2>
+                        <p>Change your password</p>
+                    </div>
+                </div>
 
-</div>
+                <div class="alert alert-success" id="passSuccess"></div>
+                <div class="alert alert-error"   id="passError"></div>
 
-<div class="card">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Min. 6 characters">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Repeat new password">
+                    </div>
+                </div>
 
-<h2>Notification Settings</h2>
+                <button class="btn-save" id="passSaveBtn" onclick="changePassword()">Update Password</button>
+            </div>
 
-<div class="toggle">
-<span>Email Notifications</span>
-<span class="badge">Enabled</span>
-</div>
+            <!-- NOTIFICATIONS -->
+            <div class="card" id="notifications">
+                <div class="card-header">
+                    <div class="card-header-icon">🔔</div>
+                    <div>
+                        <h2>Notification Preferences</h2>
+                        <p>Choose what alerts you receive</p>
+                    </div>
+                </div>
 
-<div class="toggle">
-<span>Task Alerts</span>
-<span class="badge">Enabled</span>
-</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Task Assignments</div>
+                        <div class="toggle-desc">Get notified when a task is assigned to you</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifAssign" checked onchange="saveNotifPrefs()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
 
-<div class="toggle">
-<span>Workflow Updates</span>
-<span class="badge">Enabled</span>
-</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Task Approvals</div>
+                        <div class="toggle-desc">Get notified when your task is approved</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifApproval" checked onchange="saveNotifPrefs()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
 
-</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Deadline Reminders</div>
+                        <div class="toggle-desc">Reminders when tasks are due soon</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifDeadline" checked onchange="saveNotifPrefs()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
 
-<div class="card">
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Review Submissions</div>
+                        <div class="toggle-desc">Managers: notified when employees submit for review</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifReview" checked onchange="saveNotifPrefs()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
 
-<h2>Company Settings</h2>
+            <!-- ROLE MANAGEMENT (admin only) -->
+            <div class="card" id="roleManagement" style="display:none;">
+                <div class="card-header">
+                    <div class="card-header-icon">🛡️</div>
+                    <div>
+                        <h2>Role Management</h2>
+                        <p>Change user roles across the system</p>
+                    </div>
+                </div>
 
-<div class="form-group">
-<label>Company Name</label>
-<input type="text" value="Panache">
-</div>
+                <div style="margin-bottom:14px;">
+                    <input type="text" id="roleSearch" placeholder="Search by name or email..."
+                        oninput="filterRoleTable()" style="max-width:320px;">
+                </div>
 
-<div class="form-group">
-<label>Total Employees</label>
-<input type="number" value="50">
-</div>
+                <table class="role-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Current Role</th>
+                            <th>Change To</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roleTable">
+                        <tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-<button>Update Company</button>
+        </div><!-- end settings-content -->
+    </div><!-- end settings-layout -->
+</div><!-- end main -->
 
-</div>
+<div class="toast" id="toast"></div>
 
-<div class="card">
+<script>
+    const BASE    = "https://backend-production-53f3.up.railway.app";
+    const userId  = localStorage.getItem("userId");
+    const userRole = localStorage.getItem("userRole");
 
-<h2>Role Management</h2>
+    // ── APP SIDEBAR (role-aware) ──────────────────────────────
+    const navLinks = {
+        admin: `
+            <a href="admin-dashboard.html">Dashboard</a>
+            <a href="departments.html">Departments</a>
+            <a href="project-groups.html">Project Groups</a>
+            <a href="reports.html">Reports</a>
+            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>`,
+        manager: `
+            <a href="manager-dashboard.html">Dashboard</a>
+            <a href="reports.html">Reports</a>
+            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>`,
+        employee: `
+            <a href="employee-dashboard.html">Dashboard</a>
+            <a href="history.html">History</a>
+            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>`
+    };
+    document.getElementById("appNav").innerHTML = navLinks[userRole] || navLinks.employee;
 
-<table style="width:100%;border-collapse:collapse;">
-<tr>
-<th style="text-align:left;padding:10px;">Role</th>
-<th style="text-align:left;padding:10px;">Access</th>
-</tr>
+    // Show admin-only settings nav items
+    if (userRole === "admin") {
+        document.getElementById("settingsNav").innerHTML += `
+            <a href="#roleManagement"><span class="nav-icon">🛡️</span> Role Management</a>`;
+        document.getElementById("roleManagement").style.display = "block";
+        loadAllUsers();
+    }
 
-<tr>
-<td style="padding:10px;">Admin</td>
-<td style="padding:10px;">Full System Access</td>
-</tr>
+    // ── UTILS ─────────────────────────────────────────────────
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-<tr>
-<td style="padding:10px;">Manager</td>
-<td style="padding:10px;">Team Management</td>
-</tr>
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg; t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+    }
 
-<tr>
-<td style="padding:10px;">Employee</td>
-<td style="padding:10px;">Own Tasks Only</td>
-</tr>
+    function showAlert(id, msg, type = "success") {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.className = `alert alert-${type} show`;
+        setTimeout(() => el.classList.remove("show"), 4000);
+    }
 
-</table>
+    function setLoading(btnId, loading) {
+        const btn = document.getElementById(btnId);
+        btn.disabled = loading;
+        btn.textContent = loading ? "Saving..." : btn.dataset.label;
+    }
 
-</div>
+    // ── LOAD PROFILE ──────────────────────────────────────────
+    async function loadProfile() {
+        try {
+            const res  = await fetch(`${BASE}/profile?user_id=${userId}`);
+            const data = await res.json();
 
-</div>
+            if (!data.success) return;
 
-</div>
+            document.getElementById("profileFullName").value  = data.name;
+            document.getElementById("profileEmailInput").value = data.email;
+            document.getElementById("profileRole").value       = data.role.charAt(0).toUpperCase() + data.role.slice(1);
+            document.getElementById("profileName").innerHTML   = data.name;
+            document.getElementById("profileEmail").innerHTML  = data.email;
+
+            // Avatar initial
+            document.getElementById("avatarInitial").textContent = data.name.charAt(0).toUpperCase();
+
+            // Role pill colour
+            const pillColors = { admin:"background:#f3e8ff;color:#7c3aed;", manager:"background:#dbeafe;color:#1d4ed8;", employee:"background:#dcfce7;color:#15803d;" };
+            const pill = document.getElementById("rolePill");
+            pill.textContent = data.role.charAt(0).toUpperCase() + data.role.slice(1);
+            pill.style.cssText = pillColors[data.role] || "";
+
+        } catch(e) { console.error("loadProfile:", e); }
+    }
+
+    // ── SAVE PROFILE ──────────────────────────────────────────
+    async function saveProfile() {
+        const name  = document.getElementById("profileFullName").value.trim();
+        const email = document.getElementById("profileEmailInput").value.trim();
+
+        if (!name)  { showAlert("profileError", "Name is required.", "error"); return; }
+        if (!email) { showAlert("profileError", "Email is required.", "error"); return; }
+
+        document.getElementById("profileSaveBtn").disabled    = true;
+        document.getElementById("profileSaveBtn").textContent = "Saving...";
+
+        try {
+            const params = new URLSearchParams({ user_id: userId, full_name: name, email });
+            const res    = await fetch(`${BASE}/update-profile?${params}`, { method: "POST" });
+            const data   = await res.json();
+
+            if (data.success) {
+                // Update localStorage so header reflects new name/email immediately
+                localStorage.setItem("userName",  name);
+                localStorage.setItem("userEmail", email);
+                document.getElementById("profileName").innerHTML  = name;
+                document.getElementById("profileEmail").innerHTML = email;
+                document.getElementById("avatarInitial").textContent = name.charAt(0).toUpperCase();
+                showAlert("profileSuccess", "Profile updated successfully.");
+            } else {
+                showAlert("profileError", data.message || "Update failed.", "error");
+            }
+        } catch(e) {
+            showAlert("profileError", "Network error. Please try again.", "error");
+        } finally {
+            document.getElementById("profileSaveBtn").disabled    = false;
+            document.getElementById("profileSaveBtn").textContent = "Save Changes";
+        }
+    }
+
+    // ── CHANGE PASSWORD ───────────────────────────────────────
+    async function changePassword() {
+        const current = document.getElementById("currentPassword").value;
+        const newPass = document.getElementById("newPassword").value;
+        const confirm = document.getElementById("confirmPassword").value;
+
+        if (!current) { showAlert("passError", "Please enter your current password.", "error"); return; }
+        if (!newPass)  { showAlert("passError", "Please enter a new password.", "error"); return; }
+        if (newPass.length < 6) { showAlert("passError", "New password must be at least 6 characters.", "error"); return; }
+        if (newPass !== confirm) { showAlert("passError", "New passwords do not match.", "error"); return; }
+
+        document.getElementById("passSaveBtn").disabled    = true;
+        document.getElementById("passSaveBtn").textContent = "Updating...";
+
+        try {
+            const params = new URLSearchParams({
+                user_id: userId,
+                current_password: current,
+                new_password: newPass
+            });
+            const res  = await fetch(`${BASE}/change-password?${params}`, { method: "POST" });
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById("currentPassword").value = "";
+                document.getElementById("newPassword").value     = "";
+                document.getElementById("confirmPassword").value = "";
+                showAlert("passSuccess", "Password changed successfully.");
+            } else {
+                showAlert("passError", data.message || "Failed to change password.", "error");
+            }
+        } catch(e) {
+            showAlert("passError", "Network error. Please try again.", "error");
+        } finally {
+            document.getElementById("passSaveBtn").disabled    = false;
+            document.getElementById("passSaveBtn").textContent = "Update Password";
+        }
+    }
+
+    // ── NOTIFICATION PREFS (localStorage — no backend needed) ─
+    function loadNotifPrefs() {
+        const prefs = JSON.parse(localStorage.getItem("notifPrefs") || "{}");
+        document.getElementById("notifAssign").checked   = prefs.assign   !== false;
+        document.getElementById("notifApproval").checked = prefs.approval !== false;
+        document.getElementById("notifDeadline").checked = prefs.deadline !== false;
+        document.getElementById("notifReview").checked   = prefs.review   !== false;
+    }
+
+    function saveNotifPrefs() {
+        const prefs = {
+            assign:   document.getElementById("notifAssign").checked,
+            approval: document.getElementById("notifApproval").checked,
+            deadline: document.getElementById("notifDeadline").checked,
+            review:   document.getElementById("notifReview").checked
+        };
+        localStorage.setItem("notifPrefs", JSON.stringify(prefs));
+        showToast("Notification preferences saved.");
+    }
+
+    // ── ROLE MANAGEMENT (admin only) ──────────────────────────
+    let allUsers = [];
+
+    async function loadAllUsers() {
+        try {
+            const res   = await fetch(`${BASE}/all-users`);
+            allUsers    = await res.json();
+            renderRoleTable(allUsers);
+        } catch(e) { console.error("loadAllUsers:", e); }
+    }
+
+    function filterRoleTable() {
+        const q = document.getElementById("roleSearch").value.toLowerCase();
+        renderRoleTable(allUsers.filter(u =>
+            u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        ));
+    }
+
+    function renderRoleTable(users) {
+        if (!users.length) {
+            document.getElementById("roleTable").innerHTML =
+                `<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">No users found.</td></tr>`;
+            return;
+        }
+
+        const badgeClass = { admin:"badge-admin", manager:"badge-manager", employee:"badge-employee" };
+
+        document.getElementById("roleTable").innerHTML = users.map(u => `
+            <tr>
+                <td>${u.id}</td>
+                <td><b>${u.full_name}</b></td>
+                <td>${u.email}</td>
+                <td><span class="badge ${badgeClass[u.role] || ''}">${u.role}</span></td>
+                <td>
+                    ${parseInt(u.id) === parseInt(userId)
+                        ? `<span style="font-size:13px;color:#9ca3af;">You</span>`
+                        : `<select class="role-select" onchange="updateUserRole(${u.id}, this.value, this)">
+                                <option value="employee" ${u.role==='employee'?'selected':''}>Employee</option>
+                                <option value="manager"  ${u.role==='manager' ?'selected':''}>Manager</option>
+                                <option value="admin"    ${u.role==='admin'   ?'selected':''}>Admin</option>
+                            </select>`
+                    }
+                </td>
+            </tr>`).join("");
+    }
+
+    async function updateUserRole(targetUserId, newRole, selectEl) {
+        const originalRole = selectEl.dataset.original || selectEl.value;
+        if (!confirm(`Change this user's role to "${newRole}"?`)) {
+            selectEl.value = originalRole;
+            return;
+        }
+
+        try {
+            const res  = await fetch(`${BASE}/update-role?user_id=${targetUserId}&new_role=${newRole}`, { method: "POST" });
+            const data = await res.json();
+
+            if (data.success) {
+                selectEl.dataset.original = newRole;
+                showToast(`Role updated to ${newRole}.`);
+                // Update local allUsers cache so badge reflects new role
+                const u = allUsers.find(u => u.id === targetUserId);
+                if (u) u.role = newRole;
+                renderRoleTable(allUsers);
+            } else {
+                showToast("Failed to update role.");
+                selectEl.value = originalRole;
+            }
+        } catch(e) {
+            showToast("Network error.");
+            selectEl.value = originalRole;
+        }
+    }
+
+    // ── SETTINGS NAV ACTIVE STATE ─────────────────────────────
+    document.querySelectorAll(".settings-nav a").forEach(link => {
+        link.addEventListener("click", function() {
+            document.querySelectorAll(".settings-nav a").forEach(l => l.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+
+    // ── INIT ─────────────────────────────────────────────────
+    loadProfile();
+    loadNotifPrefs();
+</script>
 
 </body>
 </html>
