@@ -372,6 +372,9 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+
+
+
 <script>
     const BASE   = "https://backend-production-53f3.up.railway.app";
     const userId = localStorage.getItem("userId");
@@ -841,16 +844,7 @@
     // Render on load so existing notes show immediately
     renderNotes();
 </script>
-// ── LIVE SYNC — re-fetches every 15 seconds automatically ──
-const SYNC_INTERVAL = 15000; // 15 seconds — adjust if needed
 
-function startLiveSync() {
-    setInterval(() => {
-        refreshAll(); // replace with whatever your refresh function is called
-    }, SYNC_INTERVAL);
-}
-
-startLiveSync();
 <!-- ============================================================
      END STICKY NOTES
      ============================================================ -->
