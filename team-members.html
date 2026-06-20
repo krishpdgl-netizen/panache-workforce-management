@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 
 const role = (localStorage.getItem("userRole") || "").toLowerCase();
@@ -183,10 +185,6 @@ Logout
 
 <select id="employeeSelect">
 
-<option value="">
-Select Employee
-</option>
-
 </select>
 
 <button class="add-btn"
@@ -249,30 +247,45 @@ window.location.href="index.html";
 
 async function loadEmployees(){
 
-const response =
-await fetch(`${BASE}/employees`);
+    const response =
+    await fetch(`${BASE}/employees`);
 
-const employees =
-await response.json();
+    const employees =
+    await response.json();
 
-let html =
-`<option value="">Select Employee</option>`;
+    let html="";
 
-employees.forEach(emp=>{
+    employees.forEach(emp=>{
 
-html += `
-<option value="${emp.id}">
-${emp.full_name}
-</option>
-`;
+        html += `
+        <option value="${emp.id}">
+        ${emp.full_name} (${emp.email})
+        </option>
+        `;
 
-});
+    });
 
-document.getElementById("employeeSelect").innerHTML =
-html;
+    document.getElementById("employeeSelect").innerHTML =
+    html;
+
+    if(window.employeeSearch){
+        window.employeeSearch.destroy();
+    }
+
+    window.employeeSearch = new TomSelect(
+        "#employeeSelect",
+        {
+            create:false,
+            sortField:{
+                field:"text",
+                direction:"asc"
+            },
+            placeholder:"Search employee...",
+            maxOptions:100
+        }
+    );
 
 }
-
 
 
 async function loadTeam(){
