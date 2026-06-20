@@ -1,253 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panache Workforce Management</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panache Workforce Management</title>
+    <style>
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-<style>
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #2563eb, #1e3a8a);
+        }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
+        .container {
+            width: 1000px;
+            max-width: 95vw;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 15px 40px rgba(0,0,0,.25);
+        }
 
-body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#2563eb,#1e3a8a);
-}
+        /* LEFT PANEL */
+        .left {
+            flex: 1;
+            background: #111827;
+            color: white;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-.container{
-width:1000px;
-height:600px;
-background:white;
-border-radius:20px;
-overflow:hidden;
-display:flex;
-box-shadow:0 15px 40px rgba(0,0,0,.25);
-}
+        .left .brand {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
 
-.left{
-flex:1;
-background:#111827;
-color:white;
-padding:50px;
-display:flex;
-flex-direction:column;
-justify-content:center;
-}
+        .left h1 {
+            font-size: 38px;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            color: white;
+        }
 
-.left h1{
-font-size:42px;
-margin-bottom:20px;
-}
+        .left p {
+            color: #9ca3af;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
 
-.left p{
-line-height:1.8;
-color:#d1d5db;
-}
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-.features{
-margin-top:25px;
-}
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #d1d5db;
+        }
 
-.features div{
-margin-bottom:12px;
-}
+        .feature-icon {
+            width: 32px;
+            height: 32px;
+            background: #1f2937;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
 
-.right{
-flex:1;
-display:flex;
-justify-content:center;
-align-items:center;
-padding:40px;
-}
+        /* RIGHT PANEL */
+        .right {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 40px;
+        }
 
-.login-box{
-width:100%;
-max-width:400px;
-}
+        .login-box {
+            width: 100%;
+            max-width: 380px;
+        }
 
-.login-box h2{
-margin-bottom:10px;
-}
+        .login-box h2 {
+            font-size: 26px;
+            color: #111827;
+            margin-bottom: 6px;
+        }
 
-.login-box p{
-margin-bottom:25px;
-color:gray;
-}
+        .login-box .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
 
-input,
-select{
-width:100%;
-padding:14px;
-margin-bottom:15px;
-border:1px solid #ddd;
-border-radius:10px;
-outline:none;
-}
+        /* FORM */
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-button{
-width:100%;
-padding:14px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:16px;
-}
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
 
-button:hover{
-background:#1d4ed8;
-}
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #111827;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
 
-.demo{
-margin-top:20px;
-padding:15px;
-background:#f3f4f6;
-border-radius:10px;
-font-size:14px;
-}
+        input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
 
-</style>
+        /* ERROR MESSAGE */
+        .error-msg {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #dc2626;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-msg.show { display: block; }
+
+        /* LOGIN BUTTON */
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .login-btn:hover:not(:disabled) { background: #1d4ed8; }
+
+        .login-btn:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        /* SPINNER */
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-btn.loading .spinner { display: block; }
+        .login-btn.loading .btn-text { display: none; }
+
+        /* REGISTER LINK */
+        .register-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .register-link:hover { color: #1d4ed8; text-decoration: underline; }
+
+        /* RESPONSIVE */
+        @media (max-width: 700px) {
+            .left { display: none; }
+            .right { padding: 40px 25px; }
+            .container { max-width: 100%; min-height: 100vh; border-radius: 0; }
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="container">
 
-<div class="left">
+    <!-- LEFT -->
+    <div class="left">
+        <div class="brand">Panache WMS</div>
+        <h1>Smart Workforce Platform</h1>
+        <p>Manage your team, track tasks, and improve productivity — all in one place.</p>
+        <div class="features">
+            <div class="feature-item">
+                <div class="feature-icon">📋</div>
+                <span>Task assignment and real-time tracking</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">📊</div>
+                <span>Team performance reports and analytics</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✅</div>
+                <span>Manager approval workflow</span>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🔔</div>
+                <span>Deadline alerts and notifications</span>
+            </div>
+        </div>
+    </div>
 
-<div class="logo-container">
+    <!-- RIGHT -->
+    <div class="right">
+        <div class="login-box">
+            <h2>Welcome back</h2>
+            <p class="subtitle">Sign in to access your workspace</p>
 
-<img
-src="panachedigilife_logo.jpg"
-class="logo"
-alt="Panache DigiLife">
+            <!-- ERROR -->
+            <div class="error-msg" id="errorMsg"></div>
+
+            <form onsubmit="login(event)">
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="you@company.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <div class="spinner"></div>
+                    <span class="btn-text">Sign In</span>
+                </button>
+
+                <a href="register.html" class="register-link">
+                    Register New User
+                </a>
+
+            </form>
+        </div>
+    </div>
 
 </div>
-
-<h1>Smart Workforce Platform</h1>
-
-
-
-</div>
-
-<div class="right">
-
-<div class="right">
-
-<div class="login-box">
-
-<h2>Login</h2>
-
-<p>Access your workspace</p>
-
-<form onsubmit="login(event)">
-
-<input
-id="email"
-type="email"
-placeholder="Email"
-required
->
-
-<input
-id="password"
-type="password"
-placeholder="Password"
-required
->
-
-<button type="submit">
-Login
-</button>
-
-    <a
-href="register.html"
-style="
-display:block;
-text-align:center;
-margin-top:15px;
-color:#2563eb;
-font-weight:600;
-text-decoration:none;
-">
-Register New User
-</a>
-    
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-
 
 <script>
-
-async function login(event){
-
-    event.preventDefault();
-
-    const email =
-    document.getElementById("email").value;
-
-    const password =
-    document.getElementById("password").value;
-
-    try {
-
-        const response = await fetch(
-`https://backend-production-53f3.up.railway.app/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
-{
-    method:"POST"
-});
-
-        const data = await response.json();
-
-console.log("LOGIN RESPONSE:", data);
-alert(JSON.stringify(data));
-        if(data.success){
-
-            localStorage.setItem("userId", data.id);
-            localStorage.setItem("userName", data.name);
-            localStorage.setItem("userEmail", data.email);
-            localStorage.setItem("userRole", data.role);
-        
-        if(data.role.toLowerCase() === "admin"){
-            window.location.href = "admin-dashboard.html";
-        }
-        else if(data.role.toLowerCase() === "manager"){
-            window.location.href = "manager-dashboard.html";
-        }
-        else{
-            window.location.href = "employee-dashboard.html";
-        }
-
-        } else {
-
-            alert("Invalid email or password");
-
-        }
-
-    } catch(error){
-
-        console.error(error);
-        alert("Cannot connect to server");
-
+    // If already logged in, redirect straight to their dashboard
+    const existingRole = localStorage.getItem("userRole");
+    if (existingRole) {
+        const redirectMap = { admin: "admin-dashboard.html", manager: "manager-dashboard.html", employee: "employee-dashboard.html" };
+        if (redirectMap[existingRole]) window.location.href = redirectMap[existingRole];
     }
 
-}
+    function showError(msg) {
+        const el = document.getElementById("errorMsg");
+        el.textContent = msg;
+        el.classList.add("show");
+    }
 
+    function hideError() {
+        document.getElementById("errorMsg").classList.remove("show");
+    }
+
+    function setLoading(on) {
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = on;
+        btn.classList.toggle("loading", on);
+    }
+
+    async function login(event) {
+        event.preventDefault();
+        hideError();
+
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        setLoading(true);
+
+        try {
+            const res  = await fetch(
+                `https://backend-production-53f3.up.railway.app/login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+                { method: "POST" }
+            );
+
+            if (!res.ok) {
+                showError("Server error. Please try again.");
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.setItem("userId",    data.id);
+                localStorage.setItem("userName",  data.name);
+                localStorage.setItem("userEmail", data.email);
+                localStorage.setItem("userRole",  data.role);
+
+                const redirectMap = {
+                    admin:    "admin-dashboard.html",
+                    manager:  "manager-dashboard.html",
+                    employee: "employee-dashboard.html"
+                };
+
+                window.location.href = redirectMap[data.role.toLowerCase()] || "employee-dashboard.html";
+
+            } else {
+                showError("Invalid email or password. Please try again.");
+                document.getElementById("password").value = "";
+                document.getElementById("password").focus();
+            }
+
+        } catch (e) {
+            console.error(e);
+            showError("Cannot connect to server. Check your internet connection.");
+        } finally {
+            setLoading(false);
+        }
+    }
 </script>
 
 </body>
