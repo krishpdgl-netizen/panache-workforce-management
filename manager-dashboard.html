@@ -477,31 +477,35 @@
     }
 
     // ── STATS ────────────────────────────────────────────────
-    async function loadStats() {
-        try {
-            const res = await fetch(`${BASE}/manager-stats`);
-            const data = await res.json();
-            const managerId =
-localStorage.getItem("userId");
+    async function loadStats(){
 
-const teamResponse =
-await fetch(
-`${BASE}/team?manager_id=${managerId}`
-);
+    const managerId =
+    localStorage.getItem("userId");
 
-const team =
-await teamResponse.json();
+    const response =
+    await fetch(
 
-document.getElementById("teamCount").innerHTML =
-team.length;
-            document.getElementById("pendingTasks").innerHTML = data.total_tasks;
-            document.getElementById("reviewTasks").innerHTML = data.completed_tasks;
-            document.getElementById("teamProductivity").innerHTML = data.productivity + "%";
-        } catch (e) {
-            console.error("loadStats error:", e);
-        }
-    }
+    `${BASE}/manager-dashboard-stats?manager_id=${managerId}`
 
+    );
+
+    const data =
+    await response.json();
+
+    document.getElementById("teamCount").innerHTML =
+    data.team_members;
+
+    document.getElementById("pendingTasks").innerHTML =
+    data.pending_tasks;
+
+    document.getElementById("reviewTasks").innerHTML =
+    data.review_tasks;
+
+    document.getElementById("teamProductivity").innerHTML =
+    data.productivity + "%";
+
+}
+    loadStats();
     // ── EMPLOYEES ────────────────────────────────────────────
     async function loadEmployees() {
         try {
@@ -526,7 +530,9 @@ team.length;
     // ── ALL TASKS ────────────────────────────────────────────
     async function loadTasks() {
         try {
-            const res = await fetch(`${BASE}/all-tasks`);
+            const res = await fetch(
+`${BASE}/manager-tasks?manager_id=${managerId}`
+);
             const tasks = await res.json();
             let html = "";
             tasks.forEach(task => {
@@ -618,7 +624,9 @@ team.length;
     // ── REVIEW TASKS ─────────────────────────────────────────
     async function loadReviewTasks() {
         try {
-            const res = await fetch(`${BASE}/review-tasks`);
+            const res = await fetch(
+`${BASE}/review-tasks?manager_id=${managerId}`
+);
             const tasks = await res.json();
             let html = "";
             tasks.forEach(task => {
