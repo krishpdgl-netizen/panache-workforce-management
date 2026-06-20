@@ -601,9 +601,11 @@
 
     try {
 
-        const res = await fetch(`${BASE}/managers`);
+        const response =
+        await fetch(`${BASE}/managers`);
 
-        const managers = await res.json();
+        const managers =
+        await response.json();
 
         allManagers = managers;
 
@@ -618,8 +620,15 @@
 
         console.error("loadManagers:", e);
 
+        document.getElementById("managerTable").innerHTML =
+        `
+        <tr>
+            <td colspan="5" class="no-data">
+                Could not load managers.
+            </td>
+        </tr>
+        `;
     }
-
 }
 function renderManagers(list) {
         if (!list.length) {
