@@ -300,19 +300,32 @@ await response.json();
 
 let html = "";
 
-team.forEach(emp=>{
+if(team.length===0){
 
+document.getElementById("teamTable").innerHTML=`
+<tr>
+<td colspan="5">
+No team members found
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+team.forEach(emp=>{
 html += `
 
 <tr>
 
 <td>${emp.id}</td>
 
-<td>${emp.full_name}</td>
+<td>${emp.full_name || emp.name}</td>
 
 <td>${emp.email}</td>
 
-<td>${emp.task_count}</td>
+<td>${emp.task_count || 0}</td>
 
 <td>
 
