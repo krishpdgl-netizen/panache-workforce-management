@@ -759,27 +759,7 @@ function renderManagers(list) {
         } catch(e) { console.error("loadPerformance:", e); }
     }
 
-    // ── RECENT ACTIVITY ───────────────────────────────────────
-    async function loadActivity() {
-        try {
-            const res      = await fetch(`${BASE}/recent-activity`);
-            const activity = await res.json();
-
-            if (!activity.length) {
-                document.getElementById("activityTable").innerHTML =
-                    `<tr><td colspan="4" class="no-data">No recent activity.</td></tr>`;
-                return;
-            }
-
-            document.getElementById("activityTable").innerHTML = activity.map(a => `
-                <tr>
-                    <td>${a.task_id}</td>
-                    <td><b>${a.task_title || "—"}</b></td>
-                    <td>${a.employee_id}</td>
-                    <td>${formatDate(a.completed_at)}</td>
-                </tr>`).join("");
-        } catch(e) { console.error("loadActivity:", e); }
-    }
+    
 
     // ── SYSTEM ALERTS (derived from task data) ────────────────
     function buildAlerts(tasks) {
