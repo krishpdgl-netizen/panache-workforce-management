@@ -458,7 +458,8 @@
 
 <script>
     const BASE = "https://backend-production-53f3.up.railway.app";
-
+const managerId =
+localStorage.getItem("userId");
     // Profile
     document.getElementById("profileName").innerHTML = localStorage.getItem("userName");
     document.getElementById("profileEmail").innerHTML = localStorage.getItem("userEmail");
