@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Dashboard | Panache</title>
+    <title>Manager Dashboard | Panache</title>
     <script>
         const role = localStorage.getItem("userRole");
-        if (!role || role !== "employee") { window.location.href = "index.html"; }
+        if (!role) { window.location.href = "index.html"; }
+        if (role !== "manager") { window.location.href = "index.html"; }
     </script>
     <style>
         * {
@@ -23,14 +24,14 @@
 
         /* SIDEBAR */
         .sidebar {
-            width: 250px;
+            width: 260px;
             height: 100vh;
             background: #111827;
             color: white;
-            padding: 20px;
             position: fixed;
             left: 0;
             top: 0;
+            padding: 20px;
         }
 
         .logo {
@@ -53,11 +54,43 @@
             background: #2563eb;
         }
 
+        .menu details summary {
+            color: white;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu details summary:hover {
+            background: #2563eb;
+        }
+
+        .review-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+            min-width: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .menu details a {
+            padding-left: 24px;
+        }
+
         /* MAIN */
         .main {
-            margin-left: 250px;
+            margin-left: 260px;
+            width: 100%;
             padding: 25px;
-            width: calc(100% - 250px);
         }
 
         .header {
@@ -67,7 +100,9 @@
             margin-bottom: 25px;
         }
 
-        .header h1 { color: #111827; }
+        .header h1 {
+            color: #111827;
+        }
 
         .profile {
             background: white;
@@ -75,17 +110,6 @@
             border-radius: 10px;
             font-weight: bold;
         }
-
-        .logout-btn {
-            background: #dc2626;
-            padding: 10px 18px;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover { background: #b91c1c; }
 
         /* CARDS */
         .cards {
@@ -116,7 +140,88 @@
             box-shadow: 0 2px 10px rgba(0,0,0,.08);
         }
 
-        .section h2 { margin-bottom: 15px; }
+        .section h2 {
+            margin-bottom: 15px;
+        }
+
+        /* BUTTONS */
+        .assign-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .assign-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .edit-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background: #d97706;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+
+        .review-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .review-btn:hover {
+            background: #d97706;
+        }
+
+        .approve-btn {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .approve-btn:hover {
+            background: #15803d;
+        }
+
+        .logout-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+        }
 
         /* TABLE */
         table {
@@ -128,114 +233,132 @@
             padding: 12px;
             border-bottom: 1px solid #eee;
             text-align: left;
-            font-size: 14px;
         }
 
         th {
             background: #f3f4f6;
-            font-size: 13px;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 480px;
+            max-width: 95%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #111827;
+        }
+
+        .modal label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .modal input, .modal select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal input:focus, .modal select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 5px;
+        }
+
+        .btn-cancel {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-save {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-save:hover { background: #1d4ed8; }
+
+        /* FILTER BUTTONS */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-btn {
+            border: 1.5px solid #e5e7eb;
+            background: white;
             color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+        .filter-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
         }
 
         /* STATUS BADGES */
-        .status-badge {
+        .badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-radius: 99px;
             font-size: 12px;
             font-weight: 600;
         }
-
-        .status-assigned    { background: #dbeafe; color: #1d4ed8; }
-        .status-inprogress  { background: #fef9c3; color: #a16207; }
-        .status-review      { background: #ffedd5; color: #c2410c; }
-        .status-completed   { background: #dcfce7; color: #15803d; }
-
-        /* ACTION BUTTONS */
-        .action-btn {
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .btn-start    { background: #2563eb; color: white; }
-        .btn-start:hover { background: #1d4ed8; }
-
-        .btn-review   { background: #f59e0b; color: white; }
-        .btn-review:hover { background: #d97706; }
-
-        .btn-disabled {
-            background: #e5e7eb;
-            color: #9ca3af;
-            cursor: default;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        /* PROGRESS BAR */
-        .progress-bar {
-            width: 100%;
-            height: 12px;
-            background: #e5e7eb;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress {
-            height: 100%;
-            width: 0%;
-            background: #2563eb;
-            border-radius: 10px;
-            transition: width 0.8s ease;
-        }
-
-        /* AI BOX */
-        .ai {
-            background: #eef4ff;
-            padding: 15px 20px;
-            border-left: 5px solid #2563eb;
-            border-radius: 10px;
-        }
-
-        .ai b { color: #1d4ed8; }
-
-        .ai ol {
-            margin: 12px 0 12px 20px;
-            font-size: 14px;
-            color: #374151;
-            line-height: 1.8;
-        }
-
-        .ai p { font-size: 14px; color: #374151; }
-
-        /* NOTIFICATIONS */
-        .notification {
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            background: #f9fafb;
-            border-left: 4px solid #2563eb;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #374151;
-        }
-
-        .notification:last-child { margin-bottom: 0; }
-
-        .no-data {
-            color: #9ca3af;
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
-        }
+        .badge-assigned    { background: #dbeafe; color: #1d4ed8; }
+        .badge-inprogress  { background: #fef9c3; color: #a16207; }
+        .badge-review      { background: #ffedd5; color: #c2410c; }
+        .badge-completed   { background: #dcfce7; color: #15803d; }
 
         /* TOAST */
         .toast {
@@ -253,12 +376,33 @@
             z-index: 9999;
         }
 
-        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
+        /* RESPONSIVE */
         @media (max-width: 900px) {
             .sidebar { width: 200px; }
-            .main { margin-left: 200px; width: calc(100% - 200px); }
+            .main { margin-left: 200px; }
         }
+
+    .review-btn{
+
+    background:#16a34a;
+    color:white;
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+
+}
+
+.review-btn:hover{
+
+    background:#15803d;
+
+}
     </style>
 </head>
 
@@ -268,11 +412,18 @@
 <div class="sidebar">
     <div class="logo">Panache WMS</div>
     <div class="menu">
-        <a href="employee-dashboard.html">Dashboard</a>
-        <a href="settings.html">Settings</a>
-        <a href="history.html">History</a>
-        <a href="sales-dashboard.html">sales</a>
+        <a href="#">Dashboard</a>
+        <a href="sales-dashboard.html">Sales Dashboard</a>
 
+        <details>
+            <summary>Team Details <span class="review-badge" id="reviewBadge"></span></summary>
+            <a href="team-members.html">Team Members</a>
+            <a href="performance-report.html">Performance Report</a>
+            <a href="history.html">Task History</a>
+        </details>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" onclick="logout()">Logout</a>
     </div>
 <!-- ── PERSONAL TO-DO ─────────────────────────────── -->
 <div style="margin-top:auto;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.12);">
@@ -354,7 +505,7 @@
 
     <!-- HEADER -->
     <div class="header">
-        <h1>Employee Dashboard</h1>
+        <h1>Manager Dashboard</h1>
         <div style="display:flex;align-items:center;gap:15px;">
             <div class="profile">
                 <b id="profileName">Loading...</b><br>
@@ -368,15 +519,11 @@
     <!-- SALES PROJECTION REMINDER -->
     <div id="salesReminderBanner" style="display:none;
         background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px;
-        padding:14px 20px; margin-bottom:20px;
-        display:flex; align-items:center; gap:14px;">
+        padding:14px 20px; margin-bottom:20px; align-items:flex-start; gap:14px;">
         <span style="font-size:20px;flex-shrink:0;">⚠️</span>
         <div style="flex:1;">
-            <b style="font-size:14px;color:#92400e;">Sales Projections Not Filled — Week <span id="reminderWeekNum"></span></b>
-            <div style="font-size:13px;color:#78350f;margin-top:3px;">
-                You haven't submitted your sales projections for this week yet.
-                <a href="sales-dashboard.html" style="color:#b45309;font-weight:600;margin-left:4px;">Fill now →</a>
-            </div>
+            <b style="font-size:14px;color:#92400e;">Week <span id="reminderWeekNum"></span> — Team Members Haven't Filled Sales Projections</b>
+            <div id="reminderMissingNames" style="font-size:13px;color:#78350f;margin-top:4px;"></div>
         </div>
         <button onclick="document.getElementById('salesReminderBanner').style.display='none'"
                 style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e;flex-shrink:0;">✕</button>
@@ -385,92 +532,132 @@
     <!-- CARDS -->
     <div class="cards">
         <div class="card">
-            <h2 id="assignedTasks">—</h2>
-            <p>Assigned Tasks</p>
+            <h2 id="teamCount">—</h2>
+            <p>Team Members</p>
+        </div>
+        <div class="card">
+            <h2 id="totalTasks">—</h2>
+            <p>Total Tasks</p>
         </div>
         <div class="card">
             <h2 id="completedTasks">—</h2>
             <p>Completed Tasks</p>
         </div>
         <div class="card">
-            <h2 id="dueTasks">—</h2>
-            <p>Pending Tasks</p>
-        </div>
-        <div class="card">
-            <h2 id="productivityScore">—</h2>
-            <p>Productivity Score</p>
+            <h2 id="teamProductivity">—</h2>
+            <p>Team Productivity</p>
         </div>
     </div>
 
-    <!-- TASKS TABLE -->
+    <!-- TASK MANAGEMENT -->
     <div class="section">
-        <h2>My Tasks</h2>
+        <h2>Task Management</h2>
         <br>
+        <button class="assign-btn" onclick="window.location.href='create-task.html'">
+            Assign New Task
+        </button>
+    </div>
+
+    <!-- ASSIGNED TASKS -->
+    <div class="section">
+        <h2>Assigned Tasks</h2>
+        <br>
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterTasks('All')">All</button>
+            <button class="filter-btn" onclick="filterTasks('In Progress')">In Progress</button>
+            <button class="filter-btn" onclick="filterTasks('Pending Review')">Pending Review</button>
+            <button class="filter-btn" onclick="filterTasks('Completed')">Completed</button>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Task</th>
+                    <th>Employee Name</th>
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Due Date</th>
-                    <th>Action</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
-            <tbody id="taskTable">
-                <tr><td colspan="6" class="no-data">Loading tasks...</td></tr>
-            </tbody>
+            <tbody id="taskTable"></tbody>
         </table>
     </div>
 
-    <!-- PROGRESS -->
     <div class="section">
-        <h2>My Progress</h2>
-        <p style="color:#6b7280;font-size:14px;">Weekly Completion Rate</p>
-        <div class="progress-bar">
-            <div class="progress" id="progressBar"></div>
-        </div>
-        <p style="margin-top:10px;font-size:14px;color:#374151;">
-            <span id="progressLabel">Calculating...</span>
-        </p>
+    <div class="section-header">
+        <h2>Tasks Pending Review</h2>
     </div>
 
-    <!-- AI ASSISTANT -->
-    <div class="section">
-        <h2>AI Assistant</h2>
-        <div class="ai">
-            <b>Today's Priorities</b>
-            <ol id="aiPriorities">
-                <li>Loading your tasks...</li>
-            </ol>
-            <p id="aiStatus">Analyzing your workload...</p>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Task</th>
+                <th>Employee</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Review</th>
+            </tr>
+        </thead>
+
+        <tbody id="reviewTable">
+            <tr>
+                <td colspan="6" style="text-align:center;">
+                    Loading tasks...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+    <!-- TEAM MEMBERS -->
+    <!-- end .main -->
+
+<!-- EDIT TASK MODAL -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h2>Edit Task</h2>
+        <input type="hidden" id="editTaskId">
+
+        <label>Title</label>
+        <input type="text" id="editTitle">
+
+        <label>Description</label>
+        <input type="text" id="editDescription">
+
+        <label>Assigned To (Employee ID)</label>
+        <input type="number" id="editAssignedTo">
+
+        <label>Priority</label>
+        <select id="editPriority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+        </select>
+
+        <label>Due Date</label>
+        <input type="date" id="editDueDate">
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+            <button class="btn-save" onclick="saveEditTask()">Save Changes</button>
         </div>
     </div>
-
-    <!-- NOTIFICATIONS -->
-    <div class="section">
-        <h2>Notifications</h2>
-        <div id="notificationsBox">
-            <div class="notification">Loading notifications...</div>
-        </div>
-    </div>
-
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-
-
-
 <script>
-    const BASE   = "https://backend-production-53f3.up.railway.app";
-    const userId = localStorage.getItem("userId");
-
-    // ── PROFILE ──────────────────────────────────────────────
-    document.getElementById("profileName").innerHTML  = localStorage.getItem("userName");
+    const BASE = "https://backend-production-53f3.up.railway.app";
+const managerId =
+localStorage.getItem("userId");
+    // Profile
+    document.getElementById("profileName").innerHTML = localStorage.getItem("userName");
     document.getElementById("profileEmail").innerHTML = localStorage.getItem("userEmail");
-    document.getElementById("profileId").innerHTML    = "Employee ID: " + userId;
+    document.getElementById("profileId").innerHTML = "Manager ID: " + localStorage.getItem("userId");
 
     function logout() {
         localStorage.clear();
@@ -484,470 +671,251 @@
         setTimeout(() => t.classList.remove("show"), 3000);
     }
 
-    // ── STATUS BADGE ─────────────────────────────────────────
-    function statusBadge(status) {
-        const map = {
-            "Assigned":       "status-assigned",
-            "In Progress":    "status-inprogress",
-            "Pending Review": "status-review",
-            "Completed":      "status-completed"
-        };
-        const cls = map[status] || "status-assigned";
-        return `<span class="status-badge ${cls}">${status}</span>`;
-    }
-
-    // ── ACTION BUTTON based on workflow stage ─────────────────
-    // Workflow: Assigned → In Progress → Pending Review → (Manager approves) → Completed
-    function actionButton(task) {
-        if (task.status === "Assigned") {
-            return `<button class="action-btn btn-start"
-                        onclick="updateStatus(${task.id}, 'In Progress')">
-                        Start Task
-                    </button>`;
-        }
-        if (task.status === "In Progress") {
-            return `<button class="action-btn btn-review"
-                        onclick="updateStatus(${task.id}, 'Pending Review')">
-                        Submit for Review
-                    </button>`;
-        }
-        if (task.status === "Pending Review") {
-            return `<span class="btn-disabled">Awaiting Approval</span>`;
-        }
-        if (task.status === "Completed") {
-            return `<span class="btn-disabled">✓ Done</span>`;
-        }
-        return `<span class="btn-disabled">—</span>`;
-    }
-
-    // ── LOAD TASKS ────────────────────────────────────────────
-    async function loadTasks() {
+    // ── STATS ────────────────────────────────────────────────
+    async function loadStats() {
         try {
-            const res   = await fetch(`${BASE}/my-tasks?user_id=${userId}`);
-            const tasks = await res.json();
+            const response = await fetch(`${BASE}/manager-dashboard-stats?manager_id=${managerId}`);
+            const data = await response.json();
 
-            if (!tasks.length) {
-                document.getElementById("taskTable").innerHTML =
-                    `<tr><td colspan="6" class="no-data">No tasks assigned yet.</td></tr>`;
-                updateAI([]);
-                return;
-            }
-
+            document.getElementById("teamCount").innerHTML       = data.team_members;
+            document.getElementById("totalTasks").innerHTML      = data.total_tasks;
+            document.getElementById("completedTasks").innerHTML  = data.completed_tasks;
+            document.getElementById("teamProductivity").innerHTML = data.productivity + "%";
+        } catch (e) {
+            console.error("loadStats error:", e);
+        }
+    }
+    loadStats();
+    // ── EMPLOYEES ────────────────────────────────────────────
+    async function loadEmployees() {
+        try {
+            const res = await fetch(`${BASE}/employees`);
+            const employees = await res.json();
             let html = "";
-            tasks.forEach(task => {
+            employees.forEach(emp => {
                 html += `
                     <tr>
-                        <td>${task.id}</td>
-                        <td><b>${task.title}</b></td>
-                        <td>${task.priority}</td>
-                        <td>${statusBadge(task.status)}</td>
-                        <td>${task.due_date ? task.due_date.split("T")[0] : "—"}</td>
-                        <td>${actionButton(task)}</td>
+                        <td>${emp.id}</td>
+                        <td>${emp.full_name}</td>
+                        <td>${emp.email}</td>
+                        <td>${emp.role}</td>
                     </tr>`;
             });
-
-            document.getElementById("taskTable").innerHTML = html;
-            updateAI(tasks);
-            updateNotifications(tasks);
-
+            document.getElementById("employeeTable").innerHTML = html;
         } catch (e) {
-            console.error("loadTasks error:", e);
+            console.error("loadEmployees error:", e);
+        }
+    }
+
+    // ── ALL TASKS ────────────────────────────────────────────
+    let allTasks        = [];
+    let activeFilter    = "All";
+
+    function statusBadge(status) {
+        const map = {
+            "Assigned":       "badge-assigned",
+            "In Progress":    "badge-inprogress",
+            "Pending Review": "badge-review",
+            "Completed":      "badge-completed"
+        };
+        return `<span class="badge ${map[status] || "badge-assigned"}">${status}</span>`;
+    }
+
+    function formatDate(raw) {
+        if (!raw) return "—";
+        const d = new Date(raw);
+        if (isNaN(d)) return raw;
+        return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function renderTasks() {
+        const filtered = activeFilter === "All"
+            ? allTasks
+            : allTasks.filter(t => t.status === activeFilter);
+
+        if (!filtered.length) {
             document.getElementById("taskTable").innerHTML =
-                `<tr><td colspan="6" class="no-data" style="color:#dc2626;">
-                    Failed to load tasks. Please refresh.
-                </td></tr>`;
-        }
-    }
-
-    // ── UPDATE STATUS (handles full workflow) ─────────────────
-    async function updateStatus(taskId, newStatus) {
-        try {
-            const res  = await fetch(
-                `${BASE}/update-task-status?task_id=${taskId}&status=${encodeURIComponent(newStatus)}`,
-                { method: "PUT" }
-            );
-            const data = await res.json();
-
-            if (data.success) {
-                const msgs = {
-                    "In Progress":    "Task started!",
-                    "Pending Review": "Task submitted for manager review."
-                };
-                showToast(msgs[newStatus] || "Status updated.");
-                loadTasks();
-                loadProductivity();
-            } else {
-                showToast("Update failed. Please try again.");
-            }
-        } catch (e) {
-            console.error("updateStatus error:", e);
-            showToast("Network error. Please try again.");
-        }
-    }
-
-    // ── PRODUCTIVITY ──────────────────────────────────────────
-    async function loadProductivity() {
-        try {
-            const res  = await fetch(`${BASE}/productivity-score?user_id=${userId}`);
-            const data = await res.json();
-
-            document.getElementById("productivityScore").innerHTML = data.score + "%";
-            document.getElementById("progressBar").style.width     = data.score + "%";
-            document.getElementById("assignedTasks").innerHTML     = data.total_tasks;
-            document.getElementById("completedTasks").innerHTML    = data.completed_tasks;
-            document.getElementById("dueTasks").innerHTML          =
-                data.total_tasks - data.completed_tasks;
-
-            const label = data.score >= 75 ? "Great work! You're on track. 🎯"
-                        : data.score >= 40 ? "Keep going — you're making progress."
-                        : "You have tasks to catch up on. Let's go!";
-            document.getElementById("progressLabel").textContent = label;
-
-        } catch (e) {
-            console.error("loadProductivity error:", e);
-        }
-    }
-
-    // ── AI ASSISTANT (built from real task data) ──────────────
-    function updateAI(tasks) {
-        const active = tasks.filter(t =>
-            t.status === "Assigned" || t.status === "In Progress"
-        );
-
-        if (!active.length) {
-            document.getElementById("aiPriorities").innerHTML = "<li>No active tasks right now.</li>";
-            document.getElementById("aiStatus").textContent   =
-                "All caught up! Check with your manager for new tasks.";
+                `<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">No tasks found.</td></tr>`;
             return;
         }
 
-        // Sort by due date ascending for priority order
-        active.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-
-        const top3 = active.slice(0, 3);
-        document.getElementById("aiPriorities").innerHTML =
-            top3.map(t => `<li>${t.title} <b style="color:#f59e0b;">[${t.priority}]</b></li>`).join("");
-
-        const overdue = active.filter(t => new Date(t.due_date) < new Date()).length;
-        document.getElementById("aiStatus").textContent = overdue > 0
-            ? `⚠️ You have ${overdue} overdue task${overdue > 1 ? "s" : ""}. Prioritise these first.`
-            : "You are on track to complete all deadlines.";
+        document.getElementById("taskTable").innerHTML = filtered.map(task => `
+            <tr>
+                <td>${task.id}</td>
+                <td><b>${task.title}</b></td>
+                <td>${task.employee_name}</td>
+                <td>${task.priority}</td>
+                <td>${statusBadge(task.status)}</td>
+                <td>${formatDate(task.due_date)}</td>
+                <td><button class="edit-btn" onclick="openEditModal(${task.id})">Edit</button></td>
+                <td><button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button></td>
+            </tr>`).join("");
     }
 
-    // ── NOTIFICATIONS (built from real task data) ─────────────
-    function updateNotifications(tasks) {
-        const notes = [];
-
-        tasks.forEach(t => {
-            if (!t.due_date) return;
-            const daysLeft = Math.ceil(
-                (new Date(t.due_date) - new Date()) / (1000 * 60 * 60 * 24)
-            );
-            if (daysLeft < 0) {
-                notes.push(`⚠️ "${t.title}" is overdue.`);
-            } else if (daysLeft === 0) {
-                notes.push(`🔴 "${t.title}" is due today.`);
-            } else if (daysLeft === 1) {
-                notes.push(`🟡 "${t.title}" is due tomorrow.`);
-            } else if (daysLeft <= 3) {
-                notes.push(`🔔 "${t.title}" is due in ${daysLeft} days.`);
-            }
+    function filterTasks(status) {
+        activeFilter = status;
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.textContent.trim() === status);
         });
+        renderTasks();
+    }
 
-        const pendingReview = tasks.filter(t => t.status === "Pending Review");
-        pendingReview.forEach(t => {
-            notes.push(`⏳ "${t.title}" is awaiting manager approval.`);
-        });
-
-        const box = document.getElementById("notificationsBox");
-        if (!notes.length) {
-            box.innerHTML = `<div class="notification">No new notifications.</div>`;
-        } else {
-            box.innerHTML = notes
-                .map(n => `<div class="notification">${n}</div>`)
-                .join("");
+    async function loadTasks() {
+        try {
+            const res   = await fetch(`${BASE}/manager-tasks?manager_id=${managerId}`);
+            allTasks    = await res.json();
+            renderTasks();
+        } catch (e) {
+            console.error("loadTasks error:", e);
         }
     }
 
-    // ── INIT ──────────────────────────────────────────────────
-    loadTasks();
-    loadProductivity();
-    loadSalesReminder();
+    // ── DELETE TASK ──────────────────────────────────────────
+    async function deleteTask(taskId) {
+        if (!confirm("Are you sure you want to delete this task?")) return;
+        try {
+            const res = await fetch(`${BASE}/delete-task?task_id=${taskId}`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Task deleted.");
+                refreshAll();
+            }
+        } catch (e) {
+            console.error("deleteTask error:", e);
+        }
+    }
+
+    // ── EDIT MODAL ───────────────────────────────────────────
+    async function openEditModal(taskId) {
+        try {
+            const res = await fetch(`${BASE}/task?task_id=${taskId}`);
+            const task = await res.json();
+            if (!task || task.success === false) { showToast("Could not load task."); return; }
+
+            document.getElementById("editTaskId").value     = task.id;
+            document.getElementById("editTitle").value      = task.title;
+            document.getElementById("editDescription").value = task.description || "";
+            document.getElementById("editAssignedTo").value = task.assigned_to;
+            document.getElementById("editPriority").value   = task.priority;
+            document.getElementById("editDueDate").value    = task.due_date ? task.due_date.split("T")[0] : "";
+
+            document.getElementById("editModal").classList.add("active");
+        } catch (e) {
+            console.error("openEditModal error:", e);
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").classList.remove("active");
+    }
+
+    async function saveEditTask() {
+        const taskId      = document.getElementById("editTaskId").value;
+        const title       = document.getElementById("editTitle").value.trim();
+        const description = document.getElementById("editDescription").value.trim();
+        const assignedTo  = document.getElementById("editAssignedTo").value;
+        const priority    = document.getElementById("editPriority").value;
+        const dueDate     = document.getElementById("editDueDate").value;
+
+        if (!title || !assignedTo || !dueDate) { showToast("Please fill in all required fields."); return; }
+
+        try {
+            const params = new URLSearchParams({ task_id: taskId, title, description, assigned_to: assignedTo, priority, due_date: dueDate });
+            const res  = await fetch(`${BASE}/edit-task?${params}`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Task updated successfully.");
+                closeEditModal();
+                refreshAll();
+            }
+        } catch (e) {
+            console.error("saveEditTask error:", e);
+        }
+    }
+
+    // ── REVIEW TASKS ─────────────────────────────────────────
+    async function loadReviewTasks() {
+        try {
+            const res   = await fetch(`${BASE}/review-tasks?manager_id=${managerId}`);
+            const tasks = await res.json();
+
+            // Update sidebar badge
+            const badge = document.getElementById("reviewBadge");
+            if (tasks.length > 0) {
+                badge.textContent = tasks.length;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+
+            if (!tasks.length) {
+                document.getElementById("reviewTable").innerHTML =
+                    `<tr><td colspan="6" style="color:#9ca3af;text-align:center;padding:20px;">No tasks pending review</td></tr>`;
+                return;
+            }
+
+            document.getElementById("reviewTable").innerHTML = tasks.map(task => `
+                <tr>
+                    <td>${task.id}</td>
+                    <td><b>${task.title}</b></td>
+                    <td>${task.employee_name || task.assigned_to}</td>
+                    <td>${task.priority}</td>
+                    <td>${statusBadge(task.status)}</td>
+                    <td>
+                        <button class="review-btn" onclick="openEditModal(${task.id})">Review</button>
+                        <button class="approve-btn" onclick="approveTask(${task.id})">Approve</button>
+                    </td>
+                </tr>`).join("");
+        } catch (e) {
+            console.error("loadReviewTasks error:", e);
+        }
+    }
+
+    // ── APPROVE TASK ─────────────────────────────────────────
+    async function approveTask(taskId) {
+        if (!confirm("Approve this task as Completed?")) return;
+        try {
+            const res  = await fetch(`${BASE}/approve-task?task_id=${taskId}`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Task approved and marked as Completed.");
+                refreshAll();
+            }
+        } catch (e) {
+            console.error("approveTask error:", e);
+        }
+    }
+
+    // ── REFRESH ALL ──────────────────────────────────────────
+    function refreshAll() {
+        loadStats();
+        loadTasks();
+        loadEmployees();
+        loadReviewTasks();
+        loadSalesReminder();
+    }
 
     async function loadSalesReminder() {
         try {
-            const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${userId}&viewer_role=employee`);
+            const managerId = localStorage.getItem("userId");
+            const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${managerId}&viewer_role=manager`);
             const data = await res.json();
-            // Show banner only if this employee is in the "missing" list
-            if (data.missing && data.missing.length > 0) {
-                document.getElementById("reminderWeekNum").textContent = data.week;
-                document.getElementById("salesReminderBanner").style.display = "flex";
-            }
-        } catch(e) { /* fail silently — reminder is non-critical */ }
-    }
-</script>
-<!-- ============================================================
-     STICKY NOTES — paste this just before </body> on every page
-     ============================================================ -->
-
-<!-- Sticky Notes Button -->
-<div id="stickyToggle" onclick="toggleSticky()" title="Sticky Notes">
-    📝
-</div>
-
-<!-- Sticky Notes Panel -->
-<div id="stickyPanel">
-    <div id="stickyHeader">
-        <span>📝 Sticky Notes</span>
-        <button id="stickyClose" onclick="toggleSticky()">✕</button>
-    </div>
-
-    <div id="stickyList"></div>
-
-    <div id="stickyInputArea">
-        <textarea id="stickyInput" placeholder="Write a note..."></textarea>
-        <button id="stickyAddBtn" onclick="addNote()">+ Add</button>
-    </div>
-</div>
-
-<style>
-    /* TOGGLE BUTTON */
-    #stickyToggle {
-        position: fixed;
-        bottom: 28px;
-        left: 20px;
-        width: 48px;
-        height: 48px;
-        background: #2563eb;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(37,99,235,0.4);
-        z-index: 1000;
-        transition: transform 0.2s, background 0.2s;
-        user-select: none;
+            if (!data.missing || data.missing.length === 0) return;
+            document.getElementById("reminderWeekNum").textContent = data.week;
+            const names = data.missing.map(e => `<b>${e.name}</b>`).join(", ");
+            document.getElementById("reminderMissingNames").innerHTML =
+                `${data.missing.length} ${data.missing.length === 1 ? "member has" : "members have"} not submitted projections: ${names}.`;
+            document.getElementById("salesReminderBanner").style.display = "flex";
+        } catch(e) { /* fail silently */ }
     }
 
-    #stickyToggle:hover {
-        transform: scale(1.1);
-        background: #1d4ed8;
-    }
-
-    /* PANEL */
-    #stickyPanel {
-        position: fixed;
-        bottom: 85px;
-        left: 20px;
-        width: 300px;
-        max-height: 420px;
-        background: white;
-        border-radius: 14px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        z-index: 999;
-        display: none;
-        flex-direction: column;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-    }
-
-    #stickyPanel.open {
-        display: flex;
-    }
-
-    /* HEADER */
-    #stickyHeader {
-        background: #111827;
-        color: white;
-        padding: 12px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: 600;
-        font-size: 14px;
-        font-family: 'Segoe UI', sans-serif;
-    }
-
-    #stickyClose {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-        line-height: 1;
-        padding: 0 2px;
-        opacity: 0.8;
-    }
-
-    #stickyClose:hover { opacity: 1; }
-
-    /* NOTES LIST */
-    #stickyList {
-        flex: 1;
-        overflow-y: auto;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-family: 'Segoe UI', sans-serif;
-    }
-
-    #stickyList:empty::after {
-        content: "No notes yet. Add one below.";
-        color: #9ca3af;
-        font-size: 13px;
-        text-align: center;
-        padding: 20px 0;
-        display: block;
-    }
-
-    /* INDIVIDUAL NOTE */
-    .sticky-note {
-        background: #fefce8;
-        border-left: 4px solid #f59e0b;
-        border-radius: 8px;
-        padding: 10px 12px;
-        font-size: 13px;
-        color: #111827;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 8px;
-        line-height: 1.5;
-        word-break: break-word;
-    }
-
-    .sticky-note-text { flex: 1; }
-
-    .sticky-note-delete {
-        background: none;
-        border: none;
-        color: #9ca3af;
-        cursor: pointer;
-        font-size: 15px;
-        line-height: 1;
-        padding: 0;
-        flex-shrink: 0;
-        margin-top: 1px;
-    }
-
-    .sticky-note-delete:hover { color: #dc2626; }
-
-    /* INPUT AREA */
-    #stickyInputArea {
-        padding: 10px;
-        border-top: 1px solid #e5e7eb;
-        display: flex;
-        gap: 8px;
-        background: #f9fafb;
-    }
-
-    #stickyInput {
-        flex: 1;
-        padding: 8px 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 13px;
-        font-family: 'Segoe UI', sans-serif;
-        resize: none;
-        height: 60px;
-        color: #111827;
-        background: white;
-    }
-
-    #stickyInput:focus {
-        outline: none;
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-    }
-
-    #stickyAddBtn {
-        background: #2563eb;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0 14px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 600;
-        font-family: 'Segoe UI', sans-serif;
-        white-space: nowrap;
-        align-self: flex-end;
-        height: 36px;
-    }
-
-    #stickyAddBtn:hover { background: #1d4ed8; }
-</style>
-
-<script>
-    // Notes are saved to localStorage so they persist across pages
-    const STICKY_KEY = "panache_sticky_notes";
-
-    function toggleSticky() {
-        document.getElementById("stickyPanel").classList.toggle("open");
-    }
-
-    function getNotes() {
-        try { return JSON.parse(localStorage.getItem(STICKY_KEY)) || []; }
-        catch { return []; }
-    }
-
-    function saveNotes(notes) {
-        localStorage.setItem(STICKY_KEY, JSON.stringify(notes));
-    }
-
-    function renderNotes() {
-        const notes = getNotes();
-        const list  = document.getElementById("stickyList");
-        list.innerHTML = "";
-
-        notes.forEach((note, idx) => {
-            const div = document.createElement("div");
-            div.className = "sticky-note";
-            div.innerHTML = `
-                <span class="sticky-note-text">${note}</span>
-                <button class="sticky-note-delete" onclick="deleteNote(${idx})" title="Delete">✕</button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    function addNote() {
-        const input = document.getElementById("stickyInput");
-        const text  = input.value.trim();
-        if (!text) return;
-
-        const notes = getNotes();
-        notes.unshift(text);        // newest note appears at top
-        saveNotes(notes);
-        input.value = "";
-        renderNotes();
-    }
-
-    function deleteNote(idx) {
-        const notes = getNotes();
-        notes.splice(idx, 1);
-        saveNotes(notes);
-        renderNotes();
-    }
-
-    // Allow Ctrl+Enter to add a note from the textarea
-    document.getElementById("stickyInput").addEventListener("keydown", function(e) {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            addNote();
-        }
+    // Close modal if clicking outside
+    document.getElementById("editModal").addEventListener("click", function(e) {
+        if (e.target === this) closeEditModal();
     });
 
-    // Render on load so existing notes show immediately
-    renderNotes();
+    // Init
+    refreshAll();
 </script>
-
-<!-- ============================================================
-     END STICKY NOTES
-     ============================================================ -->
 </body>
 </html>
