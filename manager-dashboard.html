@@ -423,8 +423,81 @@
         <a href="settings.html">Settings</a>
         <a href="#" onclick="logout()">Logout</a>
     </div>
-</div>
+<!-- ── PERSONAL TO-DO ─────────────────────────────── -->
+<div style="margin-top:auto;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.12);">
+    <p style="font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px;">My notes</p>
 
+    <div id="sidebarTodos" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+
+    <div style="display:flex;gap:6px;margin-top:10px;">
+        <input id="sidebarTodoInput"
+               placeholder="Add a task..."
+               style="flex:1;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
+               onkeydown="if(event.key==='Enter')addSidebarTodo()" />
+        <button onclick="addSidebarTodo()"
+                style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+    </div>
+</div>
+</div>
+<script>
+(function() {
+    const KEY = "panache_todos";
+
+    function load() {
+        try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+        catch { return []; }
+    }
+
+    function save(todos) {
+        localStorage.setItem(KEY, JSON.stringify(todos));
+    }
+
+    function render() {
+        const todos = load();
+        const box   = document.getElementById("sidebarTodos");
+        box.innerHTML = "";
+
+        todos.forEach((text, i) => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.4;";
+            row.innerHTML = `
+                <div onclick="completeSidebarTodo(${i})"
+                     title="Mark complete — will be removed"
+                     style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+                <span>${text}</span>`;
+            box.appendChild(row);
+        });
+    }
+
+    window.addSidebarTodo = function() {
+        const inp  = document.getElementById("sidebarTodoInput");
+        const text = inp.value.trim();
+        if (!text) return;
+        const todos = load();
+        todos.push(text);
+        save(todos);
+        inp.value = "";
+        render();
+    };
+
+    window.completeSidebarTodo = function(i) {
+        const circle = document.getElementById("sidebarTodos")
+                               .children[i]
+                               .querySelector("div");
+        circle.style.background    = "#22c55e";
+        circle.style.borderColor   = "#22c55e";
+        circle.innerHTML           = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        setTimeout(() => {
+            const todos = load();
+            todos.splice(i, 1);
+            save(todos);
+            render();
+        }, 500);
+    };
+
+    render();
+})();
+</script>
 <!-- MAIN -->
 <div class="main">
 
