@@ -267,13 +267,44 @@
         /* ── NO DATA ──────────────────────────────────────── */
         .no-data { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; }
 
-        @media (max-width: 1100px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .right-panel { position: static; }
+        /* ── PROGRESS BAR ─────────────────────────────────── */
+        .progress-track {
+            height: 10px; background: #e5e7eb; border-radius: 99px;
+            overflow: hidden; margin: 6px 0 2px;
         }
-        @media (max-width: 900px) {
-            .sidebar { width: 200px; }
-            .main { margin-left: 200px; width: calc(100% - 200px); }
+        .progress-fill {
+            height: 100%; border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+        .fill-green  { background: #059669; }
+        .fill-yellow { background: #f59e0b; }
+        .fill-red    { background: #dc2626; }
+
+        /* ── MANAGER GRID (left content + right panel) ───── */
+        .mgr-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 22px;
+            align-items: start;
+        }
+        .mgr-right { position: sticky; top: 25px; }
+
+        /* ── TEAM CARD ────────────────────────────────────── */
+        .team-emp-card {
+            border: 1px solid #f3f4f6; border-radius: 10px;
+            overflow: hidden; margin-bottom: 16px;
+        }
+        .team-emp-header {
+            background: #f9fafb; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .team-emp-name { font-size: 14px; font-weight: 700; color: #111827; }
+        .team-emp-id   { font-size: 12px; color: #6b7280; margin-left: 8px; }
+        .team-emp-pct  { font-size: 18px; font-weight: 700; }
+
+        @media (max-width: 1100px) {
+            .mgr-grid { grid-template-columns: 1fr; }
+            .mgr-right { position: static; }
         }
     </style>
 </head>
@@ -446,90 +477,92 @@
 
     <!-- ── MANAGER / ADMIN VIEW ──────────────────────────────────── -->
     <div id="managerView" style="display:none;">
+        <div class="mgr-grid">
 
-        <!-- reminder banner (shown when some employees haven't filled) -->
-        <div id="reminderBanner" style="display:none;
-            background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px;
-            padding:14px 20px; margin-bottom:20px; display:flex;
-            align-items:flex-start; gap:14px;">
-            <span style="font-size:20px;flex-shrink:0;">⚠️</span>
-            <div style="flex:1;">
-                <b style="font-size:14px;color:#92400e;">Week <span id="reminderWeekLabel"></span> — Projections Not Filled</b>
-                <div id="reminderNames" style="font-size:13px;color:#78350f;margin-top:4px;"></div>
-            </div>
-            <button onclick="document.getElementById('reminderBanner').style.display='none'"
-                    style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e;flex-shrink:0;">✕</button>
-        </div>
+            <!-- LEFT: team overview + change requests -->
+            <div>
+                <!-- Team progress bars -->
+                <div class="section">
+                    <h2>Team Achievement — Week <span id="mgr_weekLabel"></span></h2>
+                    <div id="teamProgressWrap">
+                        <p class="no-data">Loading…</p>
+                    </div>
+                </div>
 
-        <!-- manager's OWN projection entry -->
-        <div class="section" id="mgrEntrySection">
-            <h2>My Sales Projections — Week <span id="mgrFormWeekLabel"></span></h2>
-            <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
-                Add your own customer projections here. These are stored under your account.
-            </p>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <input type="text" id="mgrCustomer" placeholder="e.g. ABC Industries" />
+                <!-- Team detailed tables -->
+                <div class="section">
+                    <h2>Team Sales Detail</h2>
+                    <div id="teamSalesWrap">
+                        <p class="no-data">Loading…</p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Product Name</label>
-                    <input type="text" id="mgrProduct" placeholder="e.g. Router" />
-                </div>
-                <div class="form-group">
-                    <label>Projected Quantity</label>
-                    <input type="number" id="mgrQty" placeholder="e.g. 5" min="1" />
-                </div>
-                <div class="form-group">
-                    <label>Price Per Unit (₹)</label>
-                    <input type="number" id="mgrPrice" placeholder="e.g. 1200" min="0" />
-                </div>
-                <div class="form-full">
-                    <button class="btn-primary" onclick="submitManagerProjection()">+ Add My Projection</button>
+
+                <!-- Change requests -->
+                <div class="section">
+                    <h2>Projection Change Requests</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th><th>Week</th><th>Customer</th><th>Product</th>
+                                <th>Old→New Qty</th><th>Reason</th><th>Status</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crTableBody">
+                            <tr><td colspan="8" class="no-data">Loading…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- manager's own rows table -->
-            <div style="margin-top:20px;">
-                <h3 style="font-size:14px;color:#374151;margin-bottom:10px;">My Projections This Week</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Customer</th><th>Product</th>
-                            <th>Proj Qty</th><th>Price/Unit</th>
-                            <th>Achieved Qty</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mgrOwnTable">
-                        <tr><td colspan="5" class="no-data">No projections yet.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <!-- RIGHT: manager's own donut + stats (sticky) -->
+            <div class="mgr-right">
+                <!-- personal donut -->
+                <div class="chart-card">
+                    <h3>My Achievement — Week <span id="mgrChartWeekLabel"></span></h3>
+                    <div class="chart-wrap">
+                        <canvas id="mgrDonutChart"></canvas>
+                        <div class="chart-center-text" id="mgrChartPct">—</div>
+                    </div>
+                </div>
 
-        <!-- team overview -->
-        <div class="section">
-            <h2>Team Sales Overview — Week <span id="mgr_weekLabel"></span></h2>
-            <div id="teamSalesWrap">
-                <p class="no-data">Loading…</p>
-            </div>
-        </div>
+                <div class="stat-card">
+                    <h3>My Projected Qty</h3>
+                    <div class="stat-value" id="mgrStatProjected">—</div>
+                    <div class="stat-sub">units this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>My Achieved Qty</h3>
+                    <div class="stat-value" id="mgrStatAchieved" style="color:#059669;">—</div>
+                    <div class="stat-sub">units this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>My Achievement %</h3>
+                    <div class="stat-value" id="mgrStatPct" style="color:#f59e0b;">—</div>
+                </div>
 
-        <!-- change requests for team -->
-        <div class="section">
-            <h2>Projection Change Requests</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee</th><th>Week</th><th>Customer</th><th>Product</th>
-                        <th>Old→New Qty</th><th>Reason</th><th>Status</th><th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="crTableBody">
-                    <tr><td colspan="8" class="no-data">Loading…</td></tr>
-                </tbody>
-            </table>
-        </div>
+                <!-- team summary card -->
+                <div class="summary-card">
+                    <h3>Team Summary</h3>
+                    <div class="summary-row">
+                        <span class="summary-label">Team Members</span>
+                        <span class="summary-value" id="mgrSumMembers">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Team Projected Qty</span>
+                        <span class="summary-value" id="mgrSumProj">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Team Achieved Qty</span>
+                        <span class="summary-value" id="mgrSumAch">—</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Team Achievement</span>
+                        <span class="summary-value" id="mgrSumPct">—</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /mgr-grid -->
     </div>
 
 </div><!-- /main -->
@@ -618,12 +651,8 @@ async function initPage() {
         document.getElementById("managerView").style.display  = "block";
         selectedWeek = currentWeekNum;
         buildWeekSwitcherStatic();
-        await Promise.all([
-            loadManagerView(),
-            loadCRTable(),
-            loadManagerOwnRows(),
-            loadReminderBanner()
-        ]);
+        await loadManagerView();
+        await loadCRTable();
     }
 }
 
@@ -711,9 +740,7 @@ function buildWeekSwitcherStatic() {
     btn.className = "week-btn active";
     btn.textContent = `Week ${currentWeekNum}`;
     wrap.appendChild(btn);
-    document.getElementById("mgr_weekLabel").textContent     = currentWeekNum;
-    document.getElementById("mgrFormWeekLabel").textContent  = currentWeekNum;
-    document.getElementById("reminderWeekLabel").textContent = currentWeekNum;
+    document.getElementById("mgr_weekLabel").textContent = currentWeekNum;
 }
 
 async function selectWeek(w) {
@@ -946,43 +973,141 @@ async function loadMyRequests() {
 }
 
 // ── MANAGER VIEW ───────────────────────────────────────────────
+let mgrDonutChart = null;
+
 async function loadManagerView() {
     const res = await fetch(
         `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
     ).then(r => r.json());
 
-    const wrap = document.getElementById("teamSalesWrap");
-    if (!res.employees || !res.employees.length) {
-        wrap.innerHTML = `<p class="no-data">No team data found.</p>`;
+    const employees = res.employees || [];
+
+    // ── team totals for summary card ──
+    let teamTotalProj = 0, teamTotalAch = 0;
+    employees.forEach(emp => {
+        const rows = emp.rows || [];
+        teamTotalProj += rows.reduce((s,r) => s + Number(r.projected || 0), 0);
+        teamTotalAch  += rows.reduce((s,r) => s + Number(r.achieved  || 0), 0);
+    });
+    const teamPct = teamTotalProj > 0 ? Math.round(teamTotalAch / teamTotalProj * 100) : 0;
+
+    document.getElementById("mgrSumMembers").textContent = employees.length;
+    document.getElementById("mgrSumProj").textContent    = teamTotalProj;
+    document.getElementById("mgrSumAch").textContent     = teamTotalAch;
+    document.getElementById("mgrSumPct").textContent     = teamPct + "%";
+    document.getElementById("mgrChartWeekLabel").textContent = selectedWeek;
+
+    // ── personal donut (manager's own rows) ──
+    const mgrRes = await fetch(
+        `${BASE}/sales/rows?user_id=${userId}&week=${selectedWeek}&viewer_id=${userId}&viewer_role=employee`
+    ).then(r => r.json());
+    const mgrRows = mgrRes.rows || [];
+    const mgrProj = mgrRows.reduce((s,r) => s + Number(r.projected || 0), 0);
+    const mgrAch  = mgrRows.reduce((s,r) => s + Number(r.achieved  || 0), 0);
+    const mgrPct  = mgrProj > 0 ? Math.round(mgrAch / mgrProj * 100) : 0;
+
+    document.getElementById("mgrStatProjected").textContent = mgrProj;
+    document.getElementById("mgrStatAchieved").textContent  = mgrAch;
+    document.getElementById("mgrStatPct").textContent       = mgrPct + "%";
+    document.getElementById("mgrChartPct").textContent      = mgrProj > 0 ? mgrPct + "%" : "—";
+
+    const ctx = document.getElementById("mgrDonutChart").getContext("2d");
+    if (mgrDonutChart) mgrDonutChart.destroy();
+    if (mgrProj > 0) {
+        mgrDonutChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                datasets: [{
+                    data: [mgrAch, Math.max(mgrProj - mgrAch, 0)],
+                    backgroundColor: ["#2563eb", "#e5e7eb"],
+                    borderWidth: 0,
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                cutout: "72%",
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                animation: { duration: 600 }
+            }
+        });
+    }
+
+    // ── team progress bars ──
+    const progressWrap = document.getElementById("teamProgressWrap");
+    if (!employees.length) {
+        progressWrap.innerHTML = `<p class="no-data">No team data found.</p>`;
+    } else {
+        progressWrap.innerHTML = employees.map(emp => {
+            const rows = emp.rows || [];
+            const proj = rows.reduce((s,r) => s + Number(r.projected || 0), 0);
+            const ach  = rows.reduce((s,r) => s + Number(r.achieved  || 0), 0);
+            const pct  = proj > 0 ? Math.round(ach / proj * 100) : 0;
+            const fillClass = pct >= 75 ? "fill-green" : pct >= 40 ? "fill-yellow" : "fill-red";
+            const pctColor  = pct >= 75 ? "#059669"   : pct >= 40 ? "#f59e0b"    : "#dc2626";
+            const noData    = proj === 0;
+
+            return `
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div>
+                        <span class="team-emp-name">${emp.name}</span>
+                        <span class="team-emp-id">ID ${emp.id}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:14px;font-size:13px;">
+                        <span style="color:#6b7280;">Proj: <b style="color:#111827;">${proj}</b></span>
+                        <span style="color:#6b7280;">Ach: <b style="color:#059669;">${ach}</b></span>
+                        <span class="team-emp-pct" style="color:${noData ? '#9ca3af' : pctColor};">
+                            ${noData ? "No data" : pct + "%"}
+                        </span>
+                    </div>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill ${noData ? '' : fillClass}"
+                         style="width:${noData ? 0 : Math.min(pct,100)}%"></div>
+                </div>
+            </div>`;
+        }).join("");
+    }
+
+    // ── team detail tables ──
+    const detailWrap = document.getElementById("teamSalesWrap");
+    if (!employees.length) {
+        detailWrap.innerHTML = `<p class="no-data">No team data found.</p>`;
         return;
     }
 
-    wrap.innerHTML = res.employees.map(emp => {
+    detailWrap.innerHTML = employees.map(emp => {
         const rows = emp.rows || [];
+        const rowsHtml = rows.length
+            ? rows.map(r => `
+                <tr>
+                    <td>${r.customer}</td>
+                    <td>${r.product}</td>
+                    <td>${r.projected}</td>
+                    <td>₹${Number(r.price).toLocaleString("en-IN")}</td>
+                    <td><b style="color:#059669;">${r.achieved || 0}</b></td>
+                </tr>`).join("")
+            : `<tr><td colspan="5" class="no-data">No projections this week.</td></tr>`;
+
         const proj = rows.reduce((s,r) => s + Number(r.projected || 0), 0);
         const ach  = rows.reduce((s,r) => s + Number(r.achieved  || 0), 0);
         const pct  = proj > 0 ? Math.round(ach / proj * 100) : 0;
 
-        const rowsHtml = rows.length
-            ? rows.map(r => `
-                <tr>
-                    <td>${r.customer}</td><td>${r.product}</td>
-                    <td>${r.projected}</td><td>₹${Number(r.price).toLocaleString("en-IN")}</td>
-                    <td><b>${r.achieved || 0}</b></td>
-                </tr>`).join("")
-            : `<tr><td colspan="5" class="no-data">No projections this week.</td></tr>`;
-
         return `
-        <div style="margin-bottom:20px;border:1px solid #f3f4f6;border-radius:10px;overflow:hidden;">
-            <div style="background:#f9fafb;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <div class="team-emp-card">
+            <div class="team-emp-header">
                 <div>
-                    <b style="font-size:14px;">${emp.name}</b>
-                    <span style="font-size:12px;color:#6b7280;margin-left:8px;">ID ${emp.id}</span>
+                    <span class="team-emp-name">${emp.name}</span>
+                    <span class="team-emp-id">ID ${emp.id}</span>
                 </div>
                 <div style="display:flex;gap:16px;font-size:13px;">
                     <span>Proj: <b>${proj}</b></span>
                     <span>Ach: <b style="color:#059669;">${ach}</b></span>
-                    <span>Achievement: <b style="color:${pct >= 75 ? '#059669' : pct >= 40 ? '#f59e0b' : '#dc2626'}">${pct}%</b></span>
+                    <span>Achievement:
+                        <b style="color:${pct >= 75 ? '#059669' : pct >= 40 ? '#f59e0b' : '#dc2626'}">
+                            ${proj > 0 ? pct + "%" : "—"}
+                        </b>
+                    </span>
                 </div>
             </div>
             <table>
@@ -1037,106 +1162,9 @@ async function resolveRequest(requestId, action) {
     ).then(r => r.json());
     if (res.success) {
         showToast(`Request ${action}.`);
-        // Reload both the CR table AND the team overview so
-        // the updated projection and chart numbers are fresh
-        await Promise.all([loadCRTable(), loadManagerView()]);
+        await loadCRTable();
     } else {
         showToast(res.message || "Failed.");
-    }
-}
-
-// ── MANAGER: OWN PROJECTIONS ───────────────────────────────────
-let mgrOwnRows = [];
-
-async function loadManagerOwnRows() {
-    const res = await fetch(
-        `${BASE}/sales/rows?user_id=${userId}&week=${currentWeekNum}&viewer_id=${userId}&viewer_role=employee`
-    ).then(r => r.json());
-    mgrOwnRows = res.rows || [];
-    renderManagerOwnTable();
-}
-
-function renderManagerOwnTable() {
-    const tbody = document.getElementById("mgrOwnTable");
-    if (!mgrOwnRows.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="no-data">No projections yet. Add one above.</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = mgrOwnRows.map((row, idx) => `
-        <tr>
-            <td><b>${row.customer}</b></td>
-            <td>${row.product}</td>
-            <td>${row.projected} <span style="color:#d1d5db;font-size:12px;" title="Locked">🔒</span></td>
-            <td>₹${Number(row.price).toLocaleString("en-IN")}</td>
-            <td>
-                <input class="achieved-input" type="number" min="0"
-                       id="mgrAch_${idx}" value="${row.achieved || 0}"
-                       onkeydown="if(event.key==='Enter') saveMgrAchieved(${idx})" />
-                <button class="save-achieved-btn" onclick="saveMgrAchieved(${idx})">Save</button>
-            </td>
-        </tr>`).join("");
-}
-
-async function submitManagerProjection() {
-    const customer = document.getElementById("mgrCustomer").value.trim();
-    const product  = document.getElementById("mgrProduct").value.trim();
-    const qty      = parseInt(document.getElementById("mgrQty").value);
-    const price    = parseFloat(document.getElementById("mgrPrice").value);
-
-    if (!customer || !product || !qty || !price) {
-        showToast("Please fill in all fields."); return;
-    }
-
-    const res = await fetch(
-        `${BASE}/sales/manager-projection?manager_id=${userId}&week=${currentWeekNum}` +
-        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-        `&projected=${qty}&price=${price}`,
-        { method: "POST" }
-    ).then(r => r.json());
-
-    if (res.success) {
-        showToast("Projection added.");
-        ["mgrCustomer","mgrProduct","mgrQty","mgrPrice"].forEach(id => document.getElementById(id).value = "");
-        await loadManagerOwnRows();
-    } else {
-        showToast(res.message || "Failed to add projection.");
-    }
-}
-
-async function saveMgrAchieved(idx) {
-    const row = mgrOwnRows[idx];
-    const val = parseInt(document.getElementById(`mgrAch_${idx}`).value) || 0;
-    const res = await fetch(
-        `${BASE}/sales/manager-achieved?manager_id=${userId}&week=${currentWeekNum}` +
-        `&customer=${encodeURIComponent(row.customer)}&product=${encodeURIComponent(row.product)}&achieved=${val}`,
-        { method: "PUT" }
-    ).then(r => r.json());
-    if (res.success) {
-        mgrOwnRows[idx].achieved = val;
-        showToast("Achieved quantity saved.");
-    } else {
-        showToast(res.message || "Save failed.");
-    }
-}
-
-// ── REMINDER BANNER ────────────────────────────────────────────
-async function loadReminderBanner() {
-    try {
-        const res = await fetch(
-            `${BASE}/sales/reminder-status?viewer_id=${userId}&viewer_role=${userRole}`
-        ).then(r => r.json());
-
-        const missing = res.missing || [];
-        if (!missing.length) return;   // everyone has filled — hide banner
-
-        const banner = document.getElementById("reminderBanner");
-        banner.style.display = "flex";
-
-        const nameList = missing.map(e => `<b>${e.name}</b>`).join(", ");
-        document.getElementById("reminderNames").innerHTML =
-            `The following ${missing.length === 1 ? "employee has" : `${missing.length} employees have`} not submitted projections for Week ${res.week}: ${nameList}.`;
-    } catch(e) {
-        // fail silently — reminder is non-critical
     }
 }
 
