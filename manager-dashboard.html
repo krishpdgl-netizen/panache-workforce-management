@@ -61,10 +61,25 @@
             border-radius: 8px;
             cursor: pointer;
             list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .menu details summary:hover {
             background: #2563eb;
+        }
+
+        .review-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 99px;
+            min-width: 20px;
+            text-align: center;
+            display: none;
         }
 
         .menu details a {
@@ -304,6 +319,47 @@
 
         .btn-save:hover { background: #1d4ed8; }
 
+        /* FILTER BUTTONS */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .filter-btn {
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+        .filter-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
+        }
+
+        /* STATUS BADGES */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-assigned    { background: #dbeafe; color: #1d4ed8; }
+        .badge-inprogress  { background: #fef9c3; color: #a16207; }
+        .badge-review      { background: #ffedd5; color: #c2410c; }
+        .badge-completed   { background: #dcfce7; color: #15803d; }
+
         /* TOAST */
         .toast {
             position: fixed;
@@ -358,7 +414,7 @@
     <div class="menu">
         <a href="#">Dashboard</a>
         <details>
-            <summary>Team Details</summary>
+            <summary>Team Details <span class="review-badge" id="reviewBadge"></span></summary>
             <a href="team-members.html">Team Members</a>
             <a href="performance-report.html">Performance Report</a>
             <a href="history.html">Task History</a>
@@ -418,6 +474,12 @@
     <div class="section">
         <h2>Assigned Tasks</h2>
         <br>
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterTasks('All')">All</button>
+            <button class="filter-btn" onclick="filterTasks('In Progress')">In Progress</button>
+            <button class="filter-btn" onclick="filterTasks('Pending Review')">Pending Review</button>
+            <button class="filter-btn" onclick="filterTasks('Completed')">Completed</button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -558,31 +620,63 @@ localStorage.getItem("userId");
     }
 
     // ── ALL TASKS ────────────────────────────────────────────
+    let allTasks        = [];
+    let activeFilter    = "All";
+
+    function statusBadge(status) {
+        const map = {
+            "Assigned":       "badge-assigned",
+            "In Progress":    "badge-inprogress",
+            "Pending Review": "badge-review",
+            "Completed":      "badge-completed"
+        };
+        return `<span class="badge ${map[status] || "badge-assigned"}">${status}</span>`;
+    }
+
+    function formatDate(raw) {
+        if (!raw) return "—";
+        const d = new Date(raw);
+        if (isNaN(d)) return raw;
+        return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    function renderTasks() {
+        const filtered = activeFilter === "All"
+            ? allTasks
+            : allTasks.filter(t => t.status === activeFilter);
+
+        if (!filtered.length) {
+            document.getElementById("taskTable").innerHTML =
+                `<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:20px;">No tasks found.</td></tr>`;
+            return;
+        }
+
+        document.getElementById("taskTable").innerHTML = filtered.map(task => `
+            <tr>
+                <td>${task.id}</td>
+                <td><b>${task.title}</b></td>
+                <td>${task.employee_name}</td>
+                <td>${task.priority}</td>
+                <td>${statusBadge(task.status)}</td>
+                <td>${formatDate(task.due_date)}</td>
+                <td><button class="edit-btn" onclick="openEditModal(${task.id})">Edit</button></td>
+                <td><button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button></td>
+            </tr>`).join("");
+    }
+
+    function filterTasks(status) {
+        activeFilter = status;
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.textContent.trim() === status);
+        });
+        renderTasks();
+    }
+
     async function loadTasks() {
         try {
-            const res = await fetch(
-`${BASE}/manager-tasks?manager_id=${managerId}`
-);
-            const tasks = await res.json();
-            let html = "";
-            tasks.forEach(task => {
-                html += `
-                    <tr>
-                        <td>${task.id}</td>
-                        <td>${task.title}</td>
-                        <td>${task.employee_name} (${task.assigned_to})</td>
-                        <td>${task.priority}</td>
-                        <td>${task.status}</td>
-                        <td>${task.due_date}</td>
-                        <td>
-                            <button class="edit-btn" onclick="openEditModal(${task.id})">Edit</button>
-                        </td>
-                        <td>
-                            <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
-                        </td>
-                    </tr>`;
-            });
-            document.getElementById("taskTable").innerHTML = html;
+            const res   = await fetch(`${BASE}/manager-tasks?manager_id=${managerId}`);
+            allTasks    = await res.json();
+            renderTasks();
         } catch (e) {
             console.error("loadTasks error:", e);
         }
@@ -610,12 +704,12 @@ localStorage.getItem("userId");
             const task = await res.json();
             if (!task || task.success === false) { showToast("Could not load task."); return; }
 
-            document.getElementById("editTaskId").value = task.id;
-            document.getElementById("editTitle").value = task.title;
+            document.getElementById("editTaskId").value     = task.id;
+            document.getElementById("editTitle").value      = task.title;
             document.getElementById("editDescription").value = task.description || "";
             document.getElementById("editAssignedTo").value = task.assigned_to;
-            document.getElementById("editPriority").value = task.priority;
-            document.getElementById("editDueDate").value = task.due_date ? task.due_date.split("T")[0] : "";
+            document.getElementById("editPriority").value   = task.priority;
+            document.getElementById("editDueDate").value    = task.due_date ? task.due_date.split("T")[0] : "";
 
             document.getElementById("editModal").classList.add("active");
         } catch (e) {
@@ -628,18 +722,18 @@ localStorage.getItem("userId");
     }
 
     async function saveEditTask() {
-        const taskId     = document.getElementById("editTaskId").value;
-        const title      = document.getElementById("editTitle").value.trim();
+        const taskId      = document.getElementById("editTaskId").value;
+        const title       = document.getElementById("editTitle").value.trim();
         const description = document.getElementById("editDescription").value.trim();
-        const assignedTo = document.getElementById("editAssignedTo").value;
-        const priority   = document.getElementById("editPriority").value;
-        const dueDate    = document.getElementById("editDueDate").value;
+        const assignedTo  = document.getElementById("editAssignedTo").value;
+        const priority    = document.getElementById("editPriority").value;
+        const dueDate     = document.getElementById("editDueDate").value;
 
         if (!title || !assignedTo || !dueDate) { showToast("Please fill in all required fields."); return; }
 
         try {
             const params = new URLSearchParams({ task_id: taskId, title, description, assigned_to: assignedTo, priority, due_date: dueDate });
-            const res = await fetch(`${BASE}/edit-task?${params}`, { method: "POST" });
+            const res  = await fetch(`${BASE}/edit-task?${params}`, { method: "POST" });
             const data = await res.json();
             if (data.success) {
                 showToast("Task updated successfully.");
@@ -654,27 +748,36 @@ localStorage.getItem("userId");
     // ── REVIEW TASKS ─────────────────────────────────────────
     async function loadReviewTasks() {
         try {
-            const res = await fetch(
-`${BASE}/review-tasks?manager_id=${managerId}`
-);
+            const res   = await fetch(`${BASE}/review-tasks?manager_id=${managerId}`);
             const tasks = await res.json();
-            let html = "";
-            tasks.forEach(task => {
-                html += `
-                    <tr>
-                        <td>${task.id}</td>
-                        <td>${task.title}</td>
-                        <td>${task.assigned_to}</td>
-                        <td>${task.due_date}</td>
-                        <td>
-                            <button class="review-btn" onclick="openEditModal(${task.id})">Review</button>
-                        </td>
-                        <td>
-                            <button class="approve-btn" onclick="approveTask(${task.id})">Approve</button>
-                        </td>
-                    </tr>`;
-            });
-            document.getElementById("reviewTable").innerHTML = html || `<tr><td colspan="6" style="color:#9ca3af;text-align:center;padding:20px;">No tasks pending review</td></tr>`;
+
+            // Update sidebar badge
+            const badge = document.getElementById("reviewBadge");
+            if (tasks.length > 0) {
+                badge.textContent = tasks.length;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+
+            if (!tasks.length) {
+                document.getElementById("reviewTable").innerHTML =
+                    `<tr><td colspan="6" style="color:#9ca3af;text-align:center;padding:20px;">No tasks pending review</td></tr>`;
+                return;
+            }
+
+            document.getElementById("reviewTable").innerHTML = tasks.map(task => `
+                <tr>
+                    <td>${task.id}</td>
+                    <td><b>${task.title}</b></td>
+                    <td>${task.employee_name || task.assigned_to}</td>
+                    <td>${task.priority}</td>
+                    <td>${statusBadge(task.status)}</td>
+                    <td>
+                        <button class="review-btn" onclick="openEditModal(${task.id})">Review</button>
+                        <button class="approve-btn" onclick="approveTask(${task.id})">Approve</button>
+                    </td>
+                </tr>`).join("");
         } catch (e) {
             console.error("loadReviewTasks error:", e);
         }
@@ -684,7 +787,7 @@ localStorage.getItem("userId");
     async function approveTask(taskId) {
         if (!confirm("Approve this task as Completed?")) return;
         try {
-            const res = await fetch(`${BASE}/approve-task?task_id=${taskId}`, { method: "POST" });
+            const res  = await fetch(`${BASE}/approve-task?task_id=${taskId}`, { method: "POST" });
             const data = await res.json();
             if (data.success) {
                 showToast("Task approved and marked as Completed.");
