@@ -446,6 +446,68 @@
 
     <!-- ── MANAGER / ADMIN VIEW ──────────────────────────────────── -->
     <div id="managerView" style="display:none;">
+
+        <!-- reminder banner (shown when some employees haven't filled) -->
+        <div id="reminderBanner" style="display:none;
+            background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px;
+            padding:14px 20px; margin-bottom:20px; display:flex;
+            align-items:flex-start; gap:14px;">
+            <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+            <div style="flex:1;">
+                <b style="font-size:14px;color:#92400e;">Week <span id="reminderWeekLabel"></span> — Projections Not Filled</b>
+                <div id="reminderNames" style="font-size:13px;color:#78350f;margin-top:4px;"></div>
+            </div>
+            <button onclick="document.getElementById('reminderBanner').style.display='none'"
+                    style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e;flex-shrink:0;">✕</button>
+        </div>
+
+        <!-- manager's OWN projection entry -->
+        <div class="section" id="mgrEntrySection">
+            <h2>My Sales Projections — Week <span id="mgrFormWeekLabel"></span></h2>
+            <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+                Add your own customer projections here. These are stored under your account.
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="mgrCustomer" placeholder="e.g. ABC Industries" />
+                </div>
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="mgrProduct" placeholder="e.g. Router" />
+                </div>
+                <div class="form-group">
+                    <label>Projected Quantity</label>
+                    <input type="number" id="mgrQty" placeholder="e.g. 5" min="1" />
+                </div>
+                <div class="form-group">
+                    <label>Price Per Unit (₹)</label>
+                    <input type="number" id="mgrPrice" placeholder="e.g. 1200" min="0" />
+                </div>
+                <div class="form-full">
+                    <button class="btn-primary" onclick="submitManagerProjection()">+ Add My Projection</button>
+                </div>
+            </div>
+
+            <!-- manager's own rows table -->
+            <div style="margin-top:20px;">
+                <h3 style="font-size:14px;color:#374151;margin-bottom:10px;">My Projections This Week</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer</th><th>Product</th>
+                            <th>Proj Qty</th><th>Price/Unit</th>
+                            <th>Achieved Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mgrOwnTable">
+                        <tr><td colspan="5" class="no-data">No projections yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- team overview -->
         <div class="section">
             <h2>Team Sales Overview — Week <span id="mgr_weekLabel"></span></h2>
             <div id="teamSalesWrap">
@@ -556,8 +618,12 @@ async function initPage() {
         document.getElementById("managerView").style.display  = "block";
         selectedWeek = currentWeekNum;
         buildWeekSwitcherStatic();
-        await loadManagerView();
-        await loadCRTable();
+        await Promise.all([
+            loadManagerView(),
+            loadCRTable(),
+            loadManagerOwnRows(),
+            loadReminderBanner()
+        ]);
     }
 }
 
@@ -645,7 +711,9 @@ function buildWeekSwitcherStatic() {
     btn.className = "week-btn active";
     btn.textContent = `Week ${currentWeekNum}`;
     wrap.appendChild(btn);
-    document.getElementById("mgr_weekLabel").textContent = currentWeekNum;
+    document.getElementById("mgr_weekLabel").textContent     = currentWeekNum;
+    document.getElementById("mgrFormWeekLabel").textContent  = currentWeekNum;
+    document.getElementById("reminderWeekLabel").textContent = currentWeekNum;
 }
 
 async function selectWeek(w) {
@@ -969,9 +1037,106 @@ async function resolveRequest(requestId, action) {
     ).then(r => r.json());
     if (res.success) {
         showToast(`Request ${action}.`);
-        await loadCRTable();
+        // Reload both the CR table AND the team overview so
+        // the updated projection and chart numbers are fresh
+        await Promise.all([loadCRTable(), loadManagerView()]);
     } else {
         showToast(res.message || "Failed.");
+    }
+}
+
+// ── MANAGER: OWN PROJECTIONS ───────────────────────────────────
+let mgrOwnRows = [];
+
+async function loadManagerOwnRows() {
+    const res = await fetch(
+        `${BASE}/sales/rows?user_id=${userId}&week=${currentWeekNum}&viewer_id=${userId}&viewer_role=employee`
+    ).then(r => r.json());
+    mgrOwnRows = res.rows || [];
+    renderManagerOwnTable();
+}
+
+function renderManagerOwnTable() {
+    const tbody = document.getElementById("mgrOwnTable");
+    if (!mgrOwnRows.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="no-data">No projections yet. Add one above.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = mgrOwnRows.map((row, idx) => `
+        <tr>
+            <td><b>${row.customer}</b></td>
+            <td>${row.product}</td>
+            <td>${row.projected} <span style="color:#d1d5db;font-size:12px;" title="Locked">🔒</span></td>
+            <td>₹${Number(row.price).toLocaleString("en-IN")}</td>
+            <td>
+                <input class="achieved-input" type="number" min="0"
+                       id="mgrAch_${idx}" value="${row.achieved || 0}"
+                       onkeydown="if(event.key==='Enter') saveMgrAchieved(${idx})" />
+                <button class="save-achieved-btn" onclick="saveMgrAchieved(${idx})">Save</button>
+            </td>
+        </tr>`).join("");
+}
+
+async function submitManagerProjection() {
+    const customer = document.getElementById("mgrCustomer").value.trim();
+    const product  = document.getElementById("mgrProduct").value.trim();
+    const qty      = parseInt(document.getElementById("mgrQty").value);
+    const price    = parseFloat(document.getElementById("mgrPrice").value);
+
+    if (!customer || !product || !qty || !price) {
+        showToast("Please fill in all fields."); return;
+    }
+
+    const res = await fetch(
+        `${BASE}/sales/manager-projection?manager_id=${userId}&week=${currentWeekNum}` +
+        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
+        `&projected=${qty}&price=${price}`,
+        { method: "POST" }
+    ).then(r => r.json());
+
+    if (res.success) {
+        showToast("Projection added.");
+        ["mgrCustomer","mgrProduct","mgrQty","mgrPrice"].forEach(id => document.getElementById(id).value = "");
+        await loadManagerOwnRows();
+    } else {
+        showToast(res.message || "Failed to add projection.");
+    }
+}
+
+async function saveMgrAchieved(idx) {
+    const row = mgrOwnRows[idx];
+    const val = parseInt(document.getElementById(`mgrAch_${idx}`).value) || 0;
+    const res = await fetch(
+        `${BASE}/sales/manager-achieved?manager_id=${userId}&week=${currentWeekNum}` +
+        `&customer=${encodeURIComponent(row.customer)}&product=${encodeURIComponent(row.product)}&achieved=${val}`,
+        { method: "PUT" }
+    ).then(r => r.json());
+    if (res.success) {
+        mgrOwnRows[idx].achieved = val;
+        showToast("Achieved quantity saved.");
+    } else {
+        showToast(res.message || "Save failed.");
+    }
+}
+
+// ── REMINDER BANNER ────────────────────────────────────────────
+async function loadReminderBanner() {
+    try {
+        const res = await fetch(
+            `${BASE}/sales/reminder-status?viewer_id=${userId}&viewer_role=${userRole}`
+        ).then(r => r.json());
+
+        const missing = res.missing || [];
+        if (!missing.length) return;   // everyone has filled — hide banner
+
+        const banner = document.getElementById("reminderBanner");
+        banner.style.display = "flex";
+
+        const nameList = missing.map(e => `<b>${e.name}</b>`).join(", ");
+        document.getElementById("reminderNames").innerHTML =
+            `The following ${missing.length === 1 ? "employee has" : `${missing.length} employees have`} not submitted projections for Week ${res.week}: ${nameList}.`;
+    } catch(e) {
+        // fail silently — reminder is non-critical
     }
 }
 
