@@ -365,6 +365,23 @@
         </div>
     </div>
 
+    <!-- SALES PROJECTION REMINDER -->
+    <div id="salesReminderBanner" style="display:none;
+        background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px;
+        padding:14px 20px; margin-bottom:20px;
+        display:flex; align-items:center; gap:14px;">
+        <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+        <div style="flex:1;">
+            <b style="font-size:14px;color:#92400e;">Sales Projections Not Filled — Week <span id="reminderWeekNum"></span></b>
+            <div style="font-size:13px;color:#78350f;margin-top:3px;">
+                You haven't submitted your sales projections for this week yet.
+                <a href="sales-dashboard.html" style="color:#b45309;font-weight:600;margin-left:4px;">Fill now →</a>
+            </div>
+        </div>
+        <button onclick="document.getElementById('salesReminderBanner').style.display='none'"
+                style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e;flex-shrink:0;">✕</button>
+    </div>
+
     <!-- CARDS -->
     <div class="cards">
         <div class="card">
@@ -655,6 +672,19 @@
     // ── INIT ──────────────────────────────────────────────────
     loadTasks();
     loadProductivity();
+    loadSalesReminder();
+
+    async function loadSalesReminder() {
+        try {
+            const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${userId}&viewer_role=employee`);
+            const data = await res.json();
+            // Show banner only if this employee is in the "missing" list
+            if (data.missing && data.missing.length > 0) {
+                document.getElementById("reminderWeekNum").textContent = data.week;
+                document.getElementById("salesReminderBanner").style.display = "flex";
+            }
+        } catch(e) { /* fail silently — reminder is non-critical */ }
+    }
 </script>
 <!-- ============================================================
      STICKY NOTES — paste this just before </body> on every page
