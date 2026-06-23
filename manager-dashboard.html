@@ -584,6 +584,7 @@
                 <th>Employee</th>
                 <th>Priority</th>
                 <th>Status</th>
+                <th>Attachment</th>
                 <th>Review</th>
             </tr>
         </thead>
@@ -836,17 +837,26 @@ localStorage.getItem("userId");
 
             if (!tasks.length) {
                 document.getElementById("reviewTable").innerHTML =
-                    `<tr><td colspan="6" style="color:#9ca3af;text-align:center;padding:20px;">No tasks pending review</td></tr>`;
+                    `<tr><td colspan="7" style="color:#9ca3af;text-align:center;padding:20px;">No tasks pending review</td></tr>`;
                 return;
             }
 
-            document.getElementById("reviewTable").innerHTML = tasks.map(task => `
+            document.getElementById("reviewTable").innerHTML = tasks.map(task => {
+                const fileCell = task.file_url
+                    ? `<a href="${BASE}${task.file_url}" target="_blank"
+                          style="color:#2563eb;font-size:13px;font-weight:600;text-decoration:none;
+                                 display:inline-flex;align-items:center;gap:4px;">
+                           📎 ${task.file_name || "View File"}
+                       </a>`
+                    : `<span style="color:#9ca3af;font-size:12px;">No file</span>`;
+                return `
                 <tr>
                     <td>${task.id}</td>
                     <td><b>${task.title}</b></td>
                     <td>${task.employee_name || task.assigned_to}</td>
                     <td>${task.priority}</td>
                     <td>${statusBadge(task.status)}</td>
+                    <td>${fileCell}</td>
                     <td>
                         <button class="review-btn" onclick="openEditModal(${task.id})">Review</button>
                         <button class="approve-btn" onclick="approveTask(${task.id})">Approve</button>
@@ -856,7 +866,8 @@ localStorage.getItem("userId");
                             Send Correction
                         </button>
                     </td>
-                </tr>`).join("");
+                </tr>`;
+            }).join("");
         } catch (e) {
             console.error("loadReviewTasks error:", e);
         }
