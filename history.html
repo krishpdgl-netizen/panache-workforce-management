@@ -345,17 +345,9 @@
     }
 
 function formatDate(raw) {
-
-    console.log("RAW =", raw);
-
     if (!raw) return "—";
-
     const d = new Date(raw);
-
-    console.log("DATE =", d);
-
     if (isNaN(d)) return raw;
-
     return d.toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
         day: "2-digit",
@@ -365,7 +357,6 @@ function formatDate(raw) {
         minute: "2-digit",
         hour12: true
     });
-
 }
 
     // ── LOAD HISTORY ─────────────────────────────────────────
