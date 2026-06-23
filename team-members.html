@@ -1,435 +1,318 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Members | Panache</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role || role !== "manager") { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body { display:flex; background:#f4f6f9; }
 
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-<script>
+        .sidebar {
+            width:260px; height:100vh; background:#111827; color:white;
+            position:fixed; padding:20px; display:flex; flex-direction:column;
+        }
+        .logo { font-size:22px; font-weight:bold; margin-bottom:30px; }
+        .menu a {
+            display:block; color:white; text-decoration:none;
+            padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
+        }
+        .menu a:hover, .menu a.active { background:#2563eb; }
 
-const role = (localStorage.getItem("userRole") || "").toLowerCase();
+        .main { margin-left:260px; padding:25px; width:calc(100% - 260px); }
 
-if(role !== "manager"){
-window.location.href = "index.html";
-}
+        .header {
+            display:flex; justify-content:space-between;
+            align-items:center; margin-bottom:25px;
+        }
+        .header h1 { color:#111827; }
+        .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; font-size:13px; }
+        .logout-btn { background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:#b91c1c; }
 
-</script>
+        .section {
+            background:white; padding:22px; border-radius:15px;
+            margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
+        .section-header {
+            display:flex; justify-content:space-between;
+            align-items:center; margin-bottom:18px;
+        }
+        .section-header h2 { color:#111827; }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Team Members | Panache</title>
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
+        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
 
-<style>
+        .btn-primary {
+            background:#2563eb; color:white; border:none;
+            padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;
+        }
+        .btn-primary:hover { background:#1d4ed8; }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
+        .btn-danger {
+            background:#dc2626; color:white; border:none;
+            padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
+        }
+        .btn-danger:hover { background:#b91c1c; }
 
-body{
-display:flex;
-background:#f4f6f9;
-}
+        .btn-pending {
+            background:#e5e7eb; color:#6b7280; border:none;
+            padding:7px 13px; border-radius:7px; font-size:13px; cursor:default;
+        }
 
-.sidebar{
-width:250px;
-height:100vh;
-background:#111827;
-color:white;
-padding:20px;
-position:fixed;
-}
+        .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
 
-.logo{
-font-size:22px;
-font-weight:bold;
-margin-bottom:30px;
-}
+        /* SEARCH */
+        .search-wrap { display:flex; gap:10px; margin-bottom:16px; }
+        .search-wrap input {
+            flex:1; padding:9px 14px; border:1px solid #d1d5db;
+            border-radius:8px; font-size:14px;
+        }
+        .search-wrap input:focus { outline:none; border-color:#2563eb; }
 
-.menu a{
-display:block;
-color:white;
-text-decoration:none;
-padding:12px;
-margin-bottom:10px;
-border-radius:8px;
-}
+        /* BADGE */
+        .badge {
+            display:inline-block; padding:3px 10px;
+            border-radius:99px; font-size:12px; font-weight:600;
+        }
+        .badge-pending  { background:#fef9c3; color:#a16207; }
+        .badge-approved { background:#dcfce7; color:#15803d; }
+        .badge-rejected { background:#fee2e2; color:#b91c1c; }
 
-.menu a:hover{
-background:#2563eb;
-}
-
-.main{
-margin-left:250px;
-padding:25px;
-width:100%;
-}
-
-.section{
-background:white;
-padding:20px;
-border-radius:15px;
-margin-bottom:25px;
-box-shadow:0 2px 10px rgba(0,0,0,.08);
-}
-
-.header{
-display:flex;
-justify-content:space-between;
-margin-bottom:25px;
-align-items:center;
-}
-
-.header button{
-background:#dc2626;
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.header button:hover{
-background:#b91c1c;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #eee;
-text-align:left;
-}
-
-th{
-background:#f3f4f6;
-}
-
-select{
-padding:10px;
-border:1px solid #ddd;
-border-radius:8px;
-width:300px;
-margin-right:15px;
-}
-
-.add-btn{
-background:#2563eb;
-color:white;
-border:none;
-padding:10px 18px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.add-btn:hover{
-background:#1d4ed8;
-}
-
-.remove-btn{
-background:#dc2626;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:8px;
-cursor:pointer;
-}
-
-.remove-btn:hover{
-background:#b91c1c;
-}
-
-</style>
-
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; right:30px; background:#111827; color:white;
+            padding:14px 22px; border-radius:10px; font-size:14px;
+            opacity:0; transform:translateY(10px); transition:all .3s; z-index:9999;
+        }
+        .toast.show { opacity:1; transform:translateY(0); }
+    </style>
 </head>
 <body>
 
 <div class="sidebar">
-
-<div class="logo">
-Panache WMS
-</div>
-
-<div class="menu">
-
-<a href="manager-dashboard.html">Dashboard</a>
-<a href="team-members.html">Team Members</a>
-<a href="settings.html">Settings</a>
-
-</div>
-
+    <div class="logo">Panache WMS</div>
+    <div class="menu">
+        <a href="manager-dashboard.html">Dashboard</a>
+        <a href="sales-dashboard.html">Sales Dashboard</a>
+        <a href="team-members.html" class="active">Team Members</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </div>
 </div>
 
 <div class="main">
 
-<div class="header">
+    <div class="header">
+        <h1>Team Members</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="profile">
+                <b id="profileName">Loading...</b><br>
+                <span>Manager</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
 
-<h1>Team Members</h1>
+    <!-- CURRENT TEAM -->
+    <div class="section">
+        <div class="section-header">
+            <h2>My Team</h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Name</th><th>Email</th><th>Active Tasks</th><th>Remove</th>
+                </tr>
+            </thead>
+            <tbody id="teamTable">
+                <tr><td colspan="5" class="no-data">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-<button onclick="logout()">
-Logout
-</button>
+    <!-- SENT REQUESTS -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Sent Requests</h2>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th><th>Name</th><th>Email</th><th>Status</th><th>Sent</th>
+                </tr>
+            </thead>
+            <tbody id="requestsTable">
+                <tr><td colspan="5" class="no-data">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ADD MEMBER -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Send Team Request</h2>
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+            Search for an employee by name and send them a team join request. They will need to approve it.
+        </p>
+        <div class="search-wrap">
+            <input type="text" id="searchInput" placeholder="Search employee by name..." oninput="searchEmployees()" />
+        </div>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>Action</th></tr>
+            </thead>
+            <tbody id="searchTable">
+                <tr><td colspan="4" class="no-data">Type a name to search.</td></tr>
+            </tbody>
+        </table>
+    </div>
 
 </div>
 
-
-<div class="section">
-
-<h2>Add Employee To Team</h2>
-
-<br>
-
-<select id="employeeSelect">
-
-</select>
-
-<button class="add-btn"
-onclick="addMember()">
-
-Add Member
-
-</button>
-
-</div>
-
-
-<div class="section">
-
-<h2>Current Team</h2>
-
-<br>
-
-<table>
-
-<tr>
-
-<th>ID</th>
-<th>Name</th>
-<th>Email</th>
-<th>Active Tasks</th>
-<th>Remove</th>
-
-</tr>
-
-<tbody id="teamTable">
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
+<div class="toast" id="toast"></div>
 
 <script>
+    const BASE      = "https://backend-production-53f3.up.railway.app";
+    const managerId = localStorage.getItem("userId");
 
-const BASE =
-"https://backend-production-53f3.up.railway.app";
+    document.getElementById("profileName").textContent = localStorage.getItem("userName") || "Manager";
 
-const managerId =
-localStorage.getItem("userId");
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-
-function logout(){
-
-localStorage.clear();
-
-window.location.href="index.html";
-
-}
-
-
-
-async function loadEmployees(){
-
-    const response =
-    await fetch(`${BASE}/employees`);
-
-    const employees =
-    await response.json();
-
-    let html="";
-
-    employees.forEach(emp=>{
-
-        html += `
-        <option value="${emp.id}">
-        ${emp.full_name} (${emp.email})
-        </option>
-        `;
-
-    });
-
-    document.getElementById("employeeSelect").innerHTML =
-    html;
-
-    if(window.employeeSearch){
-        window.employeeSearch.destroy();
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
     }
 
-    window.employeeSearch = new TomSelect(
-        "#employeeSelect",
-        {
-            create:false,
-            sortField:{
-                field:"text",
-                direction:"asc"
-            },
-            placeholder:"Search employee...",
-            maxOptions:100
+    function formatDate(raw) {
+        if (!raw) return "—";
+        return new Date(raw).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    // ── LOAD CURRENT TEAM ─────────────────────────────────────
+    async function loadTeam() {
+        const res  = await fetch(`${BASE}/team?manager_id=${managerId}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            document.getElementById("teamTable").innerHTML =
+                `<tr><td colspan="5" class="no-data">No team members yet.</td></tr>`;
+            return;
         }
-    );
 
-}
-
-
-async function loadTeam(){
-
-const response =
-await fetch(
-`${BASE}/team?manager_id=${managerId}`
-);
-
-const team =
-await response.json();
-
-let html = "";
-
-if(team.length===0){
-
-document.getElementById("teamTable").innerHTML=`
-<tr>
-<td colspan="5">
-No team members found
-</td>
-</tr>
-`;
-
-return;
-
-}
-
-team.forEach(emp=>{
-html += `
-
-<tr>
-
-<td>${emp.id}</td>
-
-<td>${emp.full_name || emp.name}</td>
-
-<td>${emp.email}</td>
-
-<td>${emp.task_count || 0}</td>
-
-<td>
-
-<button
-class="remove-btn"
-onclick="removeMember(${emp.id})">
-
-Remove
-
-</button>
-
-</td>
-
-</tr>
-
-`;
-
-});
-
-document.getElementById("teamTable").innerHTML =
-html;
-
-}
-
-
-
-async function addMember(){
-
-const employeeId =
-document.getElementById("employeeSelect").value;
-
-if(employeeId==""){
-
-alert("Select an employee");
-
-return;
-
-}
-
-const response =
-await fetch(
-
-`${BASE}/team/add?manager_id=${managerId}&employee_id=${employeeId}`,
-
-{
-method:"POST"
-}
-
-);
-
-const data =
-await response.json();
-
-if(data.success){
-
-alert("Member added");
-
-loadTeam();
-
-loadEmployees();
-
-}
-
-}
-
-
-
-async function removeMember(employeeId){
-
-if(!confirm("Remove employee from team?"))
-return;
-
-const response =
-await fetch(
-
-`${BASE}/team/remove?manager_id=${managerId}&employee_id=${employeeId}`,
-
-{
-method:"POST"
-}
-
-);
-
-const data =
-await response.json();
-
-if(data.success){
-
-alert("Employee removed");
-
-loadTeam();
-
-loadEmployees();
-
-}
-
-}
-
-
-loadEmployees();
-
-loadTeam();
-
+        document.getElementById("teamTable").innerHTML = data.map(emp => `
+            <tr>
+                <td>${emp.id}</td>
+                <td><b>${emp.full_name}</b></td>
+                <td>${emp.email}</td>
+                <td>${emp.task_count}</td>
+                <td>
+                    <button class="btn-danger" onclick="removeMember(${emp.id})">Remove</button>
+                </td>
+            </tr>`).join("");
+    }
+
+    // ── REMOVE MEMBER ─────────────────────────────────────────
+    async function removeMember(employeeId) {
+        if (!confirm("Remove this employee from your team?")) return;
+        const res  = await fetch(`${BASE}/team/remove?manager_id=${managerId}&employee_id=${employeeId}`, { method:"POST" });
+        const data = await res.json();
+        if (data.success) { showToast("Member removed."); loadTeam(); }
+    }
+
+    // ── LOAD SENT REQUESTS ────────────────────────────────────
+    async function loadSentRequests() {
+        const res  = await fetch(`${BASE}/team-requests/sent?manager_id=${managerId}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            document.getElementById("requestsTable").innerHTML =
+                `<tr><td colspan="5" class="no-data">No requests sent yet.</td></tr>`;
+            return;
+        }
+
+        document.getElementById("requestsTable").innerHTML = data.map(r => `
+            <tr>
+                <td>${r.employee_id}</td>
+                <td><b>${r.employee_name}</b></td>
+                <td>${r.employee_email}</td>
+                <td><span class="badge badge-${r.status}">${r.status}</span></td>
+                <td>${formatDate(r.created_at)}</td>
+            </tr>`).join("");
+    }
+
+    // ── SEARCH EMPLOYEES ──────────────────────────────────────
+    let searchTimer = null;
+    async function searchEmployees() {
+        const q = document.getElementById("searchInput").value.trim();
+        clearTimeout(searchTimer);
+
+        if (q.length < 2) {
+            document.getElementById("searchTable").innerHTML =
+                `<tr><td colspan="4" class="no-data">Type at least 2 characters.</td></tr>`;
+            return;
+        }
+
+        searchTimer = setTimeout(async () => {
+            const res  = await fetch(`${BASE}/search-employee?name=${encodeURIComponent(q)}`);
+            const data = await res.json();
+
+            if (!data.length) {
+                document.getElementById("searchTable").innerHTML =
+                    `<tr><td colspan="4" class="no-data">No employees found.</td></tr>`;
+                return;
+            }
+
+            document.getElementById("searchTable").innerHTML = data.map(emp => `
+                <tr>
+                    <td>${emp.id}</td>
+                    <td><b>${emp.full_name}</b></td>
+                    <td>${emp.email}</td>
+                    <td>
+                        <button class="btn-primary" style="font-size:13px;padding:7px 14px;"
+                                onclick="sendRequest(${emp.id}, this)">
+                            Send Request
+                        </button>
+                    </td>
+                </tr>`).join("");
+        }, 300);
+    }
+
+    // ── SEND REQUEST ──────────────────────────────────────────
+    async function sendRequest(employeeId, btn) {
+        btn.disabled    = true;
+        btn.textContent = "Sending…";
+
+        const res  = await fetch(
+            `${BASE}/team/add?manager_id=${managerId}&employee_id=${employeeId}`,
+            { method: "POST" }
+        );
+        const data = await res.json();
+
+        if (data.success) {
+            btn.textContent      = "✓ Request Sent";
+            btn.className        = "btn-pending";
+            showToast("Request sent! Waiting for employee approval.");
+            loadSentRequests();
+        } else {
+            btn.disabled    = false;
+            btn.textContent = "Send Request";
+            showToast(data.message || "Failed to send request.");
+        }
+    }
+
+    // ── INIT ──────────────────────────────────────────────────
+    loadTeam();
+    loadSentRequests();
 </script>
-
 </body>
 </html>
