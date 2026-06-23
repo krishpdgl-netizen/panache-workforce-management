@@ -516,19 +516,6 @@
         </div>
     </div>
 
-    <!-- SALES PROJECTION REMINDER -->
-    <div id="salesReminderBanner" style="display:none;
-        background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px;
-        padding:14px 20px; margin-bottom:20px; align-items:flex-start; gap:14px;">
-        <span style="font-size:20px;flex-shrink:0;">⚠️</span>
-        <div style="flex:1;">
-            <b style="font-size:14px;color:#92400e;">Week <span id="reminderWeekNum"></span> — Team Members Haven't Filled Sales Projections</b>
-            <div id="reminderMissingNames" style="font-size:13px;color:#78350f;margin-top:4px;"></div>
-        </div>
-        <button onclick="document.getElementById('salesReminderBanner').style.display='none'"
-                style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e;flex-shrink:0;">✕</button>
-    </div>
-
     <!-- CARDS -->
     <div class="cards">
         <div class="card">
@@ -864,6 +851,11 @@ localStorage.getItem("userId");
                     <td>
                         <button class="review-btn" onclick="openEditModal(${task.id})">Review</button>
                         <button class="approve-btn" onclick="approveTask(${task.id})">Approve</button>
+                        <button onclick="openRemarkModal(${task.id}, ${task.assigned_to}, '${(task.title||'').replace(/'/g,"\\'")}')"
+                                style="background:#f59e0b;color:white;border:none;padding:6px 12px;
+                                       border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-left:4px;">
+                            Send Correction
+                        </button>
                     </td>
                 </tr>`).join("");
         } catch (e) {
@@ -892,21 +884,6 @@ localStorage.getItem("userId");
         loadTasks();
         loadEmployees();
         loadReviewTasks();
-        loadSalesReminder();
-    }
-
-    async function loadSalesReminder() {
-        try {
-            const managerId = localStorage.getItem("userId");
-            const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${managerId}&viewer_role=manager`);
-            const data = await res.json();
-            if (!data.missing || data.missing.length === 0) return;
-            document.getElementById("reminderWeekNum").textContent = data.week;
-            const names = data.missing.map(e => `<b>${e.name}</b>`).join(", ");
-            document.getElementById("reminderMissingNames").innerHTML =
-                `${data.missing.length} ${data.missing.length === 1 ? "member has" : "members have"} not submitted projections: ${names}.`;
-            document.getElementById("salesReminderBanner").style.display = "flex";
-        } catch(e) { /* fail silently */ }
     }
 
     // Close modal if clicking outside
@@ -916,6 +893,77 @@ localStorage.getItem("userId");
 
     // Init
     refreshAll();
+</script>
+<!-- ── SEND CORRECTION MODAL ────────────────────────────────── -->
+<div id="remarkModal" style="display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:14px;padding:28px;width:480px;max-width:95vw;">
+        <h2 style="font-size:17px;margin-bottom:6px;color:#111827;">Send Correction</h2>
+        <p id="remarkTaskLabel" style="font-size:13px;color:#6b7280;margin-bottom:18px;"></p>
+        <input type="hidden" id="remarkTaskId" />
+        <input type="hidden" id="remarkEmployeeId" />
+
+        <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;
+                      letter-spacing:0.4px;display:block;margin-bottom:6px;">
+            Correction / Remark
+        </label>
+        <textarea id="remarkText" rows="4"
+                  placeholder="Describe what needs to be corrected or improved..."
+                  style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;
+                         font-size:14px;font-family:'Segoe UI',sans-serif;outline:none;
+                         resize:vertical;margin-bottom:18px;"></textarea>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeRemarkModal()"
+                    style="background:#e5e7eb;color:#374151;border:none;padding:10px 20px;
+                           border-radius:8px;cursor:pointer;font-size:14px;">Cancel</button>
+            <button onclick="submitRemark()"
+                    style="background:#f59e0b;color:white;border:none;padding:10px 20px;
+                           border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+                    Send Correction
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openRemarkModal(taskId, employeeId, taskTitle) {
+    document.getElementById("remarkTaskId").value     = taskId;
+    document.getElementById("remarkEmployeeId").value = employeeId;
+    document.getElementById("remarkTaskLabel").textContent = `Task: ${taskTitle}`;
+    document.getElementById("remarkText").value       = "";
+    document.getElementById("remarkModal").style.display = "flex";
+}
+
+function closeRemarkModal() {
+    document.getElementById("remarkModal").style.display = "none";
+}
+
+async function submitRemark() {
+    const taskId     = document.getElementById("remarkTaskId").value;
+    const employeeId = document.getElementById("remarkEmployeeId").value;
+    const remark     = document.getElementById("remarkText").value.trim();
+
+    if (!remark) { showToast("Please enter a correction remark."); return; }
+
+    const res = await fetch(
+        `${BASE}/send-remark?task_id=${taskId}&manager_id=${managerId}` +
+        `&employee_id=${employeeId}&remark=${encodeURIComponent(remark)}`,
+        { method: "POST" }
+    ).then(r => r.json());
+
+    if (res.success) {
+        showToast("Correction sent. Task moved back to In Progress.");
+        closeRemarkModal();
+        refreshAll();
+    } else {
+        showToast("Failed to send correction.");
+    }
+}
+
+document.getElementById("remarkModal").addEventListener("click", function(e) {
+    if (e.target === this) closeRemarkModal();
+});
 </script>
 </body>
 </html>
