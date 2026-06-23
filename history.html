@@ -349,6 +349,7 @@
         const d = new Date(raw);
         if (isNaN(d)) return raw;
         return d.toLocaleDateString("en-IN", {
+            timeZone: "Asia/Kolkata",
             day:   "2-digit",
             month: "short",
             year:  "numeric",
