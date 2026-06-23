@@ -430,6 +430,16 @@
         </div>
     </div>
 
+    <!-- TEAM REQUESTS -->
+    <div class="section" id="teamRequestsSection" style="display:none;border-left:4px solid #2563eb;">
+        <h2 style="margin-bottom:4px;">
+                <!-- NOTIFICATIONS -->#128101; Team Join Requests
+            <span id="teamRequestBadge" style="background:#2563eb;color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span>
+        </h2>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">A manager wants to add you to their team. Approving gives them visibility of your sales data.</p>
+        <div id="teamRequestsList"></div>
+    </div>
+
     <!-- NOTIFICATIONS -->
     <div class="section">
         <h2>Notifications</h2>
@@ -1067,6 +1077,81 @@ async function resolveRemark(remarkId) {
 
 // Run remarks alongside tasks
 loadRemarks();
+
+// ── TEAM JOIN REQUESTS ────────────────────────────────────────────
+async function loadTeamRequests() {
+    try {
+        const res      = await fetch(`${BASE}/team-requests?employee_id=${userId}`);
+        const requests = await res.json();
+
+        const section = document.getElementById("teamRequestsSection");
+        const list    = document.getElementById("teamRequestsList");
+        const badge   = document.getElementById("teamRequestBadge");
+
+        if (!requests.length) {
+            section.style.display = "none";
+            return;
+        }
+
+        section.style.display = "block";
+        badge.textContent     = requests.length;
+
+        list.innerHTML = requests.map(r => `
+            <div style="border:1px solid #dbeafe;border-radius:10px;padding:16px;
+                        margin-bottom:12px;background:#f0f7ff;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+                    <div>
+                        <b style="font-size:15px;color:#111827;">${r.manager_name}</b>
+                        <div style="font-size:12px;color:#6b7280;margin-top:3px;">
+                            Manager ID: ${r.manager_id} &nbsp;·&nbsp; ${r.manager_email}
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+                            Requested on ${new Date(r.created_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-shrink:0;">
+                        <button onclick="respondTeamRequest(${r.id}, 'approved', this)"
+                                style="background:#16a34a;color:white;border:none;padding:8px 18px;
+                                       border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                            ✓ Approve
+                        </button>
+                        <button onclick="respondTeamRequest(${r.id}, 'rejected', this)"
+                                style="background:#dc2626;color:white;border:none;padding:8px 18px;
+                                       border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                            ✕ Reject
+                        </button>
+                    </div>
+                </div>
+            </div>`).join("");
+    } catch(e) {
+        console.error("loadTeamRequests error:", e);
+    }
+}
+
+async function respondTeamRequest(requestId, action, btn) {
+    btn.disabled = true;
+    try {
+        const res  = await fetch(
+            `${BASE}/team-request/respond?request_id=${requestId}&action=${action}`,
+            { method: "POST" }
+        );
+        const data = await res.json();
+        if (data.success) {
+            showToast(action === "approved"
+                ? "Request approved! You've been added to the team."
+                : "Request rejected.");
+            loadTeamRequests();
+        } else {
+            showToast(data.message || "Failed. Please try again.");
+            btn.disabled = false;
+        }
+    } catch(e) {
+        showToast("Network error. Please try again.");
+        btn.disabled = false;
+    }
+}
+
+loadTeamRequests();
 </script>
 </body>
 </html>
