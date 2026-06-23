@@ -448,6 +448,45 @@
    
     
     <div id="managerView" style="display:none;">
+
+        <!-- ── MANAGER: ADD PROJECTION FOR TEAM MEMBER ──────────── -->
+        <div class="section" id="mgrEntryFormSection">
+            <h2>Add Projection for Team Member — Week <span id="mgr_weekLabel2"></span></h2>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:flex-end;">
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Employee</label>
+                    <select id="mgrEmpSelect" style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:160px;">
+                        <option value="">Select employee…</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Customer</label>
+                    <input id="mgrFCustomer" type="text" placeholder="Customer name"
+                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:160px;" />
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Product</label>
+                    <input id="mgrFProduct" type="text" placeholder="Product name"
+                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:140px;" />
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Proj Qty</label>
+                    <input id="mgrFQty" type="number" min="1" placeholder="Qty"
+                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:90px;" />
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Price / Unit (₹)</label>
+                    <input id="mgrFPrice" type="number" min="0" step="0.01" placeholder="Price"
+                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:110px;" />
+                </div>
+                <button onclick="mgrSubmitProjection()"
+                        style="background:#2563eb;color:white;border:none;padding:10px 22px;
+                               border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:40px;">
+                    + Add Projection
+                </button>
+            </div>
+        </div>
+
         <div class="section">
             <h2>Team Sales Overview — Week <span id="mgr_weekLabel"></span></h2>
             <div id="teamSalesWrap">
@@ -560,6 +599,7 @@ async function initPage() {
         buildWeekSwitcherStatic();
         await loadManagerView();
         await loadCRTable();
+        await loadMgrTeamDropdown();
     }
 }
 
@@ -1036,6 +1076,55 @@ function completeTodo(i) {
 document.getElementById("crModal").addEventListener("click", function(e) {
     if (e.target === this) closeCRModal();
 });
+
+// ── MANAGER: POPULATE EMPLOYEE DROPDOWN ───────────────────────
+async function loadMgrTeamDropdown() {
+    if (userRole === "employee") return;
+    try {
+        const res  = await fetch(`${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`).then(r => r.json());
+        const sel  = document.getElementById("mgrEmpSelect");
+        if (!sel) return;
+        sel.innerHTML = `<option value="">Select employee…</option>`;
+        (res.employees || []).forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value       = emp.id;
+            opt.textContent = emp.name + " (ID " + emp.id + ")";
+            sel.appendChild(opt);
+        });
+        document.getElementById("mgr_weekLabel2").textContent = selectedWeek;
+    } catch (e) {
+        console.error("loadMgrTeamDropdown error:", e);
+    }
+}
+
+// ── MANAGER: SUBMIT PROJECTION FOR EMPLOYEE ────────────────────
+async function mgrSubmitProjection() {
+    const empId   = document.getElementById("mgrEmpSelect").value;
+    const customer = document.getElementById("mgrFCustomer").value.trim();
+    const product  = document.getElementById("mgrFProduct").value.trim();
+    const qty      = parseInt(document.getElementById("mgrFQty").value);
+    const price    = parseFloat(document.getElementById("mgrFPrice").value);
+
+    if (!empId || !customer || !product || !qty || !price) {
+        showToast("Please fill in all fields including selecting an employee."); return;
+    }
+
+    const res = await fetch(
+        `${BASE}/sales/projection?user_id=${empId}&week=${selectedWeek}` +
+        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
+        `&projected=${qty}&price=${price}`,
+        { method: "POST" }
+    ).then(r => r.json());
+
+    if (res.success) {
+        showToast("Projection added for employee.");
+        ["mgrFCustomer","mgrFProduct","mgrFQty","mgrFPrice"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("mgrEmpSelect").value = "";
+        await loadManagerView();
+    } else {
+        showToast(res.message || "Failed to add projection.");
+    }
+}
 
 
 
