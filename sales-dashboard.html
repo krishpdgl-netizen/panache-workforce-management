@@ -589,20 +589,20 @@
 
 <script>
 // ── GLOBALS ────────────────────────────────────────────────────
-const BASE     = "https://backend-production-53f3.up.railway.app";
-const userId   = parseInt(localStorage.getItem("userId"));
-const userRole = localStorage.getItem("userRole");
-const userName = localStorage.getItem("userName");
-const TODO_KEY = "panache_todos";
-
-let currentWeekNum  = 0;
-let selectedWeek    = 0;
-let allWeeks        = [];
-let weekRows        = [];
-let donutChart      = null;
-let weekPageOffset  = 0;
+const BASE          = "https://backend-production-53f3.up.railway.app";
+const userId        = parseInt(localStorage.getItem("userId"));
+const userRole      = localStorage.getItem("userRole");
+const userName      = localStorage.getItem("userName");
+const TODO_KEY      = "panache_todos";
 const WEEKS_PER_PAGE = 4;
 const FUTURE_WEEKS   = 8;
+
+let currentWeekNum = 0;
+let selectedWeek   = 0;
+let allWeeks       = [];
+let weekRows       = [];
+let donutChart     = null;
+let weekPageOffset = 0;
 
 // ── INIT ───────────────────────────────────────────────────────
 document.getElementById("profileName").textContent = userName || "—";
@@ -614,27 +614,28 @@ renderTodos();
 initPage();
 
 async function initPage() {
-    const cw = await fetch(`${BASE}/sales/current-week`).then(r => r.json());
-    currentWeekNum = cw.week;
-    selectedWeek   = currentWeekNum;
+    try {
+        const cw = await fetch(`${BASE}/sales/current-week`).then(r => r.json());
+        currentWeekNum = cw.week;
+        selectedWeek   = currentWeekNum;
 
-    // All roles see the entry form
-    document.getElementById("employeeView").style.display = "block";
+        document.getElementById("employeeView").style.display = "block";
 
-    // Fetch weeks with data, then build calendar and load data
-    await loadWeeks();
+        await loadWeeks();
 
-    // Managers / admins also see the team panel
-    if (userRole === "manager" || userRole === "admin") {
-        document.getElementById("managerView").style.display = "block";
-        document.getElementById("mgr_weekLabel").textContent  = selectedWeek;
-        if (document.getElementById("mgr_weekLabel2"))
-            document.getElementById("mgr_weekLabel2").textContent = selectedWeek;
-        await loadManagerView();
-        await loadCRTable();
-        await loadMgrTeamDropdown();
-    } else {
-        document.getElementById("managerView").style.display = "none";
+        if (userRole === "manager" || userRole === "admin") {
+            document.getElementById("managerView").style.display = "block";
+            document.getElementById("mgr_weekLabel").textContent = selectedWeek;
+            const lbl2 = document.getElementById("mgr_weekLabel2");
+            if (lbl2) lbl2.textContent = selectedWeek;
+            await loadManagerView();
+            await loadCRTable();
+            await loadMgrTeamDropdown();
+        } else {
+            document.getElementById("managerView").style.display = "none";
+        }
+    } catch(e) {
+        console.error("initPage error:", e);
     }
 }
 
@@ -678,23 +679,13 @@ function showToast(msg) {
 
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-// ── WEEK CALENDAR ─────────────────────────────────────────────
-// We show 4 weeks at a time. Page 0 = current week + next 3.
-// Negative pages go back into past weeks.
-let weekPageOffset = 0;   // in multiples of 4 weeks
-const WEEKS_PER_PAGE = 4;
-const FUTURE_WEEKS   = 8; // how many upcoming weeks to allow
-
-// Returns the Monday of the ISO week `w` of the year that contains
-// the current date. We derive it from currentWeekNum.
+// ── WEEK CALENDAR ──────────────────────────────────────────────
 function getWeekStartDate(weekNum) {
-    // Find the Monday of currentWeekNum, then offset
     const today = new Date();
-    const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Mon=1..Sun=7
+    const dow = today.getDay() === 0 ? 7 : today.getDay();
     const monday = new Date(today);
-    monday.setDate(today.getDate() - (dayOfWeek - 1));
-    monday.setHours(0,0,0,0);
-    // offset by (weekNum - currentWeekNum) weeks
+    monday.setDate(today.getDate() - (dow - 1));
+    monday.setHours(0, 0, 0, 0);
     const diff = weekNum - currentWeekNum;
     const d = new Date(monday);
     d.setDate(d.getDate() + diff * 7);
@@ -707,23 +698,20 @@ function fmtDate(d) {
 
 function buildWeekCalendar() {
     const grid  = document.getElementById("weekGrid");
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    // Determine visible week range
-    const startOffset = weekPageOffset * WEEKS_PER_PAGE;
+    const startOffset  = weekPageOffset * WEEKS_PER_PAGE;
     const visibleWeeks = [];
     for (let i = 0; i < WEEKS_PER_PAGE; i++) {
         visibleWeeks.push(currentWeekNum + startOffset + i);
     }
 
-    // Nav buttons — don't go before week 1 or more than FUTURE_WEEKS ahead
-    const minWeek = Math.min(...allWeeks, currentWeekNum);
+    const minWeek = allWeeks.length ? Math.min(...allWeeks, currentWeekNum) : currentWeekNum;
     document.getElementById("weekNavPrev").disabled =
         (currentWeekNum + startOffset - WEEKS_PER_PAGE) < minWeek;
     document.getElementById("weekNavNext").disabled =
         (currentWeekNum + startOffset + WEEKS_PER_PAGE) > currentWeekNum + FUTURE_WEEKS;
 
-    // Header range label
     const firstDate = getWeekStartDate(visibleWeeks[0]);
     const lastStart = getWeekStartDate(visibleWeeks[WEEKS_PER_PAGE - 1]);
     const lastEnd   = new Date(lastStart); lastEnd.setDate(lastEnd.getDate() + 6);
@@ -737,14 +725,14 @@ function buildWeekCalendar() {
         const weekStart = getWeekStartDate(w);
         const weekEnd   = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
 
-        const isPast    = w < currentWeekNum;
-        const isCurrent = w === currentWeekNum;
+        const isPast     = w < currentWeekNum;
+        const isCurrent  = w === currentWeekNum;
         const isUpcoming = w > currentWeekNum;
-        const isActive  = w === selectedWeek;
+        const isActive   = w === selectedWeek;
 
         let cardClass = "week-card";
-        if (isActive)  cardClass += " active";
-        if (isPast)    cardClass += " past";
+        if (isActive) cardClass += " active";
+        if (isPast)   cardClass += " past";
 
         let badgeClass = "wk-badge";
         let badgeText  = "";
@@ -752,7 +740,6 @@ function buildWeekCalendar() {
         if (isUpcoming) { badgeClass += " upcoming"; badgeText = "Upcoming"; }
         if (isPast)     { badgeClass += " past";     badgeText = "Past";     }
 
-        // Day chips
         const dayChips = DAY_NAMES.map((name, idx) => {
             const d = new Date(weekStart); d.setDate(weekStart.getDate() + idx);
             const isToday = d.getTime() === today.getTime();
@@ -779,34 +766,29 @@ function shiftWeekPage(dir) {
 }
 
 async function loadWeeks() {
-    const res = await fetch(`${BASE}/sales/weeks?user_id=${userId}&viewer_id=${userId}&viewer_role=${userRole}`)
-                      .then(r => r.json());
-    allWeeks = res.weeks || [];
+    try {
+        const res = await fetch(
+            `${BASE}/sales/weeks?user_id=${userId}&viewer_id=${userId}&viewer_role=${userRole}`
+        ).then(r => r.json());
+        allWeeks = res.weeks || [];
+    } catch(e) {
+        allWeeks = [];
+    }
     if (!allWeeks.includes(currentWeekNum)) allWeeks.push(currentWeekNum);
-    allWeeks.sort((a,b) => a - b);
+    allWeeks.sort((a, b) => a - b);
     selectedWeek = currentWeekNum;
     buildWeekCalendar();
     await loadWeekData();
-}
-
-// static version for manager panel (shows same calendar, just also triggers mgr refresh)
-function buildWeekSwitcherStatic() {
-    // Manager/admin also uses the same calendar — just update labels
-    document.getElementById("mgr_weekLabel").textContent  = currentWeekNum;
-    if (document.getElementById("mgr_weekLabel2"))
-        document.getElementById("mgr_weekLabel2").textContent = currentWeekNum;
-    buildWeekCalendar();
 }
 
 async function selectWeek(w) {
     selectedWeek = w;
     buildWeekCalendar();
     await loadWeekData();
-    // if manager/admin, refresh their view for this week too
     if (userRole === "manager" || userRole === "admin") {
         document.getElementById("mgr_weekLabel").textContent = w;
-        if (document.getElementById("mgr_weekLabel2"))
-            document.getElementById("mgr_weekLabel2").textContent = w;
+        const lbl2 = document.getElementById("mgr_weekLabel2");
+        if (lbl2) lbl2.textContent = w;
         await loadManagerView();
         await loadCRTable();
         await loadMgrTeamDropdown();
@@ -815,31 +797,34 @@ async function selectWeek(w) {
 
 // ── LOAD WEEK DATA ─────────────────────────────────────────────
 async function loadWeekData() {
-    const isCurrentWeek = selectedWeek === currentWeekNum;
     const isFutureWeek  = selectedWeek > currentWeekNum;
-    const canEdit       = isCurrentWeek || isFutureWeek;
+    const isPastWeek    = selectedWeek < currentWeekNum;
+    const canEdit       = !isPastWeek;   // current + future are editable
 
     document.getElementById("formWeekLabel").textContent  = selectedWeek;
     document.getElementById("tableWeekLabel").textContent = selectedWeek;
-
-    // Show entry form for current + future weeks
     document.getElementById("entryFormSection").style.display = canEdit ? "block" : "none";
 
-    const res = await fetch(
-        `${BASE}/sales/rows?user_id=${userId}&week=${selectedWeek}&viewer_id=${userId}&viewer_role=${userRole}`
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/rows?user_id=${userId}&week=${selectedWeek}&viewer_id=${userId}&viewer_role=${userRole}`
+        ).then(r => r.json());
+        weekRows = res.rows || [];
+    } catch(e) {
+        weekRows = [];
+    }
 
-    weekRows = res.rows || [];
-    renderProjectionTable(canEdit);
+    renderProjectionTable();
     updateChartAndStats();
     await loadMyRequests();
 }
 
 // ── RENDER PROJECTION TABLE ────────────────────────────────────
-function renderProjectionTable(canEdit) {
-    const tbody = document.getElementById("projTableBody");
+function renderProjectionTable() {
+    const tbody    = document.getElementById("projTableBody");
     const isFuture = selectedWeek > currentWeekNum;
     const isPast   = selectedWeek < currentWeekNum;
+    const canEdit  = !isPast;
 
     if (!weekRows.length) {
         const msg = canEdit ? "No projections yet. Add one above." : "No data for this week.";
@@ -851,51 +836,54 @@ function renderProjectionTable(canEdit) {
         const lockIcon = `<span style="color:#d1d5db;font-size:14px;" title="Locked">🔒</span>`;
 
         let achievedCell;
-        if (!isFuture && !isPast) {
-            achievedCell = `<input class="achieved-input" type="number" min="0"
-                      id="ach_${idx}" value="${row.achieved || 0}"
-                      onkeydown="if(event.key==='Enter') saveAchieved(${idx})" />
-               <button class="save-achieved-btn" onclick="saveAchieved(${idx})">Save</button>`;
+        if (isPast) {
+            achievedCell = `<span style="font-weight:600;">${row.achieved || 0}</span>`;
         } else if (isFuture) {
             achievedCell = `<span style="color:#9ca3af;font-size:12px;">Not yet</span>`;
         } else {
-            achievedCell = `<span style="font-weight:600;">${row.achieved || 0}</span>`;
+            achievedCell = `<input class="achieved-input" type="number" min="0"
+                id="ach_${idx}" value="${row.achieved || 0}"
+                onkeydown="if(event.key==='Enter') saveAchieved(${idx})" />
+                <button class="save-achieved-btn" onclick="saveAchieved(${idx})">Save</button>`;
         }
 
         const crBtn = (!isFuture && !isPast)
             ? `<button class="cr-btn" onclick="openCRModal('${esc(row.customer)}','${esc(row.product)}',${row.projected})"
-                       title="Request change to projected quantity">✏ Change</button>`
+                title="Request change to projected quantity">✏ Change</button>`
             : "";
 
         return `<tr>
             <td><b>${row.customer}</b></td>
             <td>${row.product}</td>
-            <td>${row.projected} ${isFuture ? "" : lockIcon}</td>
-            <td>&#8377;${Number(row.price).toLocaleString("en-IN")}</td>
+            <td>${row.projected} ${isPast ? lockIcon : ""}</td>
+            <td>₹${Number(row.price).toLocaleString("en-IN")}</td>
             <td>${achievedCell}</td>
             <td>${crBtn}</td>
         </tr>`;
     }).join("");
 }
 
-// escape single quotes for inline onclick
 function esc(s) { return String(s).replace(/'/g, "\\'"); }
 
 // ── SAVE ACHIEVED ──────────────────────────────────────────────
 async function saveAchieved(idx) {
     const row = weekRows[idx];
     const val = parseInt(document.getElementById(`ach_${idx}`).value) || 0;
-    const res = await fetch(
-        `${BASE}/sales/achieved?user_id=${userId}&week=${selectedWeek}` +
-        `&customer=${encodeURIComponent(row.customer)}&product=${encodeURIComponent(row.product)}&achieved=${val}`,
-        { method: "PUT" }
-    ).then(r => r.json());
-    if (res.success) {
-        weekRows[idx].achieved = val;
-        showToast("Achieved quantity saved.");
-        updateChartAndStats();
-    } else {
-        showToast(res.message || "Save failed.");
+    try {
+        const res = await fetch(
+            `${BASE}/sales/achieved?user_id=${userId}&week=${selectedWeek}` +
+            `&customer=${encodeURIComponent(row.customer)}&product=${encodeURIComponent(row.product)}&achieved=${val}`,
+            { method: "PUT" }
+        ).then(r => r.json());
+        if (res.success) {
+            weekRows[idx].achieved = val;
+            showToast("Achieved quantity saved.");
+            updateChartAndStats();
+        } else {
+            showToast(res.message || "Save failed.");
+        }
+    } catch(e) {
+        showToast("Network error saving achieved.");
     }
 }
 
@@ -910,19 +898,23 @@ async function submitProjection() {
         showToast("Please fill in all fields."); return;
     }
 
-    const res = await fetch(
-        `${BASE}/sales/projection?user_id=${userId}&week=${selectedWeek}` +
-        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-        `&projected=${qty}&price=${price}`,
-        { method: "POST" }
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/projection?user_id=${userId}&week=${selectedWeek}` +
+            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
+            `&projected=${qty}&price=${price}`,
+            { method: "POST" }
+        ).then(r => r.json());
 
-    if (res.success) {
-        showToast("Projection added.");
-        ["fCustomer","fProduct","fQty","fPrice"].forEach(id => document.getElementById(id).value = "");
-        await loadWeekData();
-    } else {
-        showToast(res.message || "Failed to add projection.");
+        if (res.success) {
+            showToast("Projection added.");
+            ["fCustomer","fProduct","fQty","fPrice"].forEach(id => document.getElementById(id).value = "");
+            await loadWeekData();
+        } else {
+            showToast(res.message || "Failed to add projection.");
+        }
+    } catch(e) {
+        showToast("Network error submitting projection.");
     }
 }
 
@@ -935,9 +927,7 @@ function updateChartAndStats() {
     document.getElementById("statProjected").textContent = totalProj;
     document.getElementById("statAchieved").textContent  = totalAch;
     document.getElementById("statPct").textContent       = pct + "%";
-    document.getElementById("chartPct").textContent      = pct + "%";
 
-    // summary
     const customers = [...new Set(weekRows.map(r => r.customer))].length;
     const products  = [...new Set(weekRows.map(r => r.product))].length;
     const projRev   = weekRows.reduce((s, r) => s + (Number(r.projected) * Number(r.price)), 0);
@@ -948,17 +938,17 @@ function updateChartAndStats() {
     document.getElementById("sumProjRev").textContent   = "₹" + projRev.toLocaleString("en-IN");
     document.getElementById("sumAchRev").textContent    = "₹" + achRev.toLocaleString("en-IN");
 
-    // donut chart
-    const remaining = Math.max(totalProj - totalAch, 0);
+    const chartPctEl = document.getElementById("chartPct");
     const ctx = document.getElementById("donutChart").getContext("2d");
-
-    if (donutChart) donutChart.destroy();
+    if (donutChart) { donutChart.destroy(); donutChart = null; }
 
     if (totalProj === 0) {
-        document.getElementById("chartPct").textContent = "—";
+        chartPctEl.textContent = "—";
         return;
     }
 
+    chartPctEl.textContent = pct + "%";
+    const remaining = Math.max(totalProj - totalAch, 0);
     donutChart = new Chart(ctx, {
         type: "doughnut",
         data: {
@@ -1004,152 +994,166 @@ async function submitCR() {
     if (!newQty || !reason) { showToast("Please fill in all fields."); return; }
     if (newQty === parseInt(oldQty)) { showToast("New quantity is the same as current."); return; }
 
-    const res = await fetch(
-        `${BASE}/sales/change-request?employee_id=${userId}&week=${selectedWeek}` +
-        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-        `&old_qty=${oldQty}&new_qty=${newQty}&reason=${encodeURIComponent(reason)}`,
-        { method: "POST" }
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/change-request?employee_id=${userId}&week=${selectedWeek}` +
+            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
+            `&old_qty=${oldQty}&new_qty=${newQty}&reason=${encodeURIComponent(reason)}`,
+            { method: "POST" }
+        ).then(r => r.json());
 
-    if (res.success) {
-        showToast("Change request submitted.");
-        closeCRModal();
-        await loadMyRequests();
-    } else {
-        showToast(res.message || "Failed.");
+        if (res.success) {
+            showToast("Change request submitted.");
+            closeCRModal();
+            await loadMyRequests();
+        } else {
+            showToast(res.message || "Failed.");
+        }
+    } catch(e) {
+        showToast("Network error submitting request.");
     }
 }
 
 // ── MY CHANGE REQUESTS ─────────────────────────────────────────
 async function loadMyRequests() {
-    const res = await fetch(
-        `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
+        ).then(r => r.json());
 
-    const requests = res.requests || [];
-    const tbody = document.getElementById("myRequestsBody");
+        const requests = res.requests || [];
+        const tbody = document.getElementById("myRequestsBody");
 
-    if (!requests.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="no-data">No change requests raised.</td></tr>`;
-        return;
+        if (!requests.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="no-data">No change requests raised.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = requests.map(r => `
+            <tr>
+                <td>Week ${r.week}</td>
+                <td>${r.customer}</td>
+                <td>${r.product}</td>
+                <td>${r.old_qty}</td>
+                <td>${r.new_qty}</td>
+                <td style="max-width:180px;font-size:12px;color:#6b7280;">${r.reason}</td>
+                <td>${pillBadge(r.status)}</td>
+            </tr>`).join("");
+    } catch(e) {
+        console.error("loadMyRequests error:", e);
     }
-
-    tbody.innerHTML = requests.map(r => `
-        <tr>
-            <td>Week ${r.week}</td>
-            <td>${r.customer}</td>
-            <td>${r.product}</td>
-            <td>${r.old_qty}</td>
-            <td>${r.new_qty}</td>
-            <td style="max-width:180px;font-size:12px;color:#6b7280;">${r.reason}</td>
-            <td>${pillBadge(r.status)}</td>
-        </tr>`).join("");
 }
 
 // ── MANAGER VIEW ───────────────────────────────────────────────
 async function loadManagerView() {
-    const res = await fetch(
-        `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
+        ).then(r => r.json());
 
-    const wrap = document.getElementById("teamSalesWrap");
-    if (!res.employees || !res.employees.length) {
-        wrap.innerHTML = `<p class="no-data">No team data found.</p>`;
-        return;
+        const wrap = document.getElementById("teamSalesWrap");
+        if (!res.employees || !res.employees.length) {
+            wrap.innerHTML = `<p class="no-data">No team data found.</p>`;
+            return;
+        }
+
+        wrap.innerHTML = res.employees.map(emp => {
+            const rows = emp.rows || [];
+            const proj = rows.reduce((s, r) => s + Number(r.projected || 0), 0);
+            const ach  = rows.reduce((s, r) => s + Number(r.achieved  || 0), 0);
+            const pct  = proj > 0 ? Math.round(ach / proj * 100) : 0;
+
+            const rowsHtml = rows.length
+                ? rows.map(r => `
+                    <tr>
+                        <td>${r.customer}</td><td>${r.product}</td>
+                        <td>${r.projected}</td><td>₹${Number(r.price).toLocaleString("en-IN")}</td>
+                        <td><b>${r.achieved || 0}</b></td>
+                    </tr>`).join("")
+                : `<tr><td colspan="5" class="no-data">No projections this week.</td></tr>`;
+
+            return `
+            <div style="margin-bottom:20px;border:1px solid #f3f4f6;border-radius:10px;overflow:hidden;">
+                <div style="background:#f9fafb;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <b style="font-size:14px;">${emp.name}</b>
+                        <span style="font-size:12px;color:#6b7280;margin-left:8px;">ID ${emp.id}</span>
+                    </div>
+                    <div style="display:flex;gap:16px;font-size:13px;">
+                        <span>Proj: <b>${proj}</b></span>
+                        <span>Ach: <b style="color:#059669;">${ach}</b></span>
+                        <span>Achievement: <b style="color:${pct >= 75 ? '#059669' : pct >= 40 ? '#f59e0b' : '#dc2626'}">${pct}%</b></span>
+                    </div>
+                </div>
+                <table>
+                    <thead><tr>
+                        <th>Customer</th><th>Product</th><th>Proj Qty</th>
+                        <th>Price/Unit</th><th>Achieved Qty</th>
+                    </tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </div>`;
+        }).join("");
+    } catch(e) {
+        console.error("loadManagerView error:", e);
     }
-
-    wrap.innerHTML = res.employees.map(emp => {
-        const rows = emp.rows || [];
-        const proj = rows.reduce((s,r) => s + Number(r.projected || 0), 0);
-        const ach  = rows.reduce((s,r) => s + Number(r.achieved  || 0), 0);
-        const pct  = proj > 0 ? Math.round(ach / proj * 100) : 0;
-
-        const rowsHtml = rows.length
-            ? rows.map(r => `
-                <tr>
-                    <td>${r.customer}</td><td>${r.product}</td>
-                    <td>${r.projected}</td><td>₹${Number(r.price).toLocaleString("en-IN")}</td>
-                    <td><b>${r.achieved || 0}</b></td>
-                </tr>`).join("")
-            : `<tr><td colspan="5" class="no-data">No projections this week.</td></tr>`;
-
-        return `
-        <div style="margin-bottom:20px;border:1px solid #f3f4f6;border-radius:10px;overflow:hidden;">
-            <div style="background:#f9fafb;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                    <b style="font-size:14px;">${emp.name}</b>
-                    <span style="font-size:12px;color:#6b7280;margin-left:8px;">ID ${emp.id}</span>
-                </div>
-                <div style="display:flex;gap:16px;font-size:13px;">
-                    <span>Proj: <b>${proj}</b></span>
-                    <span>Ach: <b style="color:#059669;">${ach}</b></span>
-                    <span>Achievement: <b style="color:${pct >= 75 ? '#059669' : pct >= 40 ? '#f59e0b' : '#dc2626'}">${pct}%</b></span>
-                </div>
-            </div>
-            <table>
-                <thead><tr>
-                    <th>Customer</th><th>Product</th><th>Proj Qty</th>
-                    <th>Price/Unit</th><th>Achieved Qty</th>
-                </tr></thead>
-                <tbody>${rowsHtml}</tbody>
-            </table>
-        </div>`;
-    }).join("");
 }
 
 // ── CR TABLE (manager / admin) ─────────────────────────────────
 async function loadCRTable() {
-    const res = await fetch(
-        `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
+        ).then(r => r.json());
 
-    const requests = res.requests || [];
-    const tbody = document.getElementById("crTableBody");
+        const requests = res.requests || [];
+        const tbody = document.getElementById("crTableBody");
 
-    if (!requests.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="no-data">No change requests.</td></tr>`;
-        return;
+        if (!requests.length) {
+            tbody.innerHTML = `<tr><td colspan="8" class="no-data">No change requests.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = requests.map(r => {
+            const actions = r.status === "pending"
+                ? `<button class="resolve-btn btn-approve" onclick="resolveRequest('${r.request_id}','approved')">Approve</button>
+                   <button class="resolve-btn btn-reject"  onclick="resolveRequest('${r.request_id}','rejected')">Reject</button>`
+                : `<span style="font-size:12px;color:#9ca3af;">${r.manager_note || "—"}</span>`;
+            return `<tr>
+                <td>Emp ${r.employee_id}</td>
+                <td>Week ${r.week}</td>
+                <td>${r.customer}</td>
+                <td>${r.product}</td>
+                <td>${r.old_qty} → ${r.new_qty}</td>
+                <td style="max-width:160px;font-size:12px;color:#6b7280;">${r.reason}</td>
+                <td>${pillBadge(r.status)}</td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join("");
+    } catch(e) {
+        console.error("loadCRTable error:", e);
     }
-
-    tbody.innerHTML = requests.map(r => {
-        const actions = r.status === "pending"
-            ? `<button class="resolve-btn btn-approve" onclick="resolveRequest('${r.request_id}','approved')">Approve</button>
-               <button class="resolve-btn btn-reject"  onclick="resolveRequest('${r.request_id}','rejected')">Reject</button>`
-            : `<span style="font-size:12px;color:#9ca3af;">${r.manager_note || "—"}</span>`;
-        return `<tr>
-            <td>Emp ${r.employee_id}</td>
-            <td>Week ${r.week}</td>
-            <td>${r.customer}</td>
-            <td>${r.product}</td>
-            <td>${r.old_qty} → ${r.new_qty}</td>
-            <td style="max-width:160px;font-size:12px;color:#6b7280;">${r.reason}</td>
-            <td>${pillBadge(r.status)}</td>
-            <td>${actions}</td>
-        </tr>`;
-    }).join("");
 }
 
 async function resolveRequest(requestId, action) {
     const note = action === "rejected" ? (prompt("Reason for rejection (optional):") || "") : "";
-    const res  = await fetch(
-        `${BASE}/sales/change-request/resolve?request_id=${encodeURIComponent(requestId)}` +
-        `&action=${action}&manager_note=${encodeURIComponent(note)}&viewer_role=${userRole}`,
-        { method: "POST" }
-    ).then(r => r.json());
-    if (res.success) {
-        showToast(`Request ${action}.`);
-        // Reload CR table AND team overview so updated projected qty
-        // appears in table rows, donut chart, and stat cards
-        await Promise.all([
-            loadCRTable(),
-            loadManagerView(),
-        ]);
-    } else {
-        showToast(res.message || "Failed.");
+    try {
+        const res = await fetch(
+            `${BASE}/sales/change-request/resolve?request_id=${encodeURIComponent(requestId)}` +
+            `&action=${action}&manager_note=${encodeURIComponent(note)}&viewer_role=${userRole}`,
+            { method: "POST" }
+        ).then(r => r.json());
+        if (res.success) {
+            showToast(`Request ${action}.`);
+            await Promise.all([loadCRTable(), loadManagerView()]);
+        } else {
+            showToast(res.message || "Failed.");
+        }
+    } catch(e) {
+        showToast("Network error resolving request.");
     }
 }
 
-// ── HELPERS ────────────────────────────────────────────────────
 function pillBadge(status) {
     const map = { pending: "pill-pending", approved: "pill-approved", rejected: "pill-rejected" };
     return `<span class="status-pill ${map[status] || ''}">${status}</span>`;
@@ -1199,17 +1203,18 @@ function completeTodo(i) {
     }, 500);
 }
 
-// close modal on outside click
 document.getElementById("crModal").addEventListener("click", function(e) {
     if (e.target === this) closeCRModal();
 });
 
-// ── MANAGER: POPULATE EMPLOYEE DROPDOWN ───────────────────────
+// ── MANAGER: EMPLOYEE DROPDOWN ────────────────────────────────
 async function loadMgrTeamDropdown() {
     if (userRole === "employee") return;
     try {
-        const res  = await fetch(`${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`).then(r => r.json());
-        const sel  = document.getElementById("mgrEmpSelect");
+        const res = await fetch(
+            `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
+        ).then(r => r.json());
+        const sel = document.getElementById("mgrEmpSelect");
         if (!sel) return;
         sel.innerHTML = `<option value="">Select employee…</option>`;
         (res.employees || []).forEach(emp => {
@@ -1218,15 +1223,16 @@ async function loadMgrTeamDropdown() {
             opt.textContent = emp.name + " (ID " + emp.id + ")";
             sel.appendChild(opt);
         });
-        document.getElementById("mgr_weekLabel2").textContent = selectedWeek;
-    } catch (e) {
+        const lbl2 = document.getElementById("mgr_weekLabel2");
+        if (lbl2) lbl2.textContent = selectedWeek;
+    } catch(e) {
         console.error("loadMgrTeamDropdown error:", e);
     }
 }
 
-// ── MANAGER: SUBMIT PROJECTION FOR EMPLOYEE ────────────────────
+// ── MANAGER: SUBMIT PROJECTION FOR EMPLOYEE ───────────────────
 async function mgrSubmitProjection() {
-    const empId   = document.getElementById("mgrEmpSelect").value;
+    const empId    = document.getElementById("mgrEmpSelect").value;
     const customer = document.getElementById("mgrFCustomer").value.trim();
     const product  = document.getElementById("mgrFProduct").value.trim();
     const qty      = parseInt(document.getElementById("mgrFQty").value);
@@ -1236,25 +1242,26 @@ async function mgrSubmitProjection() {
         showToast("Please fill in all fields including selecting an employee."); return;
     }
 
-    const res = await fetch(
-        `${BASE}/sales/projection?user_id=${empId}&week=${selectedWeek}` +
-        `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-        `&projected=${qty}&price=${price}`,
-        { method: "POST" }
-    ).then(r => r.json());
+    try {
+        const res = await fetch(
+            `${BASE}/sales/projection?user_id=${empId}&week=${selectedWeek}` +
+            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
+            `&projected=${qty}&price=${price}`,
+            { method: "POST" }
+        ).then(r => r.json());
 
-    if (res.success) {
-        showToast("Projection added for employee.");
-        ["mgrFCustomer","mgrFProduct","mgrFQty","mgrFPrice"].forEach(id => document.getElementById(id).value = "");
-        document.getElementById("mgrEmpSelect").value = "";
-        await loadManagerView();
-    } else {
-        showToast(res.message || "Failed to add projection.");
+        if (res.success) {
+            showToast("Projection added for employee.");
+            ["mgrFCustomer","mgrFProduct","mgrFQty","mgrFPrice"].forEach(id => document.getElementById(id).value = "");
+            document.getElementById("mgrEmpSelect").value = "";
+            await loadManagerView();
+        } else {
+            showToast(res.message || "Failed to add projection.");
+        }
+    } catch(e) {
+        showToast("Network error adding projection.");
     }
 }
-
-
-
 </script>
 </body>
 </html>
