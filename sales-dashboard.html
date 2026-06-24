@@ -588,56 +588,48 @@
 <div class="toast" id="toast"></div>
 
 <script>
-
-let currentWeek = 0;
-
-async function loadCurrentWeek() {
-
-    const res = await fetch(`${BASE}/sales/current-week`);
-
-    const data = await res.json();
-
-    currentWeek = data.week;
-
-}
 // ── GLOBALS ────────────────────────────────────────────────────
-const BASE       = "https://backend-production-53f3.up.railway.app";
-const userId     = parseInt(localStorage.getItem("userId"));
-const userRole   = localStorage.getItem("userRole");
-const userName   = localStorage.getItem("userName");
-const TODO_KEY   = "panache_todos";
-const isGuest    = false;
+const BASE     = "https://backend-production-53f3.up.railway.app";
+const userId   = parseInt(localStorage.getItem("userId"));
+const userRole = localStorage.getItem("userRole");
+const userName = localStorage.getItem("userName");
+const TODO_KEY = "panache_todos";
 
-let currentWeekNum = 0;
-let selectedWeek   = 0;
-let allWeeks       = [];
-let weekRows       = [];      // rows for selected week
-let donutChart     = null;
+let currentWeekNum  = 0;
+let selectedWeek    = 0;
+let allWeeks        = [];
+let weekRows        = [];
+let donutChart      = null;
+let weekPageOffset  = 0;
+const WEEKS_PER_PAGE = 4;
+const FUTURE_WEEKS   = 8;
 
 // ── INIT ───────────────────────────────────────────────────────
 document.getElementById("profileName").textContent = userName || "—";
-document.getElementById("profileRole").textContent = userRole ? (userRole.charAt(0).toUpperCase() + userRole.slice(1)) : "";
+document.getElementById("profileRole").textContent = userRole
+    ? (userRole.charAt(0).toUpperCase() + userRole.slice(1)) : "";
 
 buildSidebar();
 renderTodos();
 initPage();
 
-
-  
 async function initPage() {
-    // fetch current week number
     const cw = await fetch(`${BASE}/sales/current-week`).then(r => r.json());
     currentWeekNum = cw.week;
+    selectedWeek   = currentWeekNum;
 
-    // All roles see the entry form to add their own projections
+    // All roles see the entry form
     document.getElementById("employeeView").style.display = "block";
+
+    // Fetch weeks with data, then build calendar and load data
     await loadWeeks();
 
+    // Managers / admins also see the team panel
     if (userRole === "manager" || userRole === "admin") {
-        // Also show the team/admin report below
         document.getElementById("managerView").style.display = "block";
-        selectedWeek = currentWeekNum;
-        buildWeekSwitcherStatic();
+        document.getElementById("mgr_weekLabel").textContent  = selectedWeek;
+        if (document.getElementById("mgr_weekLabel2"))
+            document.getElementById("mgr_weekLabel2").textContent = selectedWeek;
         await loadManagerView();
         await loadCRTable();
         await loadMgrTeamDropdown();
@@ -844,25 +836,33 @@ async function loadWeekData() {
 }
 
 // ── RENDER PROJECTION TABLE ────────────────────────────────────
-function renderProjectionTable(isCurrentWeek) {
+function renderProjectionTable(canEdit) {
     const tbody = document.getElementById("projTableBody");
+    const isFuture = selectedWeek > currentWeekNum;
+    const isPast   = selectedWeek < currentWeekNum;
+
     if (!weekRows.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="no-data">
-            ${isCurrentWeek ? "No projections yet. Add one above." : "No data for this week."}
-        </td></tr>`;
+        const msg = canEdit ? "No projections yet. Add one above." : "No data for this week.";
+        tbody.innerHTML = `<tr><td colspan="6" class="no-data">${msg}</td></tr>`;
         return;
     }
 
     tbody.innerHTML = weekRows.map((row, idx) => {
         const lockIcon = `<span style="color:#d1d5db;font-size:14px;" title="Locked">🔒</span>`;
-        const achievedCell = isCurrentWeek
-            ? `<input class="achieved-input" type="number" min="0"
+
+        let achievedCell;
+        if (!isFuture && !isPast) {
+            achievedCell = `<input class="achieved-input" type="number" min="0"
                       id="ach_${idx}" value="${row.achieved || 0}"
                       onkeydown="if(event.key==='Enter') saveAchieved(${idx})" />
-               <button class="save-achieved-btn" onclick="saveAchieved(${idx})">Save</button>`
-            : `<span style="font-weight:600;">${row.achieved || 0}</span>`;
+               <button class="save-achieved-btn" onclick="saveAchieved(${idx})">Save</button>`;
+        } else if (isFuture) {
+            achievedCell = `<span style="color:#9ca3af;font-size:12px;">Not yet</span>`;
+        } else {
+            achievedCell = `<span style="font-weight:600;">${row.achieved || 0}</span>`;
+        }
 
-        const crBtn = isCurrentWeek
+        const crBtn = (!isFuture && !isPast)
             ? `<button class="cr-btn" onclick="openCRModal('${esc(row.customer)}','${esc(row.product)}',${row.projected})"
                        title="Request change to projected quantity">✏ Change</button>`
             : "";
@@ -870,8 +870,8 @@ function renderProjectionTable(isCurrentWeek) {
         return `<tr>
             <td><b>${row.customer}</b></td>
             <td>${row.product}</td>
-            <td>${row.projected} ${lockIcon}</td>
-            <td>₹${Number(row.price).toLocaleString("en-IN")}</td>
+            <td>${row.projected} ${isFuture ? "" : lockIcon}</td>
+            <td>&#8377;${Number(row.price).toLocaleString("en-IN")}</td>
             <td>${achievedCell}</td>
             <td>${crBtn}</td>
         </tr>`;
