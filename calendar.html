@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar | Panache WMS</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role) { window.location.href = "index.html"; }
+    </script>
+    <style>
+        /* ── RESET & BASE ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { display: flex; background: #f4f6f9; min-height: 100vh; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 260px; height: 100vh; background: #111827;
+            color: white; position: fixed; top: 0; left: 0;
+            padding: 20px; display: flex; flex-direction: column;
+            overflow-y: auto; z-index: 100;
+        }
+        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; color: #fff; }
+        .menu a {
+            display: flex; align-items: center; gap: 10px;
+            color: white; text-decoration: none; padding: 12px;
+            margin-bottom: 6px; border-radius: 8px; transition: .2s; font-size: 14px;
+        }
+        .menu a:hover, .menu a.active { background: #2563eb; }
+        .menu a svg { flex-shrink: 0; opacity: .8; }
+
+        /* Mini todo in sidebar */
+        .sidebar-notes { margin-top: auto; padding-top: 20px; border-top: .5px solid rgba(255,255,255,.12); }
+        .sidebar-notes-label {
+            font-size: 11px; font-weight: 500; color: rgba(255,255,255,.4);
+            letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px;
+        }
+        #sidebarTodos { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
+        .sidebar-todo-add { display: flex; gap: 6px; margin-top: 10px; }
+        .sidebar-todo-add input {
+            flex: 1; background: rgba(255,255,255,.08); border: .5px solid rgba(255,255,255,.15);
+            border-radius: 6px; padding: 6px 8px; font-size: 12px; color: #fff; outline: none;
+        }
+        .sidebar-todo-add button {
+            width: 28px; height: 28px; border-radius: 6px; background: #2563eb;
+            border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; flex-shrink: 0;
+        }
+
+        /* ── MAIN ── */
+        .main { margin-left: 260px; width: calc(100% - 260px); padding: 28px; }
+
+        /* ── HEADER ── */
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
+        }
+        .page-header h1 { color: #111827; font-size: 26px; font-weight: 700; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .profile-badge {
+            background: white; padding: 8px 18px; border-radius: 10px;
+            font-weight: 600; font-size: 14px; color: #111827;
+        }
+        .btn-logout {
+            background: #dc2626; color: white; border: none;
+            padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+        .btn-logout:hover { background: #b91c1c; }
+        .btn-new-meeting {
+            background: #2563eb; color: white; border: none;
+            padding: 9px 18px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-new-meeting:hover { background: #1d4ed8; }
+
+        /* ── CALENDAR LAYOUT ── */
+        .calendar-wrapper {
+            background: white; border-radius: 16px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.07); overflow: hidden;
+        }
+
+        /* ── CALENDAR TOOLBAR ── */
+        .cal-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 24px; border-bottom: 1px solid #f0f0f0;
+        }
+        .cal-nav { display: flex; align-items: center; gap: 10px; }
+        .cal-nav button {
+            background: #f3f4f6; border: none; border-radius: 8px;
+            width: 34px; height: 34px; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center; color: #374151;
+            transition: .15s;
+        }
+        .cal-nav button:hover { background: #2563eb; color: white; }
+        .cal-title { font-size: 20px; font-weight: 700; color: #111827; min-width: 200px; text-align: center; }
+        .cal-view-tabs { display: flex; gap: 4px; background: #f3f4f6; border-radius: 8px; padding: 4px; }
+        .cal-view-tab {
+            padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer;
+            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent;
+            transition: .15s;
+        }
+        .cal-view-tab.active { background: white; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+        .btn-today {
+            background: white; border: 1.5px solid #d1d5db; border-radius: 8px;
+            padding: 6px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+            color: #374151; transition: .15s;
+        }
+        .btn-today:hover { border-color: #2563eb; color: #2563eb; }
+
+        /* ── MONTH VIEW ── */
+        #monthView { display: block; }
+        .month-grid { padding: 0; }
+        .month-weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .month-weekday {
+            text-align: center; padding: 10px; font-size: 12px;
+            font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .5px;
+        }
+        .month-days {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+        }
+        .month-day {
+            min-height: 110px; border-right: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0; padding: 8px; cursor: pointer;
+            transition: background .15s; position: relative;
+        }
+        .month-day:hover { background: #f8faff; }
+        .month-day:nth-child(7n) { border-right: none; }
+        .month-day.other-month { background: #fafafa; }
+        .month-day.other-month .day-num { color: #d1d5db; }
+        .month-day.today { background: #eff6ff; }
+        .month-day.today .day-num {
+            background: #2563eb; color: white; width: 28px; height: 28px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        .day-num { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+        .month-meeting-pill {
+            display: block; padding: 2px 7px; border-radius: 4px;
+            font-size: 11px; font-weight: 600; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .month-more { font-size: 11px; color: #6b7280; padding: 2px 4px; }
+
+        /* ── DAY VIEW ── */
+        #dayView { display: none; }
+        .day-view-header {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px 24px; border-bottom: 1px solid #f0f0f0;
+        }
+        .back-to-month {
+            background: #f3f4f6; border: none; border-radius: 8px;
+            padding: 7px 14px; cursor: pointer; font-size: 13px;
+            font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px;
+            transition: .15s;
+        }
+        .back-to-month:hover { background: #e5e7eb; }
+        .day-view-title { font-size: 18px; font-weight: 700; color: #111827; }
+        .day-view-subtitle { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+        .day-schedule {
+            display: grid; grid-template-columns: 64px 1fr;
+            height: calc(100vh - 280px); overflow-y: auto;
+            position: relative;
+        }
+        .time-gutter { border-right: 1px solid #f0f0f0; }
+        .time-label {
+            height: 48px; display: flex; align-items: flex-start;
+            justify-content: flex-end; padding: 4px 10px 0 0;
+            font-size: 11px; color: #9ca3af; font-weight: 500;
+        }
+        .slots-column { position: relative; }
+        .slot-row {
+            height: 48px; border-bottom: 1px solid #f3f4f6;
+            position: relative; cursor: pointer; transition: background .1s;
+        }
+        .slot-row:nth-child(odd) { border-bottom: 1px dashed #f3f4f6; }
+        .slot-row:hover { background: #f0f6ff; }
+        .slot-row.selecting { background: #dbeafe; }
+        .slot-row.busy { background: #fef2f2; cursor: not-allowed; }
+
+        /* Meeting blocks */
+        .meeting-block {
+            position: absolute; left: 4px; right: 4px;
+            border-radius: 8px; padding: 6px 10px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            z-index: 10; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.12);
+            transition: transform .1s, box-shadow .1s;
+            border-left: 3px solid rgba(0,0,0,.15);
+        }
+        .meeting-block:hover { transform: translateX(1px); box-shadow: 0 3px 10px rgba(0,0,0,.15); }
+        .meeting-block .mb-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .meeting-block .mb-time { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .meeting-block .mb-loc { font-size: 11px; opacity: .65; display: flex; align-items: center; gap: 3px; margin-top: 1px; }
+
+        /* Current time line */
+        .current-time-line {
+            position: absolute; left: 0; right: 0;
+            height: 2px; background: #ef4444; z-index: 20; pointer-events: none;
+        }
+        .current-time-line::before {
+            content: ''; position: absolute; left: -5px; top: -4px;
+            width: 10px; height: 10px; border-radius: 50%; background: #ef4444;
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; border-radius: 16px; padding: 28px;
+            width: 520px; max-width: 96vw; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 16px 48px rgba(0,0,0,.22);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+        .modal-header h2 { color: #111827; font-size: 18px; }
+        .modal-close {
+            background: #f3f4f6; border: none; border-radius: 8px;
+            width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: #6b7280;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #e5e7eb; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; margin-bottom: 6px;
+            font-weight: 600; color: #374151; font-size: 13px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%; padding: 10px 12px;
+            border: 1.5px solid #e5e7eb; border-radius: 8px;
+            font-size: 14px; color: #111827; outline: none;
+            transition: border-color .15s; background: white;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus { border-color: #2563eb; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .participants-list {
+            border: 1.5px solid #e5e7eb; border-radius: 8px;
+            max-height: 160px; overflow-y: auto; padding: 8px;
+        }
+        .participant-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 8px; border-radius: 6px; cursor: pointer;
+            transition: background .1s;
+        }
+        .participant-item:hover { background: #f3f4f6; }
+        .participant-item input[type=checkbox] { accent-color: #2563eb; width: 16px; height: 16px; }
+        .participant-name { font-size: 14px; color: #374151; }
+        .participant-role { font-size: 11px; color: #9ca3af; margin-left: auto; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+        .btn-cancel {
+            background: #f3f4f6; color: #374151; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+        .btn-save {
+            background: #2563eb; color: white; border: none;
+            padding: 10px 24px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 700;
+        }
+        .btn-save:hover { background: #1d4ed8; }
+        .btn-save:disabled { background: #93c5fd; cursor: not-allowed; }
+        .time-range-display {
+            background: #eff6ff; border: 1.5px solid #bfdbfe;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 14px; color: #1d4ed8; font-weight: 600;
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── MEETING DETAIL MODAL ── */
+        .meeting-detail { padding: 4px 0; }
+        .detail-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+        .detail-icon { color: #6b7280; margin-top: 2px; flex-shrink: 0; }
+        .detail-label { font-size: 12px; color: #9ca3af; margin-bottom: 2px; }
+        .detail-value { font-size: 14px; color: #111827; }
+        .attendee-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .attendee-chip {
+            background: #eff6ff; color: #1d4ed8;
+            border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600;
+        }
+        .status-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 99px;
+            font-size: 12px; font-weight: 700;
+        }
+        .status-confirmed { background: #dcfce7; color: #16a34a; }
+        .status-pending   { background: #fef9c3; color: #a16207; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px;
+            background: #111827; color: white; padding: 13px 20px;
+            border-radius: 10px; font-size: 14px; opacity: 0;
+            transform: translateY(8px); transition: all .28s; z-index: 9999;
+            pointer-events: none; max-width: 320px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #16a34a; }
+        .toast.error   { background: #dc2626; }
+
+        /* ── MINI CALENDAR (sidebar) ── */
+        .mini-cal { margin-bottom: 20px; }
+        .mini-cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .mini-cal-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.85); }
+        .mini-cal-nav button {
+            background: none; border: none; color: rgba(255,255,255,.5);
+            cursor: pointer; font-size: 16px; padding: 0 4px;
+        }
+        .mini-cal-nav button:hover { color: white; }
+        .mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .mini-cal-wd { text-align: center; font-size: 10px; color: rgba(255,255,255,.35); font-weight: 600; padding: 2px; }
+        .mini-cal-day {
+            text-align: center; font-size: 12px; color: rgba(255,255,255,.65);
+            padding: 4px; border-radius: 4px; cursor: pointer;
+        }
+        .mini-cal-day:hover { background: rgba(255,255,255,.1); }
+        .mini-cal-day.today { background: #2563eb; color: white; font-weight: 700; }
+        .mini-cal-day.selected { background: rgba(37,99,235,.5); color: white; }
+        .mini-cal-day.has-event::after {
+            content: ''; display: block; width: 4px; height: 4px;
+            border-radius: 50%; background: #60a5fa; margin: 1px auto 0;
+        }
+        .mini-cal-day.other { color: rgba(255,255,255,.2); }
+
+        /* Meeting colors */
+        .color-blue   { background: #dbeafe; color: #1d4ed8; }
+        .color-green  { background: #dcfce7; color: #15803d; }
+        .color-purple { background: #f3e8ff; color: #7c3aed; }
+        .color-orange { background: #ffedd5; color: #c2410c; }
+        .color-teal   { background: #ccfbf1; color: #0f766e; }
+
+        /* Loading spinner */
+        .loading-overlay {
+            position: absolute; inset: 0; background: rgba(255,255,255,.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; border-radius: 16px;
+        }
+        .spinner {
+            width: 28px; height: 28px; border: 3px solid #e5e7eb;
+            border-top-color: #2563eb; border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Empty state */
+        .empty-day {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 200px; color: #9ca3af;
+        }
+        .empty-day svg { margin-bottom: 12px; opacity: .4; }
+        .empty-day p { font-size: 15px; font-weight: 600; }
+        .empty-day span { font-size: 13px; margin-top: 4px; }
+
+        /* Scrollbar */
+        .day-schedule::-webkit-scrollbar { width: 6px; }
+        .day-schedule::-webkit-scrollbar-track { background: transparent; }
+        .day-schedule::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; width: calc(100% - 200px); }
+        }
+        @media (max-width: 650px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; width: 100%; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+<div class="sidebar">
+    <div class="logo">Panache WMS</div>
+
+    <!-- Mini calendar -->
+    <div class="mini-cal" id="miniCal"></div>
+
+    <!-- Nav links — role aware, injected by JS -->
+    <div class="menu" id="sidebarMenu"></div>
+
+    <!-- Personal notes -->
+    <div class="sidebar-notes">
+        <p class="sidebar-notes-label">My notes</p>
+        <div id="sidebarTodos"></div>
+        <div class="sidebar-todo-add">
+            <input id="sidebarTodoInput" placeholder="Add a note…"
+                   onkeydown="if(event.key==='Enter') addSidebarTodo()">
+            <button onclick="addSidebarTodo()">+</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ MAIN ══════════════════════════════ -->
+<div class="main">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <h1>📅 Calendar</h1>
+        <div class="header-actions">
+            <button class="btn-new-meeting" onclick="openNewMeeting()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                New Meeting
+            </button>
+            <div class="profile-badge" id="profileBadge">…</div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Calendar card -->
+    <div class="calendar-wrapper" id="calendarWrapper" style="position:relative">
+
+        <!-- Toolbar -->
+        <div class="cal-toolbar">
+            <div class="cal-nav">
+                <button onclick="navigate(-1)" title="Previous">&#8249;</button>
+                <button class="btn-today" onclick="goToday()">Today</button>
+                <button onclick="navigate(1)" title="Next">&#8250;</button>
+                <span class="cal-title" id="calTitle">…</span>
+            </div>
+            <div class="cal-view-tabs">
+                <button class="cal-view-tab active" id="tabMonth" onclick="switchView('month')">Month</button>
+                <button class="cal-view-tab" id="tabDay"   onclick="switchView('day')">Day</button>
+            </div>
+        </div>
+
+        <!-- MONTH VIEW -->
+        <div id="monthView">
+            <div class="month-grid">
+                <div class="month-weekdays">
+                    <div class="month-weekday">Sun</div>
+                    <div class="month-weekday">Mon</div>
+                    <div class="month-weekday">Tue</div>
+                    <div class="month-weekday">Wed</div>
+                    <div class="month-weekday">Thu</div>
+                    <div class="month-weekday">Fri</div>
+                    <div class="month-weekday">Sat</div>
+                </div>
+                <div class="month-days" id="monthDays"></div>
+            </div>
+        </div>
+
+        <!-- DAY VIEW -->
+        <div id="dayView">
+            <div class="day-view-header">
+                <button class="back-to-month" onclick="switchView('month')">
+                    ← Month
+                </button>
+                <div>
+                    <div class="day-view-title" id="dayViewTitle">…</div>
+                    <div class="day-view-subtitle" id="dayViewSubtitle"></div>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:8px">
+                    <button class="back-to-month" onclick="navigateDay(-1)">← Prev day</button>
+                    <button class="back-to-month" onclick="navigateDay(1)">Next day →</button>
+                </div>
+            </div>
+            <div class="day-schedule" id="daySchedule"></div>
+        </div>
+
+    </div><!-- /calendar-wrapper -->
+</div>
+
+<!-- ══════════════════════════════ CREATE MEETING MODAL ══════════════════════════════ -->
+<div class="modal-overlay" id="meetingModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>📅 Schedule Meeting</h2>
+            <button class="modal-close" onclick="closeMeetingModal()">✕</button>
+        </div>
+
+        <div class="time-range-display" id="modalTimeDisplay">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span id="timeRangeText">Select time range</span>
+        </div>
+
+        <div class="form-group">
+            <label>Meeting Title *</label>
+            <input type="text" id="mtgTitle" placeholder="e.g. Weekly Sales Review">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="mtgDesc" placeholder="Agenda, notes, or context…"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="mtgDate">
+            </div>
+            <div class="form-group">
+                <label>Location / Link</label>
+                <input type="text" id="mtgLocation" placeholder="Room, Zoom link…">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Start Time</label>
+                <select id="mtgStartSlot"></select>
+            </div>
+            <div class="form-group">
+                <label>End Time</label>
+                <select id="mtgEndSlot"></select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Participants</label>
+            <div class="participants-list" id="participantsList">
+                <div style="color:#9ca3af;font-size:13px;padding:8px">Loading users…</div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeMeetingModal()">Cancel</button>
+            <button class="btn-save" id="saveMeetingBtn" onclick="saveMeeting()">Save Meeting</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════ MEETING DETAIL MODAL ══════════════════════════════ -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal" style="width:460px">
+        <div class="modal-header">
+            <h2 id="detailTitle">Meeting Details</h2>
+            <button class="modal-close" onclick="closeDetailModal()">✕</button>
+        </div>
+        <div class="meeting-detail" id="meetingDetail"></div>
+        <div class="modal-footer" style="margin-top:16px">
+            <button class="btn-cancel" onclick="closeDetailModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════ SCRIPTS ══════════════════════════════ -->
+<script>
+/* ─── CONFIG ──────────────────────────────────────────── */
+const API_BASE = "https://panache-production.up.railway.app"; // adjust if needed
+
+/* ─── STATE ───────────────────────────────────────────── */
+const userId   = parseInt(localStorage.getItem("userId")    || "0");
+const userName = localStorage.getItem("userName")           || "User";
+const userRole = localStorage.getItem("userRole")           || "employee";
+
+let currentView    = "month";
+let viewDate       = new Date();        // anchor for month view
+let selectedDate   = null;             // active day in day view
+let allUsers       = [];
+let monthMeetings  = {};               // keyed by YYYY-MM-DD
+
+// drag-select state
+let dragStart      = null;
+let dragEnd        = null;
+let isDragging     = false;
+// pre-selected range from click/drag
+let pendingStart   = null;
+let pendingEnd     = null;
+
+/* ─── INIT ────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", async () => {
+    setupSidebar();
+    populateSlotSelects();
+    await loadUsers();
+    renderMiniCal();
+    renderMonthView();
+    setInterval(drawCurrentTimeLine, 30000);
+    document.getElementById("profileBadge").textContent = userName;
+});
+
+/* ─── SIDEBAR ─────────────────────────────────────────── */
+function setupSidebar() {
+    const menu  = document.getElementById("sidebarMenu");
+    const links = {
+        admin: [
+            { href: "admin-dashboard.html",   label: "Dashboard" },
+            { href: "settings.html",           label: "Settings" },
+            { href: "history.html",            label: "History" },
+            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "calendar.html",           label: "📅 Calendar", active: true },
+        ],
+        manager: [
+            { href: "manager-dashboard.html",  label: "Dashboard" },
+            { href: "settings.html",           label: "Settings" },
+            { href: "history.html",            label: "History" },
+            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "calendar.html",           label: "📅 Calendar", active: true },
+        ],
+        employee: [
+            { href: "employee-dashboard.html", label: "Dashboard" },
+            { href: "settings.html",           label: "Settings" },
+            { href: "history.html",            label: "History" },
+            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "calendar.html",           label: "📅 Calendar", active: true },
+        ],
+    };
+    const items = links[userRole] || links.employee;
+    menu.innerHTML = items.map(l =>
+        `<a href="${l.href}" ${l.active ? 'class="active"' : ''}>${l.label}</a>`
+    ).join("");
+
+    // sidebar notes
+    renderSidebarTodos();
+}
+
+/* ─── SIDEBAR TODO ────────────────────────────────────── */
+const TODO_KEY = "panache_todos";
+function loadTodos()   { try { return JSON.parse(localStorage.getItem(TODO_KEY)) || []; } catch { return []; } }
+function saveTodos(t)  { localStorage.setItem(TODO_KEY, JSON.stringify(t)); }
+
+function renderSidebarTodos() {
+    const box   = document.getElementById("sidebarTodos");
+    const todos = loadTodos();
+    box.innerHTML = todos.map((text, i) => `
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.4;">
+            <div onclick="completeSidebarTodo(${i})" style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);flex-shrink:0;cursor:pointer;"></div>
+            <span>${text}</span>
+        </div>`).join("");
+}
+
+function addSidebarTodo() {
+    const inp  = document.getElementById("sidebarTodoInput");
+    const text = inp.value.trim();
+    if (!text) return;
+    const todos = loadTodos();
+    todos.push(text);
+    saveTodos(todos);
+    inp.value = "";
+    renderSidebarTodos();
+}
+
+function completeSidebarTodo(i) {
+    setTimeout(() => {
+        const todos = loadTodos();
+        todos.splice(i, 1);
+        saveTodos(todos);
+        renderSidebarTodos();
+    }, 400);
+}
+
+/* ─── SLOT UTILITIES ──────────────────────────────────── */
+function slotToTime(slot) {
+    const h = Math.floor(slot / 2);
+    const m = (slot % 2) * 30;
+    return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+function timeToSlot(hhmm) {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 2 + (m >= 30 ? 1 : 0);
+}
+
+function populateSlotSelects() {
+    const startSel = document.getElementById("mtgStartSlot");
+    const endSel   = document.getElementById("mtgEndSlot");
+    startSel.innerHTML = "";
+    endSel.innerHTML   = "";
+    for (let i = 0; i < 48; i++) {
+        const t = slotToTime(i);
+        startSel.innerHTML += `<option value="${i}">${t}</option>`;
+        endSel.innerHTML   += `<option value="${i+1}">${slotToTime(i+1) === "24:00" ? "24:00" : slotToTime(i+1)}</option>`;
+    }
+    startSel.value = 18; // 09:00
+    endSel.value   = 20; // 10:00
+}
+
+/* ─── USER LOADING ────────────────────────────────────── */
+async function loadUsers() {
+    try {
+        const res = await fetch(`${API_BASE}/users`);
+        allUsers  = await res.json();
+    } catch {
+        allUsers = [];
+    }
+    renderParticipantsList();
+}
+
+function renderParticipantsList() {
+    const container = document.getElementById("participantsList");
+    if (!allUsers.length) {
+        container.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:8px">No users found</div>`;
+        return;
+    }
+    container.innerHTML = allUsers
+        .filter(u => u.id !== userId)
+        .map(u => `
+            <label class="participant-item">
+                <input type="checkbox" name="participant" value="${u.id}">
+                <span class="participant-name">${u.full_name}</span>
+                <span class="participant-role">${u.role}</span>
+            </label>`)
+        .join("");
+}
+
+function getSelectedParticipants() {
+    return [...document.querySelectorAll('input[name="participant"]:checked')]
+        .map(cb => parseInt(cb.value));
+}
+
+/* ─── MONTH VIEW ──────────────────────────────────────── */
+function renderMonthView() {
+    const year  = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    document.getElementById("calTitle").textContent =
+        viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev  = new Date(year, month, 0).getDate();
+
+    const today = new Date();
+    const todayStr = dateStr(today);
+
+    const container = document.getElementById("monthDays");
+    container.innerHTML = "";
+
+    let cells = [];
+    // Pad with prev month
+    for (let i = firstDay - 1; i >= 0; i--) {
+        cells.push({ day: daysInPrev - i, cur: false, date: new Date(year, month - 1, daysInPrev - i) });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+        cells.push({ day: d, cur: true, date: new Date(year, month, d) });
+    }
+    while (cells.length % 7 !== 0) {
+        cells.push({ day: cells.length - firstDay - daysInMonth + 1, cur: false, date: new Date(year, month + 1, cells.length - firstDay - daysInMonth + 1) });
+    }
+
+    cells.forEach(cell => {
+        const ds  = dateStr(cell.date);
+        const div = document.createElement("div");
+        div.className = "month-day" +
+            (!cell.cur ? " other-month" : "") +
+            (ds === todayStr ? " today" : "");
+        div.onclick = () => openDayView(cell.date);
+
+        const numDiv = document.createElement("div");
+        numDiv.className = "day-num";
+        numDiv.textContent = cell.day;
+        div.appendChild(numDiv);
+
+        // meetings for this date
+        const meetings = monthMeetings[ds] || [];
+        const colors   = ["color-blue","color-green","color-purple","color-orange","color-teal"];
+        meetings.slice(0, 3).forEach((m, i) => {
+            const pill = document.createElement("span");
+            pill.className = `month-meeting-pill ${colors[i % colors.length]}`;
+            pill.textContent = `${slotToTime(m.start_slot)} ${m.title}`;
+            pill.onclick = (e) => { e.stopPropagation(); showMeetingDetail(m); };
+            div.appendChild(pill);
+        });
+        if (meetings.length > 3) {
+            const more = document.createElement("div");
+            more.className = "month-more";
+            more.textContent = `+${meetings.length - 3} more`;
+            div.appendChild(more);
+        }
+
+        container.appendChild(div);
+    });
+
+    // Load meetings for entire month
+    loadMonthMeetings(year, month);
+    renderMiniCal();
+}
+
+async function loadMonthMeetings(year, month) {
+    // Fetch meetings for each day in month using existing /meetings/day endpoint
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const promises    = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+        const ds = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        promises.push(
+            fetch(`${API_BASE}/meetings/day?date=${ds}`)
+                .then(r => r.json())
+                .then(data => ({ ds, data }))
+                .catch(() => ({ ds, data: [] }))
+        );
+    }
+    const results = await Promise.all(promises);
+    results.forEach(({ ds, data }) => { monthMeetings[ds] = data; });
+    renderMonthView();  // re-render with meeting data
+}
+
+/* ─── MINI CALENDAR ───────────────────────────────────── */
+let miniCalDate = new Date();
+function renderMiniCal() {
+    const y = miniCalDate.getFullYear();
+    const m = miniCalDate.getMonth();
+    const today = new Date();
+
+    let html = `
+        <div class="mini-cal-header">
+            <span class="mini-cal-title">${miniCalDate.toLocaleDateString("en-US",{month:"short",year:"numeric"})}</span>
+            <div class="mini-cal-nav">
+                <button onclick="miniCalNav(-1)">‹</button>
+                <button onclick="miniCalNav(1)">›</button>
+            </div>
+        </div>
+        <div class="mini-cal-grid">
+            ${["S","M","T","W","T","F","S"].map(d=>`<div class="mini-cal-wd">${d}</div>`).join("")}`;
+
+    const first = new Date(y, m, 1).getDay();
+    const days  = new Date(y, m + 1, 0).getDate();
+
+    for (let i = 0; i < first; i++) html += `<div class="mini-cal-day other"></div>`;
+    for (let d = 1; d <= days; d++) {
+        const dt  = new Date(y, m, d);
+        const ds  = dateStr(dt);
+        const cls = [
+            "mini-cal-day",
+            dateStr(today) === ds ? "today" : "",
+            selectedDate && dateStr(selectedDate) === ds ? "selected" : "",
+            (monthMeetings[ds] || []).length ? "has-event" : "",
+        ].join(" ");
+        html += `<div class="${cls}" onclick="miniCalClick(${y},${m},${d})">${d}</div>`;
+    }
+    html += "</div>";
+    document.getElementById("miniCal").innerHTML = html;
+}
+
+function miniCalNav(dir) { miniCalDate.setMonth(miniCalDate.getMonth() + dir); renderMiniCal(); }
+function miniCalClick(y, m, d) {
+    const dt = new Date(y, m, d);
+    openDayView(dt);
+}
+
+/* ─── DAY VIEW ────────────────────────────────────────── */
+async function openDayView(date) {
+    selectedDate = date;
+    currentView  = "day";
+
+    // Sync mini cal month
+    miniCalDate  = new Date(date.getFullYear(), date.getMonth(), 1);
+    renderMiniCal();
+
+    document.getElementById("monthView").style.display = "none";
+    document.getElementById("dayView").style.display   = "block";
+    document.getElementById("tabMonth").classList.remove("active");
+    document.getElementById("tabDay").classList.add("active");
+
+    const opts = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+    document.getElementById("calTitle").textContent        = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    document.getElementById("dayViewTitle").textContent    = date.toLocaleDateString("en-US", opts);
+    document.getElementById("dayViewSubtitle").textContent = "Click or drag slots to schedule a meeting";
+
+    await renderDayView(date);
+}
+
+async function renderDayView(date) {
+    const schedule = document.getElementById("daySchedule");
+    schedule.innerHTML = `<div class="loading-overlay"><div class="spinner"></div></div>`;
+
+    const ds = dateStr(date);
+    let meetings = [];
+    try {
+        const res = await fetch(`${API_BASE}/meetings/day?date=${ds}`);
+        meetings  = await res.json();
+    } catch { meetings = []; }
+    monthMeetings[ds] = meetings;
+
+    schedule.innerHTML = "";
+
+    // Time gutter
+    const gutter = document.createElement("div");
+    gutter.className = "time-gutter";
+    for (let s = 0; s < 48; s++) {
+        const lbl = document.createElement("div");
+        lbl.className = "time-label";
+        lbl.textContent = s % 2 === 0 ? slotToTime(s) : "";
+        gutter.appendChild(lbl);
+    }
+    schedule.appendChild(gutter);
+
+    // Slots column
+    const slotsCol = document.createElement("div");
+    slotsCol.className = "slots-column";
+    slotsCol.id = "slotsColumn";
+
+    for (let s = 0; s < 48; s++) {
+        const row = document.createElement("div");
+        row.className = "slot-row";
+        row.dataset.slot = s;
+        row.addEventListener("mousedown",  e => startDrag(s, e));
+        row.addEventListener("mouseover",  () => continueDrag(s));
+        row.addEventListener("mouseup",    () => endDrag());
+        row.addEventListener("click",      () => singleClick(s));
+        slotsCol.appendChild(row);
+    }
+
+    // Render meeting blocks
+    const colors = ["#dbeafe|#1d4ed8","#dcfce7|#15803d","#f3e8ff|#7c3aed","#ffedd5|#c2410c","#ccfbf1|#0f766e"];
+    meetings.forEach((m, i) => {
+        const [bg, fg] = colors[i % colors.length].split("|");
+        const block    = document.createElement("div");
+        block.className = "meeting-block";
+        block.style.cssText = `
+            top:${m.start_slot * 48}px;
+            height:${(m.end_slot - m.start_slot) * 48 - 4}px;
+            background:${bg}; color:${fg};
+            border-left-color:${fg};
+        `;
+        block.innerHTML = `
+            <div class="mb-title">${m.title}</div>
+            <div class="mb-time">${slotToTime(m.start_slot)} – ${slotToTime(m.end_slot)}</div>
+            ${m.location ? `<div class="mb-loc">📍 ${m.location}</div>` : ""}
+        `;
+        block.onclick = (e) => { e.stopPropagation(); showMeetingDetail(m); };
+        slotsCol.appendChild(block);
+    });
+
+    // Current time line
+    const now = new Date();
+    if (dateStr(now) === ds) {
+        const totalMinutes = now.getHours() * 60 + now.getMinutes();
+        const topPx        = (totalMinutes / 30) * 48;
+        const line         = document.createElement("div");
+        line.className     = "current-time-line";
+        line.id            = "timeLine";
+        line.style.top     = `${topPx}px`;
+        slotsCol.appendChild(line);
+        setTimeout(() => {
+            line.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+    }
+
+    schedule.appendChild(slotsCol);
+    schedule.addEventListener("mouseleave", () => { if (isDragging) endDrag(); });
+}
+
+function drawCurrentTimeLine() {
+    const line = document.getElementById("timeLine");
+    if (!line || !selectedDate) return;
+    const now = new Date();
+    if (dateStr(now) !== dateStr(selectedDate)) return;
+    const totalMinutes = now.getHours() * 60 + now.getMinutes();
+    line.style.top = `${(totalMinutes / 30) * 48}px`;
+}
+
+function navigateDay(dir) {
+    if (!selectedDate) return;
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + dir);
+    openDayView(d);
+}
+
+/* ─── DRAG-SELECT SLOTS ───────────────────────────────── */
+document.addEventListener("mouseup", () => { if (isDragging) endDrag(); });
+
+function startDrag(slot, e) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStart  = slot;
+    dragEnd    = slot;
+    highlightDraggedSlots();
+}
+function continueDrag(slot) {
+    if (!isDragging) return;
+    dragEnd = slot;
+    highlightDraggedSlots();
+}
+function endDrag() {
+    if (!isDragging) return;
+    isDragging = false;
+    if (dragStart !== null && dragEnd !== null) {
+        const s = Math.min(dragStart, dragEnd);
+        const e = Math.max(dragStart, dragEnd) + 1;
+        if (e - s > 1) openMeetingModal(s, e);
+        // else: treated as click via singleClick
+    }
+    clearDragHighlights();
+    dragStart = dragEnd = null;
+}
+function singleClick(slot) {
+    if (isDragging) return;
+    openMeetingModal(slot, slot + 2); // default 1 hour
+}
+function highlightDraggedSlots() {
+    const rows = document.querySelectorAll(".slot-row");
+    const s = Math.min(dragStart, dragEnd);
+    const e = Math.max(dragStart, dragEnd);
+    rows.forEach(r => {
+        const sl = parseInt(r.dataset.slot);
+        r.classList.toggle("selecting", sl >= s && sl <= e);
+    });
+}
+function clearDragHighlights() {
+    document.querySelectorAll(".slot-row.selecting").forEach(r => r.classList.remove("selecting"));
+}
+
+/* ─── VIEW SWITCHING ──────────────────────────────────── */
+function switchView(view) {
+    currentView = view;
+    if (view === "month") {
+        document.getElementById("monthView").style.display = "block";
+        document.getElementById("dayView").style.display   = "none";
+        document.getElementById("tabMonth").classList.add("active");
+        document.getElementById("tabDay").classList.remove("active");
+        renderMonthView();
+    } else {
+        openDayView(selectedDate || new Date());
+    }
+}
+
+function navigate(dir) {
+    if (currentView === "month") {
+        viewDate.setMonth(viewDate.getMonth() + dir);
+        renderMonthView();
+    } else {
+        navigateDay(dir);
+    }
+}
+
+function goToday() {
+    if (currentView === "month") {
+        viewDate = new Date();
+        renderMonthView();
+    } else {
+        openDayView(new Date());
+    }
+}
+
+/* ─── MEETING MODAL ───────────────────────────────────── */
+function openNewMeeting() {
+    const d = selectedDate || new Date();
+    const s = new Date().getHours() * 2;
+    openMeetingModal(s, s + 2, d);
+}
+
+function openMeetingModal(startSlot, endSlot, date) {
+    pendingStart = startSlot;
+    pendingEnd   = endSlot;
+
+    const d = date || selectedDate || new Date();
+    document.getElementById("mtgDate").value      = dateStr(d);
+    document.getElementById("mtgStartSlot").value = startSlot;
+    document.getElementById("mtgEndSlot").value   = Math.min(endSlot, 48);
+    document.getElementById("mtgTitle").value     = "";
+    document.getElementById("mtgDesc").value      = "";
+    document.getElementById("mtgLocation").value  = "";
+    updateTimeDisplay();
+
+    // Uncheck all participants
+    document.querySelectorAll('input[name="participant"]').forEach(cb => cb.checked = false);
+
+    document.getElementById("meetingModal").classList.add("active");
+}
+
+function updateTimeDisplay() {
+    const s = parseInt(document.getElementById("mtgStartSlot").value);
+    const e = parseInt(document.getElementById("mtgEndSlot").value);
+    const dateVal = document.getElementById("mtgDate").value;
+    const d = new Date(dateVal + "T00:00:00");
+    const dateLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    document.getElementById("timeRangeText").textContent =
+        `${dateLabel} · ${slotToTime(s)} – ${slotToTime(e)}`;
+}
+
+document.getElementById("mtgStartSlot").addEventListener("change", updateTimeDisplay);
+document.getElementById("mtgEndSlot").addEventListener("change",   updateTimeDisplay);
+document.getElementById("mtgDate").addEventListener("change",      updateTimeDisplay);
+
+function closeMeetingModal() {
+    document.getElementById("meetingModal").classList.remove("active");
+}
+
+async function saveMeeting() {
+    const title     = document.getElementById("mtgTitle").value.trim();
+    const desc      = document.getElementById("mtgDesc").value.trim();
+    const dateVal   = document.getElementById("mtgDate").value;
+    const startSlot = parseInt(document.getElementById("mtgStartSlot").value);
+    const endSlot   = parseInt(document.getElementById("mtgEndSlot").value);
+    const location  = document.getElementById("mtgLocation").value.trim();
+    const attendees = getSelectedParticipants();
+
+    if (!title)          { showToast("Meeting title is required", "error"); return; }
+    if (!dateVal)        { showToast("Please select a date", "error"); return; }
+    if (endSlot <= startSlot) { showToast("End time must be after start time", "error"); return; }
+
+    const btn = document.getElementById("saveMeetingBtn");
+    btn.disabled    = true;
+    btn.textContent = "Saving…";
+
+    try {
+        const res = await fetch(`${API_BASE}/meetings/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                description: desc,
+                meeting_date: dateVal,
+                start_slot: startSlot,
+                end_slot: endSlot,
+                organizer_id: userId,
+                location,
+                attendees,
+            }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast("Meeting scheduled!", "success");
+            closeMeetingModal();
+            // Reload current view
+            if (currentView === "day" && selectedDate) {
+                renderDayView(selectedDate);
+            }
+            // Invalidate cache for this date so month re-renders correctly
+            delete monthMeetings[dateVal];
+        } else {
+            showToast(data.message || "Could not save meeting", "error");
+        }
+    } catch (e) {
+        showToast("Network error — please retry", "error");
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = "Save Meeting";
+    }
+}
+
+/* ─── MEETING DETAIL ──────────────────────────────────── */
+async function showMeetingDetail(m) {
+    document.getElementById("detailTitle").textContent = m.title;
+
+    // Fetch attendees
+    let attendeeNames = [];
+    try {
+        const res = await fetch(`${API_BASE}/meetings/${m.id}/attendees`);
+        const data = await res.json();
+        attendeeNames = data.map(a => a.full_name || a.user_name || `User ${a.user_id}`);
+    } catch {
+        attendeeNames = ["Could not load"];
+    }
+
+    const statusClass = m.status === "confirmed" ? "status-confirmed" : "status-pending";
+    document.getElementById("meetingDetail").innerHTML = `
+        <div class="detail-row">
+            <span class="detail-icon">📅</span>
+            <div>
+                <div class="detail-label">Date &amp; Time</div>
+                <div class="detail-value">${m.date || m.meeting_date} · ${slotToTime(m.start_slot)} – ${slotToTime(m.end_slot)}</div>
+            </div>
+        </div>
+        ${m.description ? `
+        <div class="detail-row">
+            <span class="detail-icon">📝</span>
+            <div>
+                <div class="detail-label">Description</div>
+                <div class="detail-value">${m.description}</div>
+            </div>
+        </div>` : ""}
+        ${m.location ? `
+        <div class="detail-row">
+            <span class="detail-icon">📍</span>
+            <div>
+                <div class="detail-label">Location</div>
+                <div class="detail-value">${m.location}</div>
+            </div>
+        </div>` : ""}
+        <div class="detail-row">
+            <span class="detail-icon">👥</span>
+            <div>
+                <div class="detail-label">Participants</div>
+                <div class="attendee-chips">
+                    ${attendeeNames.map(n => `<span class="attendee-chip">${n}</span>`).join("") || "<span style='color:#9ca3af;font-size:13px'>None invited</span>"}
+                </div>
+            </div>
+        </div>
+        <div class="detail-row" style="margin-bottom:0">
+            <span class="detail-icon">🟢</span>
+            <div>
+                <div class="detail-label">Status</div>
+                <span class="status-badge ${statusClass}">${m.status || "pending"}</span>
+            </div>
+        </div>
+    `;
+    document.getElementById("detailModal").classList.add("active");
+}
+
+function closeDetailModal() {
+    document.getElementById("detailModal").classList.remove("active");
+}
+
+/* ─── UTILITIES ───────────────────────────────────────── */
+function dateStr(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+function showToast(msg, type = "") {
+    const t = document.getElementById("toast");
+    t.textContent  = msg;
+    t.className    = `toast ${type} show`;
+    setTimeout(() => t.className = "toast", 3200);
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+}
+
+/* ─── CLOSE MODALS ON OVERLAY CLICK ──────────────────── */
+document.getElementById("meetingModal").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeMeetingModal();
+});
+document.getElementById("detailModal").addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeDetailModal();
+});
+</script>
+</body>
+</html>
