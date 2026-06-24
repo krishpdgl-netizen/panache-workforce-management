@@ -28,7 +28,25 @@
             margin-bottom: 6px; border-radius: 8px; transition: .2s; font-size: 14px;
         }
         .menu a:hover, .menu a.active { background: #2563eb; }
-        .menu a svg { flex-shrink: 0; opacity: .8; }
+
+        /* Google Calendar connect banner in sidebar */
+        .gcal-banner {
+            margin-bottom: 14px; border-radius: 10px; padding: 12px 14px;
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
+            font-size: 12px; color: rgba(255,255,255,.75);
+        }
+        .gcal-banner .gcal-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .gcal-banner .gcal-connected { color: #4ade80; font-size: 11px; }
+        .gcal-connect-btn {
+            display: inline-block; margin-top: 8px; background: #2563eb;
+            color: white; border: none; border-radius: 7px; padding: 6px 12px;
+            font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
+        }
+        .gcal-disconnect-btn {
+            display: inline-block; margin-top: 6px; background: rgba(220,38,38,.15);
+            color: #f87171; border: none; border-radius: 7px; padding: 5px 10px;
+            font-size: 11px; font-weight: 600; cursor: pointer;
+        }
 
         /* Mini todo in sidebar */
         .sidebar-notes { margin-top: auto; padding-top: 20px; border-top: .5px solid rgba(255,255,255,.12); }
@@ -68,9 +86,27 @@
         .btn-new-meeting {
             background: #2563eb; color: white; border: none;
             padding: 9px 18px; border-radius: 8px; cursor: pointer;
-            font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            font-size: 14px; font-weight: 600;
         }
         .btn-new-meeting:hover { background: #1d4ed8; }
+        /* Add Task button */
+        .btn-new-task {
+            background: #7c3aed; color: white; border: none;
+            padding: 9px 18px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 600;
+        }
+        .btn-new-task:hover { background: #6d28d9; }
+
+        /* ── VIEW TABS (Meeting / Task) ── */
+        .view-mode-tabs {
+            display: flex; gap: 4px; background: #f3f4f6;
+            border-radius: 8px; padding: 4px; margin-bottom: 20px; width: fit-content;
+        }
+        .view-mode-tab {
+            padding: 7px 20px; border-radius: 6px; border: none; cursor: pointer;
+            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent; transition: .15s;
+        }
+        .view-mode-tab.active { background: white; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
 
         /* ── CALENDAR LAYOUT ── */
         .calendar-wrapper {
@@ -87,16 +123,14 @@
         .cal-nav button {
             background: #f3f4f6; border: none; border-radius: 8px;
             width: 34px; height: 34px; cursor: pointer; font-size: 18px;
-            display: flex; align-items: center; justify-content: center; color: #374151;
-            transition: .15s;
+            display: flex; align-items: center; justify-content: center; color: #374151; transition: .15s;
         }
         .cal-nav button:hover { background: #2563eb; color: white; }
         .cal-title { font-size: 20px; font-weight: 700; color: #111827; min-width: 200px; text-align: center; }
         .cal-view-tabs { display: flex; gap: 4px; background: #f3f4f6; border-radius: 8px; padding: 4px; }
         .cal-view-tab {
             padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer;
-            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent;
-            transition: .15s;
+            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent; transition: .15s;
         }
         .cal-view-tab.active { background: white; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
         .btn-today {
@@ -117,9 +151,7 @@
             text-align: center; padding: 10px; font-size: 12px;
             font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .5px;
         }
-        .month-days {
-            display: grid; grid-template-columns: repeat(7, 1fr);
-        }
+        .month-days { display: grid; grid-template-columns: repeat(7, 1fr); }
         .month-day {
             min-height: 110px; border-right: 1px solid #f0f0f0;
             border-bottom: 1px solid #f0f0f0; padding: 8px; cursor: pointer;
@@ -134,12 +166,21 @@
             background: #2563eb; color: white; width: 28px; height: 28px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
-        .day-num { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+        .day-num {
+            font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px;
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+        }
         .month-meeting-pill {
             display: block; padding: 2px 7px; border-radius: 4px;
             font-size: 11px; font-weight: 600; margin-bottom: 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            cursor: pointer;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+        }
+        /* Task pills on month (purple-ish) */
+        .month-task-pill {
+            display: block; padding: 2px 7px; border-radius: 4px;
+            font-size: 11px; font-weight: 600; margin-bottom: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+            background: #f3e8ff; color: #7c3aed; border-left: 3px solid #7c3aed;
         }
         .month-more { font-size: 11px; color: #6b7280; padding: 2px 4px; }
 
@@ -152,8 +193,7 @@
         .back-to-month {
             background: #f3f4f6; border: none; border-radius: 8px;
             padding: 7px 14px; cursor: pointer; font-size: 13px;
-            font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px;
-            transition: .15s;
+            font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; transition: .15s;
         }
         .back-to-month:hover { background: #e5e7eb; }
         .day-view-title { font-size: 18px; font-weight: 700; color: #111827; }
@@ -161,8 +201,7 @@
 
         .day-schedule {
             display: grid; grid-template-columns: 64px 1fr;
-            height: calc(100vh - 280px); overflow-y: auto;
-            position: relative;
+            height: calc(100vh - 280px); overflow-y: auto; position: relative;
         }
         .time-gutter { border-right: 1px solid #f0f0f0; }
         .time-label {
@@ -192,8 +231,27 @@
         }
         .meeting-block:hover { transform: translateX(1px); box-shadow: 0 3px 10px rgba(0,0,0,.15); }
         .meeting-block .mb-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .meeting-block .mb-time { font-size: 11px; opacity: .75; margin-top: 2px; }
-        .meeting-block .mb-loc { font-size: 11px; opacity: .65; display: flex; align-items: center; gap: 3px; margin-top: 1px; }
+        .meeting-block .mb-time  { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .meeting-block .mb-loc   { font-size: 11px; opacity: .65; display: flex; align-items: center; gap: 3px; margin-top: 1px; }
+
+        /* Task blocks (personal calendar tasks) */
+        .task-block {
+            position: absolute; left: 4px; right: 60px;
+            border-radius: 8px; padding: 6px 10px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            z-index: 10; overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.12);
+            border-left: 3px solid;
+        }
+        .task-block .tb-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-block .tb-time  { font-size: 11px; opacity: .75; margin-top: 2px; }
+        .task-block .tb-delete {
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,.1); border: none; border-radius: 4px;
+            width: 22px; height: 22px; cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; justify-content: center; color: inherit;
+        }
+        .task-block .tb-delete:hover { background: rgba(220,38,38,.2); color: #dc2626; }
 
         /* Current time line */
         .current-time-line {
@@ -235,8 +293,7 @@
         .form-group select {
             width: 100%; padding: 10px 12px;
             border: 1.5px solid #e5e7eb; border-radius: 8px;
-            font-size: 14px; color: #111827; outline: none;
-            transition: border-color .15s; background: white;
+            font-size: 14px; color: #111827; outline: none; transition: border-color .15s; background: white;
         }
         .form-group input:focus,
         .form-group textarea:focus,
@@ -249,8 +306,7 @@
         }
         .participant-item {
             display: flex; align-items: center; gap: 8px;
-            padding: 6px 8px; border-radius: 6px; cursor: pointer;
-            transition: background .1s;
+            padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background .1s;
         }
         .participant-item:hover { background: #f3f4f6; }
         .participant-item input[type=checkbox] { accent-color: #2563eb; width: 16px; height: 16px; }
@@ -268,12 +324,38 @@
         }
         .btn-save:hover { background: #1d4ed8; }
         .btn-save:disabled { background: #93c5fd; cursor: not-allowed; }
+        .btn-save-task {
+            background: #7c3aed; color: white; border: none;
+            padding: 10px 24px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 700;
+        }
+        .btn-save-task:hover { background: #6d28d9; }
+        .btn-save-task:disabled { background: #c4b5fd; cursor: not-allowed; }
         .time-range-display {
             background: #eff6ff; border: 1.5px solid #bfdbfe;
             border-radius: 8px; padding: 10px 14px;
             font-size: 14px; color: #1d4ed8; font-weight: 600;
             margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
         }
+
+        /* Color picker for tasks */
+        .color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+        .color-swatch {
+            width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+            border: 2px solid transparent; transition: border-color .15s, transform .15s;
+        }
+        .color-swatch:hover { transform: scale(1.15); }
+        .color-swatch.selected { border-color: #111827; }
+
+        /* Sync to GCal checkbox */
+        .gcal-sync-row {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #374151; font-weight: 600;
+            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 16px;
+        }
+        .gcal-sync-row input { accent-color: #16a34a; width: 16px; height: 16px; }
+        .gcal-sync-row .gcal-sync-note { font-size: 11px; color: #6b7280; font-weight: 400; margin-left: auto; }
 
         /* ── MEETING DETAIL MODAL ── */
         .meeting-detail { padding: 4px 0; }
@@ -361,69 +443,57 @@
         /* Scrollbar */
         .day-schedule::-webkit-scrollbar { width: 6px; }
         .day-schedule::-webkit-scrollbar-track { background: transparent; }
-        .day-schedule::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 99px; }
-
-        @media (max-width: 900px) {
-            .sidebar { width: 200px; }
-            .main { margin-left: 200px; width: calc(100% - 200px); }
-        }
-        @media (max-width: 650px) {
-            .sidebar { display: none; }
-            .main { margin-left: 0; width: 100%; padding: 16px; }
-        }
+        .day-schedule::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+<!-- ── SIDEBAR ── -->
 <div class="sidebar">
-    <div class="logo">Panache WMS</div>
+    <div class="logo">🏢 Panache WMS</div>
+    <div id="miniCal" class="mini-cal"></div>
+    <nav class="menu" id="sidebarMenu"></nav>
 
-    <!-- Mini calendar -->
-    <div class="mini-cal" id="miniCal"></div>
+    <!-- Google Calendar connect -->
+    <div class="gcal-banner" id="gcalBanner">
+        <div class="gcal-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Google Calendar
+        </div>
+        <div id="gcalStatus">Checking…</div>
+    </div>
 
-    <!-- Nav links — role aware, injected by JS -->
-    <div class="menu" id="sidebarMenu"></div>
-
-    <!-- Personal notes -->
     <div class="sidebar-notes">
-        <p class="sidebar-notes-label">My notes</p>
+        <div class="sidebar-notes-label">Quick Notes</div>
         <div id="sidebarTodos"></div>
         <div class="sidebar-todo-add">
-            <input id="sidebarTodoInput" placeholder="Add a note…"
-                   onkeydown="if(event.key==='Enter') addSidebarTodo()">
+            <input type="text" id="sidebarTodoInput" placeholder="Add a note…" onkeydown="if(event.key==='Enter') addSidebarTodo()">
             <button onclick="addSidebarTodo()">+</button>
         </div>
     </div>
 </div>
 
-<!-- ══════════════════════════════ MAIN ══════════════════════════════ -->
+<!-- ── MAIN ── -->
 <div class="main">
-
-    <!-- Page header -->
     <div class="page-header">
         <h1>📅 Calendar</h1>
         <div class="header-actions">
-            <button class="btn-new-meeting" onclick="openNewMeeting()">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                New Meeting
-            </button>
+            <button class="btn-new-task"    onclick="openNewTask()">＋ Add Task</button>
+            <button class="btn-new-meeting" onclick="openNewMeeting()">＋ Schedule Meeting</button>
             <div class="profile-badge" id="profileBadge">…</div>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </div>
 
-    <!-- Calendar card -->
-    <div class="calendar-wrapper" id="calendarWrapper" style="position:relative">
-
-        <!-- Toolbar -->
+    <div class="calendar-wrapper">
+        <!-- TOOLBAR -->
         <div class="cal-toolbar">
             <div class="cal-nav">
-                <button onclick="navigate(-1)" title="Previous">&#8249;</button>
+                <button onclick="navigate(-1)">‹</button>
                 <button class="btn-today" onclick="goToday()">Today</button>
-                <button onclick="navigate(1)" title="Next">&#8250;</button>
-                <span class="cal-title" id="calTitle">…</span>
+                <button onclick="navigate(1)">›</button>
             </div>
+            <div class="cal-title" id="calTitle">…</div>
             <div class="cal-view-tabs">
                 <button class="cal-view-tab active" id="tabMonth" onclick="switchView('month')">Month</button>
                 <button class="cal-view-tab" id="tabDay"   onclick="switchView('day')">Day</button>
@@ -449,37 +519,32 @@
         <!-- DAY VIEW -->
         <div id="dayView">
             <div class="day-view-header">
-                <button class="back-to-month" onclick="switchView('month')">
-                    ← Month
-                </button>
+                <button class="back-to-month" onclick="switchView('month')">← Month</button>
                 <div>
                     <div class="day-view-title" id="dayViewTitle">…</div>
                     <div class="day-view-subtitle" id="dayViewSubtitle"></div>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:8px">
-                    <button class="back-to-month" onclick="navigateDay(-1)">← Prev day</button>
-                    <button class="back-to-month" onclick="navigateDay(1)">Next day →</button>
+                    <button class="back-to-month" onclick="navigateDay(-1)">← Prev</button>
+                    <button class="back-to-month" onclick="navigateDay(1)">Next →</button>
                 </div>
             </div>
             <div class="day-schedule" id="daySchedule"></div>
         </div>
-
-    </div><!-- /calendar-wrapper -->
+    </div>
 </div>
 
-<!-- ══════════════════════════════ CREATE MEETING MODAL ══════════════════════════════ -->
+<!-- ══ CREATE MEETING MODAL ══ -->
 <div class="modal-overlay" id="meetingModal">
     <div class="modal">
         <div class="modal-header">
             <h2>📅 Schedule Meeting</h2>
             <button class="modal-close" onclick="closeMeetingModal()">✕</button>
         </div>
-
-        <div class="time-range-display" id="modalTimeDisplay">
+        <div class="time-range-display">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span id="timeRangeText">Select time range</span>
         </div>
-
         <div class="form-group">
             <label>Meeting Title *</label>
             <input type="text" id="mtgTitle" placeholder="e.g. Weekly Sales Review">
@@ -514,7 +579,6 @@
                 <div style="color:#9ca3af;font-size:13px;padding:8px">Loading users…</div>
             </div>
         </div>
-
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeMeetingModal()">Cancel</button>
             <button class="btn-save" id="saveMeetingBtn" onclick="saveMeeting()">Save Meeting</button>
@@ -522,7 +586,60 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════ MEETING DETAIL MODAL ══════════════════════════════ -->
+<!-- ══ CREATE TASK MODAL ══ -->
+<div class="modal-overlay" id="taskModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>✅ Add Calendar Task</h2>
+            <button class="modal-close" onclick="closeTaskModal()">✕</button>
+        </div>
+        <div class="time-range-display" style="background:#f5f3ff;border-color:#ddd6fe;color:#7c3aed">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span id="taskTimeRangeText">Select time range</span>
+        </div>
+        <div class="form-group">
+            <label>Task Title *</label>
+            <input type="text" id="taskTitle" placeholder="e.g. Prepare Q3 Report">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="taskDesc" placeholder="Notes, context, links…" style="min-height:60px"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="taskDate">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Start Time</label>
+                <select id="taskStartSlot"></select>
+            </div>
+            <div class="form-group">
+                <label>End Time</label>
+                <select id="taskEndSlot"></select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Color</label>
+            <div class="color-picker" id="taskColorPicker"></div>
+            <input type="hidden" id="taskColor" value="#7c3aed">
+        </div>
+        <!-- Sync to Google Calendar (only shown if GCal is connected) -->
+        <div class="gcal-sync-row" id="gcalSyncRow" style="display:none">
+            <input type="checkbox" id="syncGcal" checked>
+            <label for="syncGcal">Also add to my Google Calendar</label>
+            <span class="gcal-sync-note">Requires Google Calendar connected</span>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
+            <button class="btn-save-task" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MEETING DETAIL MODAL ══ -->
 <div class="modal-overlay" id="detailModal">
     <div class="modal" style="width:460px">
         <div class="modal-header">
@@ -539,64 +656,84 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ══════════════════════════════ SCRIPTS ══════════════════════════════ -->
+<!-- ════════════════════════════ SCRIPTS ════════════════════════════ -->
 <script>
-/* ─── CONFIG ──────────────────────────────────────────── */
-const API_BASE = "https://panache-production.up.railway.app"; // adjust if needed
+const API_BASE = "https://panache-production.up.railway.app";
 
-/* ─── STATE ───────────────────────────────────────────── */
-const userId   = parseInt(localStorage.getItem("userId")    || "0");
-const userName = localStorage.getItem("userName")           || "User";
-const userRole = localStorage.getItem("userRole")           || "employee";
+/* ─── STATE ─────────────────────────────────────────── */
+const userId   = parseInt(localStorage.getItem("userId")  || "0");
+const userName = localStorage.getItem("userName")         || "User";
+const userRole = localStorage.getItem("userRole")         || "employee";
 
-let currentView    = "month";
-let viewDate       = new Date();        // anchor for month view
-let selectedDate   = null;             // active day in day view
-let allUsers       = [];
-let monthMeetings  = {};               // keyed by YYYY-MM-DD
+let currentView   = "month";
+let viewDate      = new Date();
+let selectedDate  = null;
+let allUsers      = [];
+let monthMeetings = {};   // keyed YYYY-MM-DD → meetings[]
+let monthTasks    = {};   // keyed YYYY-MM-DD → tasks[]
+let gcalConnected = false;
 
-// drag-select state
-let dragStart      = null;
-let dragEnd        = null;
-let isDragging     = false;
-// pre-selected range from click/drag
-let pendingStart   = null;
-let pendingEnd     = null;
+let dragStart = null, dragEnd = null, isDragging = false;
+let pendingStart = null, pendingEnd = null;
+let pendingModalType = "meeting"; // "meeting" | "task"
 
-/* ─── INIT ────────────────────────────────────────────── */
+/* ── Task color options ─────────────────────────────── */
+const TASK_COLORS = [
+    { hex: "#7c3aed", label: "Purple" },
+    { hex: "#2563eb", label: "Blue"   },
+    { hex: "#16a34a", label: "Green"  },
+    { hex: "#d97706", label: "Amber"  },
+    { hex: "#dc2626", label: "Red"    },
+    { hex: "#0891b2", label: "Cyan"   },
+    { hex: "#be185d", label: "Pink"   },
+    { hex: "#374151", label: "Gray"   },
+];
+
+/* ─── INIT ──────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById("profileBadge").textContent = userName;
     setupSidebar();
     populateSlotSelects();
+    buildTaskColorPicker();
     await loadUsers();
+    await checkGCalStatus();
     renderMiniCal();
     renderMonthView();
     setInterval(drawCurrentTimeLine, 30000);
-    document.getElementById("profileBadge").textContent = userName;
+
+    // Check if we just got redirected back from Google OAuth
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("gcal") === "connected") {
+        showToast("Google Calendar connected! ✅", "success");
+        history.replaceState(null, "", "calendar.html");
+        gcalConnected = true;
+        renderGCalBanner();
+    }
 });
 
-/* ─── SIDEBAR ─────────────────────────────────────────── */
+/* ─── SIDEBAR ───────────────────────────────────────── */
 function setupSidebar() {
     const menu  = document.getElementById("sidebarMenu");
     const links = {
-        admin: [
+        admin:    [
             { href: "admin-dashboard.html",   label: "Dashboard" },
-            { href: "settings.html",           label: "Settings" },
-            { href: "history.html",            label: "History" },
-            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "settings.html",           label: "Settings"  },
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
         ],
-        manager: [
+        manager:  [
             { href: "manager-dashboard.html",  label: "Dashboard" },
-            { href: "settings.html",           label: "Settings" },
-            { href: "history.html",            label: "History" },
-            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "settings.html",           label: "Settings"  },
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
         ],
         employee: [
             { href: "employee-dashboard.html", label: "Dashboard" },
-            { href: "settings.html",           label: "Settings" },
-            { href: "history.html",            label: "History" },
-            { href: "sales-dashboard.html",    label: "Sales" },
+            { href: "settings.html",           label: "Settings"  },
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
         ],
     };
@@ -604,15 +741,50 @@ function setupSidebar() {
     menu.innerHTML = items.map(l =>
         `<a href="${l.href}" ${l.active ? 'class="active"' : ''}>${l.label}</a>`
     ).join("");
-
-    // sidebar notes
     renderSidebarTodos();
 }
 
-/* ─── SIDEBAR TODO ────────────────────────────────────── */
+/* ─── GOOGLE CALENDAR STATUS ────────────────────────── */
+async function checkGCalStatus() {
+    try {
+        const res  = await fetch(`${API_BASE}/auth/google/status?user_id=${userId}`);
+        const data = await res.json();
+        gcalConnected = data.connected;
+    } catch {
+        gcalConnected = false;
+    }
+    renderGCalBanner();
+}
+
+function renderGCalBanner() {
+    const statusEl = document.getElementById("gcalStatus");
+    if (gcalConnected) {
+        statusEl.innerHTML = `
+            <span class="gcal-connected">✓ Connected</span><br>
+            <button class="gcal-disconnect-btn" onclick="disconnectGCal()">Disconnect</button>`;
+    } else {
+        statusEl.innerHTML = `
+            <span style="color:rgba(255,255,255,.5)">Not connected</span><br>
+            <a class="gcal-connect-btn" href="${API_BASE}/auth/google/login?user_id=${userId}">
+                Connect Google Calendar
+            </a>`;
+    }
+    // Show/hide sync checkbox in task modal
+    const row = document.getElementById("gcalSyncRow");
+    if (row) row.style.display = gcalConnected ? "flex" : "none";
+}
+
+async function disconnectGCal() {
+    await fetch(`${API_BASE}/auth/google/disconnect?user_id=${userId}`, { method: "DELETE" });
+    gcalConnected = false;
+    renderGCalBanner();
+    showToast("Google Calendar disconnected", "");
+}
+
+/* ─── SIDEBAR TODO ───────────────────────────────────── */
 const TODO_KEY = "panache_todos";
-function loadTodos()   { try { return JSON.parse(localStorage.getItem(TODO_KEY)) || []; } catch { return []; } }
-function saveTodos(t)  { localStorage.setItem(TODO_KEY, JSON.stringify(t)); }
+function loadTodos()  { try { return JSON.parse(localStorage.getItem(TODO_KEY)) || []; } catch { return []; } }
+function saveTodos(t) { localStorage.setItem(TODO_KEY, JSON.stringify(t)); }
 
 function renderSidebarTodos() {
     const box   = document.getElementById("sidebarTodos");
@@ -623,7 +795,6 @@ function renderSidebarTodos() {
             <span>${text}</span>
         </div>`).join("");
 }
-
 function addSidebarTodo() {
     const inp  = document.getElementById("sidebarTodoInput");
     const text = inp.value.trim();
@@ -634,7 +805,6 @@ function addSidebarTodo() {
     inp.value = "";
     renderSidebarTodos();
 }
-
 function completeSidebarTodo(i) {
     setTimeout(() => {
         const todos = loadTodos();
@@ -644,32 +814,44 @@ function completeSidebarTodo(i) {
     }, 400);
 }
 
-/* ─── SLOT UTILITIES ──────────────────────────────────── */
+/* ─── SLOT UTILITIES ─────────────────────────────────── */
 function slotToTime(slot) {
     const h = Math.floor(slot / 2);
     const m = (slot % 2) * 30;
     return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
-function timeToSlot(hhmm) {
-    const [h, m] = hhmm.split(":").map(Number);
-    return h * 2 + (m >= 30 ? 1 : 0);
-}
 
 function populateSlotSelects() {
-    const startSel = document.getElementById("mtgStartSlot");
-    const endSel   = document.getElementById("mtgEndSlot");
-    startSel.innerHTML = "";
-    endSel.innerHTML   = "";
-    for (let i = 0; i < 48; i++) {
-        const t = slotToTime(i);
-        startSel.innerHTML += `<option value="${i}">${t}</option>`;
-        endSel.innerHTML   += `<option value="${i+1}">${slotToTime(i+1) === "24:00" ? "24:00" : slotToTime(i+1)}</option>`;
-    }
-    startSel.value = 18; // 09:00
-    endSel.value   = 20; // 10:00
+    ["mtgStartSlot","mtgEndSlot","taskStartSlot","taskEndSlot"].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = "";
+        for (let i = 0; i < 48; i++) {
+            sel.innerHTML += `<option value="${i}">${slotToTime(i)}</option>`;
+        }
+    });
+    document.getElementById("mtgStartSlot").value  = 18;
+    document.getElementById("mtgEndSlot").value    = 20;
+    document.getElementById("taskStartSlot").value = 18;
+    document.getElementById("taskEndSlot").value   = 20;
 }
 
-/* ─── USER LOADING ────────────────────────────────────── */
+/* ─── COLOR PICKER ───────────────────────────────────── */
+function buildTaskColorPicker() {
+    const picker = document.getElementById("taskColorPicker");
+    picker.innerHTML = TASK_COLORS.map(c => `
+        <div class="color-swatch ${c.hex === "#7c3aed" ? "selected" : ""}"
+             style="background:${c.hex}"
+             title="${c.label}"
+             onclick="selectTaskColor('${c.hex}', this)"></div>
+    `).join("");
+}
+function selectTaskColor(hex, el) {
+    document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("selected"));
+    el.classList.add("selected");
+    document.getElementById("taskColor").value = hex;
+}
+
+/* ─── USER LOADING ───────────────────────────────────── */
 async function loadUsers() {
     try {
         const res = await fetch(`${API_BASE}/users`);
@@ -702,7 +884,7 @@ function getSelectedParticipants() {
         .map(cb => parseInt(cb.value));
 }
 
-/* ─── MONTH VIEW ──────────────────────────────────────── */
+/* ─── MONTH VIEW ─────────────────────────────────────── */
 function renderMonthView() {
     const year  = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -710,27 +892,22 @@ function renderMonthView() {
     document.getElementById("calTitle").textContent =
         viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDay    = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const daysInPrev  = new Date(year, month, 0).getDate();
-
-    const today = new Date();
-    const todayStr = dateStr(today);
+    const today       = new Date();
+    const todayStr    = dateStr(today);
 
     const container = document.getElementById("monthDays");
     container.innerHTML = "";
 
     let cells = [];
-    // Pad with prev month
-    for (let i = firstDay - 1; i >= 0; i--) {
+    for (let i = firstDay - 1; i >= 0; i--)
         cells.push({ day: daysInPrev - i, cur: false, date: new Date(year, month - 1, daysInPrev - i) });
-    }
-    for (let d = 1; d <= daysInMonth; d++) {
+    for (let d = 1; d <= daysInMonth; d++)
         cells.push({ day: d, cur: true, date: new Date(year, month, d) });
-    }
-    while (cells.length % 7 !== 0) {
+    while (cells.length % 7 !== 0)
         cells.push({ day: cells.length - firstDay - daysInMonth + 1, cur: false, date: new Date(year, month + 1, cells.length - firstDay - daysInMonth + 1) });
-    }
 
     cells.forEach(cell => {
         const ds  = dateStr(cell.date);
@@ -745,37 +922,69 @@ function renderMonthView() {
         numDiv.textContent = cell.day;
         div.appendChild(numDiv);
 
-        // meetings for this date
+        // Meetings
         const meetings = monthMeetings[ds] || [];
-        const colors   = ["color-blue","color-green","color-purple","color-orange","color-teal"];
-        meetings.slice(0, 3).forEach((m, i) => {
+        const colors   = ["color-blue","color-green","color-teal","color-orange"];
+        let pillCount  = 0;
+        meetings.slice(0, 2).forEach((m, i) => {
             const pill = document.createElement("span");
             pill.className = `month-meeting-pill ${colors[i % colors.length]}`;
             pill.textContent = `${slotToTime(m.start_slot)} ${m.title}`;
             pill.onclick = (e) => { e.stopPropagation(); showMeetingDetail(m); };
             div.appendChild(pill);
+            pillCount++;
         });
-        if (meetings.length > 3) {
+
+        // Tasks
+        const tasks = monthTasks[ds] || [];
+        tasks.slice(0, 2 - Math.min(pillCount, 1)).forEach(t => {
+            const pill = document.createElement("span");
+            pill.className = "month-task-pill";
+            pill.textContent = `${slotToTime(t.start_slot)} ${t.title}`;
+            pill.onclick = (e) => { e.stopPropagation(); openDayView(cell.date); };
+            div.appendChild(pill);
+            pillCount++;
+        });
+
+        const total = meetings.length + tasks.length;
+        if (total > pillCount) {
             const more = document.createElement("div");
             more.className = "month-more";
-            more.textContent = `+${meetings.length - 3} more`;
+            more.textContent = `+${total - pillCount} more`;
             div.appendChild(more);
         }
 
         container.appendChild(div);
     });
 
-    // Load meetings for entire month
-    loadMonthMeetings(year, month);
+    loadMonthData(year, month);
     renderMiniCal();
 }
 
-async function loadMonthMeetings(year, month) {
-    // Fetch meetings for each day in month using existing /meetings/day endpoint
+async function loadMonthData(year, month) {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const promises    = [];
+    const monthStr = `${year}-${String(month+1).padStart(2,"0")}`;
+
+    // Load tasks for the month in one request
+    try {
+        const res  = await fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&month=${monthStr}`);
+        const data = await res.json();
+        // Reset tasks for this month
+        for (let d = 1; d <= daysInMonth; d++) {
+            const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
+            monthTasks[ds] = [];
+        }
+        data.forEach(t => {
+            const ds = String(t.task_date).slice(0, 10);
+            if (!monthTasks[ds]) monthTasks[ds] = [];
+            monthTasks[ds].push(t);
+        });
+    } catch { /* ignore */ }
+
+    // Load meetings per day
+    const promises = [];
     for (let d = 1; d <= daysInMonth; d++) {
-        const ds = `${year}-${String(month+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+        const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
         promises.push(
             fetch(`${API_BASE}/meetings/day?date=${ds}`)
                 .then(r => r.json())
@@ -785,10 +994,10 @@ async function loadMonthMeetings(year, month) {
     }
     const results = await Promise.all(promises);
     results.forEach(({ ds, data }) => { monthMeetings[ds] = data; });
-    renderMonthView();  // re-render with meeting data
+    renderMonthView();
 }
 
-/* ─── MINI CALENDAR ───────────────────────────────────── */
+/* ─── MINI CALENDAR ──────────────────────────────────── */
 let miniCalDate = new Date();
 function renderMiniCal() {
     const y = miniCalDate.getFullYear();
@@ -813,11 +1022,11 @@ function renderMiniCal() {
     for (let d = 1; d <= days; d++) {
         const dt  = new Date(y, m, d);
         const ds  = dateStr(dt);
-        const cls = [
-            "mini-cal-day",
+        const hasEvent = (monthMeetings[ds] || []).length > 0 || (monthTasks[ds] || []).length > 0;
+        const cls = ["mini-cal-day",
             dateStr(today) === ds ? "today" : "",
             selectedDate && dateStr(selectedDate) === ds ? "selected" : "",
-            (monthMeetings[ds] || []).length ? "has-event" : "",
+            hasEvent ? "has-event" : "",
         ].join(" ");
         html += `<div class="${cls}" onclick="miniCalClick(${y},${m},${d})">${d}</div>`;
     }
@@ -826,17 +1035,12 @@ function renderMiniCal() {
 }
 
 function miniCalNav(dir) { miniCalDate.setMonth(miniCalDate.getMonth() + dir); renderMiniCal(); }
-function miniCalClick(y, m, d) {
-    const dt = new Date(y, m, d);
-    openDayView(dt);
-}
+function miniCalClick(y, m, d) { openDayView(new Date(y, m, d)); }
 
-/* ─── DAY VIEW ────────────────────────────────────────── */
+/* ─── DAY VIEW ───────────────────────────────────────── */
 async function openDayView(date) {
     selectedDate = date;
     currentView  = "day";
-
-    // Sync mini cal month
     miniCalDate  = new Date(date.getFullYear(), date.getMonth(), 1);
     renderMiniCal();
 
@@ -846,9 +1050,9 @@ async function openDayView(date) {
     document.getElementById("tabDay").classList.add("active");
 
     const opts = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
-    document.getElementById("calTitle").textContent        = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    document.getElementById("dayViewTitle").textContent    = date.toLocaleDateString("en-US", opts);
-    document.getElementById("dayViewSubtitle").textContent = "Click or drag slots to schedule a meeting";
+    document.getElementById("calTitle").textContent     = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    document.getElementById("dayViewTitle").textContent = date.toLocaleDateString("en-US", opts);
+    document.getElementById("dayViewSubtitle").textContent = "Click or drag slots to add a meeting or task";
 
     await renderDayView(date);
 }
@@ -858,12 +1062,19 @@ async function renderDayView(date) {
     schedule.innerHTML = `<div class="loading-overlay"><div class="spinner"></div></div>`;
 
     const ds = dateStr(date);
-    let meetings = [];
+    let meetings = [], tasks = [];
+
     try {
-        const res = await fetch(`${API_BASE}/meetings/day?date=${ds}`);
-        meetings  = await res.json();
-    } catch { meetings = []; }
+        const [mRes, tRes] = await Promise.all([
+            fetch(`${API_BASE}/meetings/day?date=${ds}`),
+            fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`)
+        ]);
+        meetings = await mRes.json();
+        tasks    = await tRes.json();
+    } catch { meetings = []; tasks = []; }
+
     monthMeetings[ds] = meetings;
+    monthTasks[ds]    = tasks;
 
     schedule.innerHTML = "";
 
@@ -887,31 +1098,45 @@ async function renderDayView(date) {
         const row = document.createElement("div");
         row.className = "slot-row";
         row.dataset.slot = s;
-        row.addEventListener("mousedown",  e => startDrag(s, e));
-        row.addEventListener("mouseover",  () => continueDrag(s));
-        row.addEventListener("mouseup",    () => endDrag());
-        row.addEventListener("click",      () => singleClick(s));
+        row.addEventListener("mousedown", e => startDrag(s, e, "meeting"));
+        row.addEventListener("mouseover", () => continueDrag(s));
+        row.addEventListener("mouseup",   () => endDrag());
+        row.addEventListener("click",     () => singleClick(s));
         slotsCol.appendChild(row);
     }
 
     // Render meeting blocks
-    const colors = ["#dbeafe|#1d4ed8","#dcfce7|#15803d","#f3e8ff|#7c3aed","#ffedd5|#c2410c","#ccfbf1|#0f766e"];
+    const meetingColors = ["#dbeafe|#1d4ed8","#dcfce7|#15803d","#ffedd5|#c2410c","#ccfbf1|#0f766e","#fef9c3|#a16207"];
     meetings.forEach((m, i) => {
-        const [bg, fg] = colors[i % colors.length].split("|");
+        const [bg, fg] = meetingColors[i % meetingColors.length].split("|");
         const block    = document.createElement("div");
         block.className = "meeting-block";
-        block.style.cssText = `
-            top:${m.start_slot * 48}px;
-            height:${(m.end_slot - m.start_slot) * 48 - 4}px;
-            background:${bg}; color:${fg};
-            border-left-color:${fg};
-        `;
+        block.style.cssText = `top:${m.start_slot*48}px;height:${(m.end_slot-m.start_slot)*48-4}px;background:${bg};color:${fg};border-left-color:${fg};`;
         block.innerHTML = `
             <div class="mb-title">${m.title}</div>
             <div class="mb-time">${slotToTime(m.start_slot)} – ${slotToTime(m.end_slot)}</div>
-            ${m.location ? `<div class="mb-loc">📍 ${m.location}</div>` : ""}
-        `;
+            ${m.location ? `<div class="mb-loc">📍 ${m.location}</div>` : ""}`;
         block.onclick = (e) => { e.stopPropagation(); showMeetingDetail(m); };
+        slotsCol.appendChild(block);
+    });
+
+    // Render personal task blocks
+    tasks.forEach(t => {
+        const color = t.color || "#7c3aed";
+        const block = document.createElement("div");
+        block.className = "task-block";
+        // Make a lighter background from the hex color
+        block.style.cssText = `
+            top:${t.start_slot*48}px;
+            height:${(t.end_slot-t.start_slot)*48-4}px;
+            background:${color}18;
+            color:${color};
+            border-left-color:${color};
+        `;
+        block.innerHTML = `
+            <div class="tb-title">✓ ${t.title}</div>
+            <div class="tb-time">${slotToTime(t.start_slot)} – ${slotToTime(t.end_slot)}</div>
+            <button class="tb-delete" onclick="deleteCalendarTask(${t.id}, event)" title="Delete task">✕</button>`;
         slotsCol.appendChild(block);
     });
 
@@ -925,9 +1150,7 @@ async function renderDayView(date) {
         line.id            = "timeLine";
         line.style.top     = `${topPx}px`;
         slotsCol.appendChild(line);
-        setTimeout(() => {
-            line.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 100);
+        setTimeout(() => line.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
     }
 
     schedule.appendChild(slotsCol);
@@ -939,8 +1162,7 @@ function drawCurrentTimeLine() {
     if (!line || !selectedDate) return;
     const now = new Date();
     if (dateStr(now) !== dateStr(selectedDate)) return;
-    const totalMinutes = now.getHours() * 60 + now.getMinutes();
-    line.style.top = `${(totalMinutes / 30) * 48}px`;
+    line.style.top = `${((now.getHours()*60 + now.getMinutes()) / 30) * 48}px`;
 }
 
 function navigateDay(dir) {
@@ -950,14 +1172,15 @@ function navigateDay(dir) {
     openDayView(d);
 }
 
-/* ─── DRAG-SELECT SLOTS ───────────────────────────────── */
+/* ─── DRAG-SELECT ────────────────────────────────────── */
 document.addEventListener("mouseup", () => { if (isDragging) endDrag(); });
 
-function startDrag(slot, e) {
+function startDrag(slot, e, type) {
     if (e.button !== 0) return;
     isDragging = true;
     dragStart  = slot;
     dragEnd    = slot;
+    pendingModalType = type;
     highlightDraggedSlots();
 }
 function continueDrag(slot) {
@@ -971,15 +1194,15 @@ function endDrag() {
     if (dragStart !== null && dragEnd !== null) {
         const s = Math.min(dragStart, dragEnd);
         const e = Math.max(dragStart, dragEnd) + 1;
-        if (e - s > 1) openMeetingModal(s, e);
-        // else: treated as click via singleClick
+        if (e - s > 1) openModalForSlots(s, e, pendingModalType);
     }
     clearDragHighlights();
     dragStart = dragEnd = null;
 }
 function singleClick(slot) {
     if (isDragging) return;
-    openMeetingModal(slot, slot + 2); // default 1 hour
+    // Default: open meeting modal on single click (same as original behaviour)
+    openMeetingModal(slot, slot + 2);
 }
 function highlightDraggedSlots() {
     const rows = document.querySelectorAll(".slot-row");
@@ -994,7 +1217,12 @@ function clearDragHighlights() {
     document.querySelectorAll(".slot-row.selecting").forEach(r => r.classList.remove("selecting"));
 }
 
-/* ─── VIEW SWITCHING ──────────────────────────────────── */
+function openModalForSlots(start, end, type) {
+    if (type === "task") openTaskModal(start, end);
+    else                  openMeetingModal(start, end);
+}
+
+/* ─── VIEW SWITCHING ─────────────────────────────────── */
 function switchView(view) {
     currentView = view;
     if (view === "month") {
@@ -1018,15 +1246,11 @@ function navigate(dir) {
 }
 
 function goToday() {
-    if (currentView === "month") {
-        viewDate = new Date();
-        renderMonthView();
-    } else {
-        openDayView(new Date());
-    }
+    if (currentView === "month") { viewDate = new Date(); renderMonthView(); }
+    else openDayView(new Date());
 }
 
-/* ─── MEETING MODAL ───────────────────────────────────── */
+/* ─── MEETING MODAL ──────────────────────────────────── */
 function openNewMeeting() {
     const d = selectedDate || new Date();
     const s = new Date().getHours() * 2;
@@ -1036,39 +1260,32 @@ function openNewMeeting() {
 function openMeetingModal(startSlot, endSlot, date) {
     pendingStart = startSlot;
     pendingEnd   = endSlot;
-
     const d = date || selectedDate || new Date();
     document.getElementById("mtgDate").value      = dateStr(d);
     document.getElementById("mtgStartSlot").value = startSlot;
-    document.getElementById("mtgEndSlot").value   = Math.min(endSlot, 48);
+    document.getElementById("mtgEndSlot").value   = Math.min(endSlot, 47);
     document.getElementById("mtgTitle").value     = "";
     document.getElementById("mtgDesc").value      = "";
     document.getElementById("mtgLocation").value  = "";
-    updateTimeDisplay();
-
-    // Uncheck all participants
+    updateMeetingTimeDisplay();
     document.querySelectorAll('input[name="participant"]').forEach(cb => cb.checked = false);
-
     document.getElementById("meetingModal").classList.add("active");
 }
 
-function updateTimeDisplay() {
+function updateMeetingTimeDisplay() {
     const s = parseInt(document.getElementById("mtgStartSlot").value);
     const e = parseInt(document.getElementById("mtgEndSlot").value);
     const dateVal = document.getElementById("mtgDate").value;
     const d = new Date(dateVal + "T00:00:00");
     const dateLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-    document.getElementById("timeRangeText").textContent =
-        `${dateLabel} · ${slotToTime(s)} – ${slotToTime(e)}`;
+    document.getElementById("timeRangeText").textContent = `${dateLabel} · ${slotToTime(s)} – ${slotToTime(e)}`;
 }
 
-document.getElementById("mtgStartSlot").addEventListener("change", updateTimeDisplay);
-document.getElementById("mtgEndSlot").addEventListener("change",   updateTimeDisplay);
-document.getElementById("mtgDate").addEventListener("change",      updateTimeDisplay);
+document.getElementById("mtgStartSlot").addEventListener("change", updateMeetingTimeDisplay);
+document.getElementById("mtgEndSlot").addEventListener("change",   updateMeetingTimeDisplay);
+document.getElementById("mtgDate").addEventListener("change",      updateMeetingTimeDisplay);
 
-function closeMeetingModal() {
-    document.getElementById("meetingModal").classList.remove("active");
-}
+function closeMeetingModal() { document.getElementById("meetingModal").classList.remove("active"); }
 
 async function saveMeeting() {
     const title     = document.getElementById("mtgTitle").value.trim();
@@ -1084,34 +1301,19 @@ async function saveMeeting() {
     if (endSlot <= startSlot) { showToast("End time must be after start time", "error"); return; }
 
     const btn = document.getElementById("saveMeetingBtn");
-    btn.disabled    = true;
-    btn.textContent = "Saving…";
+    btn.disabled = true; btn.textContent = "Saving…";
 
     try {
-        const res = await fetch(`${API_BASE}/meetings/create`, {
+        const res  = await fetch(`${API_BASE}/meetings/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title,
-                description: desc,
-                meeting_date: dateVal,
-                start_slot: startSlot,
-                end_slot: endSlot,
-                organizer_id: userId,
-                location,
-                attendees,
-            }),
+            body: JSON.stringify({ title, description: desc, meeting_date: dateVal, start_slot: startSlot, end_slot: endSlot, organizer_id: userId, location, attendees }),
         });
         const data = await res.json();
-
         if (data.success) {
             showToast("Meeting scheduled!", "success");
             closeMeetingModal();
-            // Reload current view
-            if (currentView === "day" && selectedDate) {
-                renderDayView(selectedDate);
-            }
-            // Invalidate cache for this date so month re-renders correctly
+            if (currentView === "day" && selectedDate) renderDayView(selectedDate);
             delete monthMeetings[dateVal];
         } else {
             showToast(data.message || "Could not save meeting", "error");
@@ -1119,24 +1321,120 @@ async function saveMeeting() {
     } catch (e) {
         showToast("Network error — please retry", "error");
     } finally {
-        btn.disabled    = false;
-        btn.textContent = "Save Meeting";
+        btn.disabled = false; btn.textContent = "Save Meeting";
     }
 }
 
-/* ─── MEETING DETAIL ──────────────────────────────────── */
+/* ─── TASK MODAL ─────────────────────────────────────── */
+function openNewTask() {
+    const d = selectedDate || new Date();
+    const s = new Date().getHours() * 2;
+    openTaskModal(s, s + 2, d);
+}
+
+function openTaskModal(startSlot, endSlot, date) {
+    const d = date || selectedDate || new Date();
+    document.getElementById("taskDate").value      = dateStr(d);
+    document.getElementById("taskStartSlot").value = startSlot;
+    document.getElementById("taskEndSlot").value   = Math.min(endSlot, 47);
+    document.getElementById("taskTitle").value     = "";
+    document.getElementById("taskDesc").value      = "";
+    document.getElementById("taskColor").value     = "#7c3aed";
+    buildTaskColorPicker();  // reset selection
+    updateTaskTimeDisplay();
+    renderGCalBanner();      // show/hide sync row
+    document.getElementById("taskModal").classList.add("active");
+}
+
+function updateTaskTimeDisplay() {
+    const s = parseInt(document.getElementById("taskStartSlot").value);
+    const e = parseInt(document.getElementById("taskEndSlot").value);
+    const dateVal = document.getElementById("taskDate").value;
+    const d = new Date(dateVal + "T00:00:00");
+    const dateLabel = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    document.getElementById("taskTimeRangeText").textContent = `${dateLabel} · ${slotToTime(s)} – ${slotToTime(e)}`;
+}
+
+document.getElementById("taskStartSlot").addEventListener("change", updateTaskTimeDisplay);
+document.getElementById("taskEndSlot").addEventListener("change",   updateTaskTimeDisplay);
+document.getElementById("taskDate").addEventListener("change",      updateTaskTimeDisplay);
+
+function closeTaskModal() { document.getElementById("taskModal").classList.remove("active"); }
+
+async function saveTask() {
+    const title     = document.getElementById("taskTitle").value.trim();
+    const desc      = document.getElementById("taskDesc").value.trim();
+    const dateVal   = document.getElementById("taskDate").value;
+    const startSlot = parseInt(document.getElementById("taskStartSlot").value);
+    const endSlot   = parseInt(document.getElementById("taskEndSlot").value);
+    const color     = document.getElementById("taskColor").value;
+    const syncGcal  = gcalConnected && document.getElementById("syncGcal")?.checked;
+
+    if (!title)   { showToast("Task title is required", "error"); return; }
+    if (!dateVal) { showToast("Please select a date", "error"); return; }
+    if (endSlot <= startSlot) { showToast("End time must be after start time", "error"); return; }
+
+    const btn = document.getElementById("saveTaskBtn");
+    btn.disabled = true; btn.textContent = "Saving…";
+
+    try {
+        const res  = await fetch(`${API_BASE}/calendar-tasks/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: userId,
+                title, description: desc,
+                task_date: dateVal,
+                start_slot: startSlot,
+                end_slot: endSlot,
+                color,
+                sync_gcal: syncGcal,
+            }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            const msg = data.gcal_synced ? "Task added & synced to Google Calendar ✅" : "Task added!";
+            showToast(msg, "success");
+            closeTaskModal();
+            if (!monthTasks[dateVal]) monthTasks[dateVal] = [];
+            if (currentView === "day" && selectedDate) renderDayView(selectedDate);
+            renderMonthView();
+        } else {
+            showToast("Could not save task", "error");
+        }
+    } catch (e) {
+        showToast("Network error — please retry", "error");
+    } finally {
+        btn.disabled = false; btn.textContent = "Save Task";
+    }
+}
+
+async function deleteCalendarTask(taskId, e) {
+    e.stopPropagation();
+    if (!confirm("Delete this task?")) return;
+    try {
+        const res = await fetch(`${API_BASE}/calendar-tasks/${taskId}?user_id=${userId}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Task deleted", "");
+            if (currentView === "day" && selectedDate) renderDayView(selectedDate);
+            renderMonthView();
+        }
+    } catch {
+        showToast("Could not delete task", "error");
+    }
+}
+
+/* ─── MEETING DETAIL ─────────────────────────────────── */
 async function showMeetingDetail(m) {
     document.getElementById("detailTitle").textContent = m.title;
 
-    // Fetch attendees
     let attendeeNames = [];
     try {
         const res = await fetch(`${API_BASE}/meetings/${m.id}/attendees`);
         const data = await res.json();
-        attendeeNames = data.map(a => a.full_name || a.user_name || `User ${a.user_id}`);
-    } catch {
-        attendeeNames = ["Could not load"];
-    }
+        attendeeNames = data.map(a => a.full_name || `User ${a.user_id}`);
+    } catch { attendeeNames = ["Could not load"]; }
 
     const statusClass = m.status === "confirmed" ? "status-confirmed" : "status-pending";
     document.getElementById("meetingDetail").innerHTML = `
@@ -1147,22 +1445,8 @@ async function showMeetingDetail(m) {
                 <div class="detail-value">${m.date || m.meeting_date} · ${slotToTime(m.start_slot)} – ${slotToTime(m.end_slot)}</div>
             </div>
         </div>
-        ${m.description ? `
-        <div class="detail-row">
-            <span class="detail-icon">📝</span>
-            <div>
-                <div class="detail-label">Description</div>
-                <div class="detail-value">${m.description}</div>
-            </div>
-        </div>` : ""}
-        ${m.location ? `
-        <div class="detail-row">
-            <span class="detail-icon">📍</span>
-            <div>
-                <div class="detail-label">Location</div>
-                <div class="detail-value">${m.location}</div>
-            </div>
-        </div>` : ""}
+        ${m.description ? `<div class="detail-row"><span class="detail-icon">📝</span><div><div class="detail-label">Description</div><div class="detail-value">${m.description}</div></div></div>` : ""}
+        ${m.location    ? `<div class="detail-row"><span class="detail-icon">📍</span><div><div class="detail-label">Location</div><div class="detail-value">${m.location}</div></div></div>` : ""}
         <div class="detail-row">
             <span class="detail-icon">👥</span>
             <div>
@@ -1178,16 +1462,13 @@ async function showMeetingDetail(m) {
                 <div class="detail-label">Status</div>
                 <span class="status-badge ${statusClass}">${m.status || "pending"}</span>
             </div>
-        </div>
-    `;
+        </div>`;
     document.getElementById("detailModal").classList.add("active");
 }
 
-function closeDetailModal() {
-    document.getElementById("detailModal").classList.remove("active");
-}
+function closeDetailModal() { document.getElementById("detailModal").classList.remove("active"); }
 
-/* ─── UTILITIES ───────────────────────────────────────── */
+/* ─── UTILITIES ──────────────────────────────────────── */
 function dateStr(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -1197,23 +1478,17 @@ function dateStr(d) {
 
 function showToast(msg, type = "") {
     const t = document.getElementById("toast");
-    t.textContent  = msg;
-    t.className    = `toast ${type} show`;
-    setTimeout(() => t.className = "toast", 3200);
+    t.textContent = msg;
+    t.className   = `toast ${type} show`;
+    setTimeout(() => t.className = "toast", 3400);
 }
 
-function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
-}
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-/* ─── CLOSE MODALS ON OVERLAY CLICK ──────────────────── */
-document.getElementById("meetingModal").addEventListener("click", e => {
-    if (e.target === e.currentTarget) closeMeetingModal();
-});
-document.getElementById("detailModal").addEventListener("click", e => {
-    if (e.target === e.currentTarget) closeDetailModal();
-});
+/* ─── CLOSE MODALS ON OVERLAY CLICK ─────────────────── */
+document.getElementById("meetingModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeMeetingModal(); });
+document.getElementById("taskModal").addEventListener("click",    e => { if (e.target === e.currentTarget) closeTaskModal();    });
+document.getElementById("detailModal").addEventListener("click",  e => { if (e.target === e.currentTarget) closeDetailModal();  });
 </script>
 </body>
 </html>
