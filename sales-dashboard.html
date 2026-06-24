@@ -567,6 +567,7 @@ const userId     = parseInt(localStorage.getItem("userId"));
 const userRole   = localStorage.getItem("userRole");
 const userName   = localStorage.getItem("userName");
 const TODO_KEY   = "panache_todos";
+const isGuest    = false;
 
 let currentWeekNum = 0;
 let selectedWeek   = 0;
@@ -589,19 +590,20 @@ async function initPage() {
     const cw = await fetch(`${BASE}/sales/current-week`).then(r => r.json());
     currentWeekNum = cw.week;
 
-    if (userRole === "employee") {
-        document.getElementById("employeeView").style.display = "block";
-        document.getElementById("managerView").style.display  = "none";
-        await loadWeeks();
-    } else {
-        // manager or admin
-        document.getElementById("employeeView").style.display = "none";
-        document.getElementById("managerView").style.display  = "block";
+    // All roles see the entry form to add their own projections
+    document.getElementById("employeeView").style.display = "block";
+    await loadWeeks();
+
+    if (userRole === "manager" || userRole === "admin") {
+        // Also show the team/admin report below
+        document.getElementById("managerView").style.display = "block";
         selectedWeek = currentWeekNum;
         buildWeekSwitcherStatic();
         await loadManagerView();
         await loadCRTable();
         await loadMgrTeamDropdown();
+    } else {
+        document.getElementById("managerView").style.display = "none";
     }
 }
 
