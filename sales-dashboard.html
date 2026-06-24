@@ -84,28 +84,61 @@
         }
         .logout-btn:hover { background: #b91c1c; }
 
-        /* ── WEEK SWITCHER ───────────────────────────────── */
+        /* ── WEEK CALENDAR ───────────────────────────────── */
         .week-bar {
-            display: flex; align-items: center; gap: 10px;
-            background: white; padding: 14px 20px; border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 22px; flex-wrap: wrap;
+            background: white; padding: 18px 20px; border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 22px;
         }
-        .week-bar label { font-size: 13px; color: #6b7280; font-weight: 600; }
-        .week-btn {
-            padding: 6px 16px; border-radius: 99px; border: 1.5px solid #e5e7eb;
-            background: white; color: #6b7280; font-size: 13px; font-weight: 600;
-            cursor: pointer; transition: 0.2s;
+        .week-bar-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px;
         }
-        .week-btn:hover { border-color: #2563eb; color: #2563eb; }
-        .week-btn.active { background: #2563eb; border-color: #2563eb; color: white; }
-        .week-locked-badge {
-            background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 700;
-            padding: 3px 10px; border-radius: 99px; margin-left: 8px;
+        .week-bar-header label { font-size: 14px; color: #111827; font-weight: 700; }
+        .week-nav-btns { display: flex; gap: 6px; }
+        .week-nav-btn {
+            width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+            background: white; color: #374151; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .week-current-badge {
-            background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700;
-            padding: 3px 10px; border-radius: 99px; margin-left: 8px;
+        .week-nav-btn:hover { border-color: #2563eb; color: #2563eb; }
+        .week-nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+        .week-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
         }
+        @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .week-card {
+            border: 2px solid #e5e7eb; border-radius: 10px; padding: 10px 12px;
+            cursor: pointer; transition: 0.2s; position: relative; background: white;
+        }
+        .week-card:hover { border-color: #2563eb; background: #eff6ff; }
+        .week-card.active { border-color: #2563eb; background: #eff6ff; }
+        .week-card.past { opacity: 0.6; background: #f9fafb; }
+        .week-card.past:hover { border-color: #9ca3af; background: #f3f4f6; }
+
+        .week-card-top {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 4px;
+        }
+        .week-card-num { font-size: 13px; font-weight: 700; color: #111827; }
+        .wk-badge {
+            font-size: 10px; font-weight: 700; padding: 2px 7px;
+            border-radius: 99px; white-space: nowrap;
+        }
+        .wk-badge.current  { background: #dcfce7; color: #15803d; }
+        .wk-badge.upcoming { background: #dbeafe; color: #1d4ed8; }
+        .wk-badge.past     { background: #f3f4f6; color: #6b7280; }
+
+        .week-card-dates { font-size: 11px; color: #6b7280; }
+        .week-card-days {
+            display: flex; gap: 3px; margin-top: 8px; flex-wrap: wrap;
+        }
+        .day-chip {
+            font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            background: #f3f4f6; color: #374151; font-weight: 500;
+        }
+        .day-chip.today { background: #2563eb; color: white; }
 
         /* ── TWO-COLUMN LAYOUT ───────────────────────────── */
         .dashboard-grid {
@@ -315,10 +348,16 @@
         </div>
     </div>
 
-    <!-- week switcher -->
+    <!-- week calendar -->
     <div class="week-bar">
-        <label>Week:</label>
-        <div id="weekButtons" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        <div class="week-bar-header">
+            <label id="weekRangeLabel">Select Week</label>
+            <div class="week-nav-btns">
+                <button class="week-nav-btn" id="weekNavPrev" onclick="shiftWeekPage(-1)" title="Previous weeks">&#8249;</button>
+                <button class="week-nav-btn" id="weekNavNext" onclick="shiftWeekPage(1)"  title="Next weeks">&#8250;</button>
+            </div>
+        </div>
+        <div class="week-grid" id="weekGrid"></div>
     </div>
 
     <!-- ── EMPLOYEE VIEW ─────────────────────────────────────────── -->
@@ -647,75 +686,159 @@ function showToast(msg) {
 
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-// ── WEEK SWITCHER (employee) ───────────────────────────────────
+// ── WEEK CALENDAR ─────────────────────────────────────────────
+// We show 4 weeks at a time. Page 0 = current week + next 3.
+// Negative pages go back into past weeks.
+let weekPageOffset = 0;   // in multiples of 4 weeks
+const WEEKS_PER_PAGE = 4;
+const FUTURE_WEEKS   = 8; // how many upcoming weeks to allow
+
+// Returns the Monday of the ISO week `w` of the year that contains
+// the current date. We derive it from currentWeekNum.
+function getWeekStartDate(weekNum) {
+    // Find the Monday of currentWeekNum, then offset
+    const today = new Date();
+    const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Mon=1..Sun=7
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek - 1));
+    monday.setHours(0,0,0,0);
+    // offset by (weekNum - currentWeekNum) weeks
+    const diff = weekNum - currentWeekNum;
+    const d = new Date(monday);
+    d.setDate(d.getDate() + diff * 7);
+    return d;
+}
+
+function fmtDate(d) {
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function buildWeekCalendar() {
+    const grid  = document.getElementById("weekGrid");
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    // Determine visible week range
+    const startOffset = weekPageOffset * WEEKS_PER_PAGE;
+    const visibleWeeks = [];
+    for (let i = 0; i < WEEKS_PER_PAGE; i++) {
+        visibleWeeks.push(currentWeekNum + startOffset + i);
+    }
+
+    // Nav buttons — don't go before week 1 or more than FUTURE_WEEKS ahead
+    const minWeek = Math.min(...allWeeks, currentWeekNum);
+    document.getElementById("weekNavPrev").disabled =
+        (currentWeekNum + startOffset - WEEKS_PER_PAGE) < minWeek;
+    document.getElementById("weekNavNext").disabled =
+        (currentWeekNum + startOffset + WEEKS_PER_PAGE) > currentWeekNum + FUTURE_WEEKS;
+
+    // Header range label
+    const firstDate = getWeekStartDate(visibleWeeks[0]);
+    const lastStart = getWeekStartDate(visibleWeeks[WEEKS_PER_PAGE - 1]);
+    const lastEnd   = new Date(lastStart); lastEnd.setDate(lastEnd.getDate() + 6);
+    document.getElementById("weekRangeLabel").textContent =
+        `${fmtDate(firstDate)} — ${fmtDate(lastEnd)}`;
+
+    const DAY_NAMES = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+    grid.innerHTML = "";
+    visibleWeeks.forEach(w => {
+        const weekStart = getWeekStartDate(w);
+        const weekEnd   = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+
+        const isPast    = w < currentWeekNum;
+        const isCurrent = w === currentWeekNum;
+        const isUpcoming = w > currentWeekNum;
+        const isActive  = w === selectedWeek;
+
+        let cardClass = "week-card";
+        if (isActive)  cardClass += " active";
+        if (isPast)    cardClass += " past";
+
+        let badgeClass = "wk-badge";
+        let badgeText  = "";
+        if (isCurrent)  { badgeClass += " current";  badgeText = "Current";  }
+        if (isUpcoming) { badgeClass += " upcoming"; badgeText = "Upcoming"; }
+        if (isPast)     { badgeClass += " past";     badgeText = "Past";     }
+
+        // Day chips
+        const dayChips = DAY_NAMES.map((name, idx) => {
+            const d = new Date(weekStart); d.setDate(weekStart.getDate() + idx);
+            const isToday = d.getTime() === today.getTime();
+            return `<span class="day-chip${isToday ? " today" : ""}">${name} ${d.getDate()}</span>`;
+        }).join("");
+
+        const card = document.createElement("div");
+        card.className = cardClass;
+        card.innerHTML = `
+            <div class="week-card-top">
+                <span class="week-card-num">Week ${w}</span>
+                <span class="${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="week-card-dates">${fmtDate(weekStart)} – ${fmtDate(weekEnd)}</div>
+            <div class="week-card-days">${dayChips}</div>`;
+        card.onclick = () => selectWeek(w);
+        grid.appendChild(card);
+    });
+}
+
+function shiftWeekPage(dir) {
+    weekPageOffset += dir;
+    buildWeekCalendar();
+}
+
 async function loadWeeks() {
     const res = await fetch(`${BASE}/sales/weeks?user_id=${userId}&viewer_id=${userId}&viewer_role=${userRole}`)
                       .then(r => r.json());
     allWeeks = res.weeks || [];
-    // always include current week even if no data yet
     if (!allWeeks.includes(currentWeekNum)) allWeeks.push(currentWeekNum);
     allWeeks.sort((a,b) => a - b);
     selectedWeek = currentWeekNum;
-    buildWeekSwitcher();
+    buildWeekCalendar();
     await loadWeekData();
 }
 
-function buildWeekSwitcher() {
-    const wrap = document.getElementById("weekButtons");
-    wrap.innerHTML = "";
-    allWeeks.forEach(w => {
-        const btn = document.createElement("button");
-        btn.className = "week-btn" + (w === selectedWeek ? " active" : "");
-        btn.textContent = `Week ${w}`;
-        if (w === currentWeekNum) {
-            const badge = document.createElement("span");
-            badge.className = "week-current-badge";
-            badge.textContent = "Current";
-            btn.appendChild(badge);
-        } else {
-            const badge = document.createElement("span");
-            badge.className = "week-locked-badge";
-            badge.textContent = "Locked";
-            btn.appendChild(badge);
-        }
-        btn.onclick = () => selectWeek(w);
-        wrap.appendChild(btn);
-    });
-}
-
-// static for manager (just current week for now)
+// static version for manager panel (shows same calendar, just also triggers mgr refresh)
 function buildWeekSwitcherStatic() {
-    const wrap = document.getElementById("weekButtons");
-    wrap.innerHTML = "";
-    const btn = document.createElement("button");
-    btn.className = "week-btn active";
-    btn.textContent = `Week ${currentWeekNum}`;
-    wrap.appendChild(btn);
-    document.getElementById("mgr_weekLabel").textContent = currentWeekNum;
+    // Manager/admin also uses the same calendar — just update labels
+    document.getElementById("mgr_weekLabel").textContent  = currentWeekNum;
+    if (document.getElementById("mgr_weekLabel2"))
+        document.getElementById("mgr_weekLabel2").textContent = currentWeekNum;
+    buildWeekCalendar();
 }
 
 async function selectWeek(w) {
     selectedWeek = w;
-    buildWeekSwitcher();
+    buildWeekCalendar();
     await loadWeekData();
+    // if manager/admin, refresh their view for this week too
+    if (userRole === "manager" || userRole === "admin") {
+        document.getElementById("mgr_weekLabel").textContent = w;
+        if (document.getElementById("mgr_weekLabel2"))
+            document.getElementById("mgr_weekLabel2").textContent = w;
+        await loadManagerView();
+        await loadCRTable();
+        await loadMgrTeamDropdown();
+    }
 }
 
-// ── LOAD WEEK DATA (employee) ──────────────────────────────────
+// ── LOAD WEEK DATA ─────────────────────────────────────────────
 async function loadWeekData() {
     const isCurrentWeek = selectedWeek === currentWeekNum;
+    const isFutureWeek  = selectedWeek > currentWeekNum;
+    const canEdit       = isCurrentWeek || isFutureWeek;
 
     document.getElementById("formWeekLabel").textContent  = selectedWeek;
     document.getElementById("tableWeekLabel").textContent = selectedWeek;
 
-    // Show / hide entry form based on whether this is current week
-    document.getElementById("entryFormSection").style.display = isCurrentWeek ? "block" : "none";
+    // Show entry form for current + future weeks
+    document.getElementById("entryFormSection").style.display = canEdit ? "block" : "none";
 
     const res = await fetch(
         `${BASE}/sales/rows?user_id=${userId}&week=${selectedWeek}&viewer_id=${userId}&viewer_role=${userRole}`
     ).then(r => r.json());
 
     weekRows = res.rows || [];
-    renderProjectionTable(isCurrentWeek);
+    renderProjectionTable(canEdit);
     updateChartAndStats();
     await loadMyRequests();
 }
@@ -788,7 +911,7 @@ async function submitProjection() {
     }
 
     const res = await fetch(
-        `${BASE}/sales/projection?user_id=${userId}&week=${currentWeekNum}` +
+        `${BASE}/sales/projection?user_id=${userId}&week=${selectedWeek}` +
         `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
         `&projected=${qty}&price=${price}`,
         { method: "POST" }
