@@ -1034,9 +1034,9 @@ async function loadMonthData(year, month) {
         for (let d = 1; d <= daysInMonth; d++) {
             const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
             promises.push(
-                fetch(`${API_BASE}/meetings/day?date=${ds}`)
+                fetch(`${API_BASE}/meetings/month?user_id=${userId}&month=${monthStr}`)
                     .then(r => r.ok ? r.json() : [])
-                    .then(data => ({ ds, data }))
+                    .then(data => ({ ds, data: data.filter(m => String(m.meeting_date || m.date).slice(0,10) === ds) }))
                     .catch(() => ({ ds, data: [] }))
             );
         }
@@ -1116,13 +1116,14 @@ async function renderDayView(date) {
     let meetings = [], tasks = [];
 
     try {
-        const [mRes, tRes] = await Promise.all([
-            fetch(`${API_BASE}/meetings/day?date=${ds}`),
-            fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`)
-        ]);
-        meetings = await mRes.json();
-        tasks    = await tRes.json();
-    } catch { meetings = []; tasks = []; }
+        const mRes = await fetch(`${API_BASE}/meetings/day?date=${ds}`);
+        if (mRes.ok) meetings = await mRes.json();
+    } catch { meetings = []; }
+
+    try {
+        const tRes = await fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`);
+        if (tRes.ok) tasks = await tRes.json();
+    } catch { tasks = []; }
 
     monthMeetings[ds] = meetings;
     monthTasks[ds]    = tasks;
@@ -1372,7 +1373,7 @@ async function saveMeeting() {
             showToast("Meeting scheduled!", "success");
             closeMeetingModal();
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
-            delete monthMeetings[dateVal];
+            refreshMonthView();
         } else {
             showToast(data.message || "Could not save meeting", "error");
         }
