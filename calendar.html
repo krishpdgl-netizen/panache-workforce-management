@@ -1355,10 +1355,17 @@ async function saveMeeting() {
     btn.disabled = true; btn.textContent = "Saving…";
 
     try {
-        const res  = await fetch(`${API_BASE}/meetings/create`, {
+        const params = new URLSearchParams({
+            title, description: desc,
+            meeting_date: dateVal,
+            start_slot: startSlot,
+            end_slot: endSlot,
+            organizer_id: userId,
+            location,
+            attendees: JSON.stringify(attendees)
+        });
+        const res  = await fetch(`${API_BASE}/meetings/create?${params}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, description: desc, meeting_date: dateVal, start_slot: startSlot, end_slot: endSlot, organizer_id: userId, location, attendees }),
         });
         const data = await res.json();
         if (data.success) {
@@ -1429,18 +1436,18 @@ async function saveTask() {
     btn.disabled = true; btn.textContent = "Saving…";
 
     try {
-        const res  = await fetch(`${API_BASE}/calendar-tasks/create`, {
+        const params = new URLSearchParams({
+            user_id: userId,
+            title,
+            description: desc,
+            task_date: dateVal,
+            start_slot: startSlot,
+            end_slot: endSlot,
+            color,
+            sync_gcal: syncGcal,
+        });
+        const res  = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: userId,
-                title, description: desc,
-                task_date: dateVal,
-                start_slot: startSlot,
-                end_slot: endSlot,
-                color,
-                sync_gcal: syncGcal,
-            }),
         });
         const data = await res.json();
         if (data.success) {
