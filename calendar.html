@@ -885,7 +885,11 @@ function getSelectedParticipants() {
 }
 
 /* ─── MONTH VIEW ─────────────────────────────────────── */
-function renderMonthView() {
+// Track which months have already been fetched to avoid redundant calls
+const _fetchedMonths = new Set();
+
+// Pure render — never triggers a fetch. Call this after data is already in memory.
+function _paintMonthView() {
     const year  = viewDate.getFullYear();
     const month = viewDate.getMonth();
 
@@ -957,8 +961,30 @@ function renderMonthView() {
         container.appendChild(div);
     });
 
-    loadMonthData(year, month);
     renderMiniCal();
+}
+
+// Public entry point: renders immediately from cached data, then fetches fresh data once per month key.
+function renderMonthView() {
+    _paintMonthView();  // instant render with whatever is cached
+
+    const year     = viewDate.getFullYear();
+    const month    = viewDate.getMonth();
+    const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+
+    if (!_fetchedMonths.has(monthKey)) {
+        _fetchedMonths.add(monthKey);
+        loadMonthData(year, month);
+    }
+}
+
+// Force-refresh current month (called after creating/deleting items)
+function refreshMonthView() {
+    const year     = viewDate.getFullYear();
+    const month    = viewDate.getMonth();
+    const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+    _fetchedMonths.delete(monthKey);  // invalidate cache so next call fetches again
+    loadMonthData(year, month);
 }
 
 async function loadMonthData(year, month) {
@@ -968,33 +994,58 @@ async function loadMonthData(year, month) {
     // Load tasks for the month in one request
     try {
         const res  = await fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&month=${monthStr}`);
-        const data = await res.json();
-        // Reset tasks for this month
+        if (res.ok) {
+            const data = await res.json();
+            // Reset tasks for this month
+            for (let d = 1; d <= daysInMonth; d++) {
+                const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
+                monthTasks[ds] = [];
+            }
+            data.forEach(t => {
+                const ds = String(t.task_date).slice(0, 10);
+                if (!monthTasks[ds]) monthTasks[ds] = [];
+                monthTasks[ds].push(t);
+            });
+        }
+    } catch { /* backend unreachable — keep cached data */ }
+
+    // Load meetings per day — batch into a single request if backend supports it,
+    // otherwise fall back to per-day (silently ignoring CORS/network failures).
+    try {
+        const res = await fetch(`${API_BASE}/meetings/month?user_id=${userId}&month=${monthStr}`);
+        if (res.ok) {
+            const data = await res.json();
+            // Reset meetings for this month
+            for (let d = 1; d <= daysInMonth; d++) {
+                const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
+                monthMeetings[ds] = [];
+            }
+            data.forEach(m => {
+                const ds = String(m.meeting_date || m.date).slice(0, 10);
+                if (!monthMeetings[ds]) monthMeetings[ds] = [];
+                monthMeetings[ds].push(m);
+            });
+        } else {
+            throw new Error("month endpoint not available");
+        }
+    } catch {
+        // Fallback: per-day fetch (only fires if month endpoint doesn't exist)
+        const promises = [];
         for (let d = 1; d <= daysInMonth; d++) {
             const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
-            monthTasks[ds] = [];
+            promises.push(
+                fetch(`${API_BASE}/meetings/day?date=${ds}`)
+                    .then(r => r.ok ? r.json() : [])
+                    .then(data => ({ ds, data }))
+                    .catch(() => ({ ds, data: [] }))
+            );
         }
-        data.forEach(t => {
-            const ds = String(t.task_date).slice(0, 10);
-            if (!monthTasks[ds]) monthTasks[ds] = [];
-            monthTasks[ds].push(t);
-        });
-    } catch { /* ignore */ }
-
-    // Load meetings per day
-    const promises = [];
-    for (let d = 1; d <= daysInMonth; d++) {
-        const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
-        promises.push(
-            fetch(`${API_BASE}/meetings/day?date=${ds}`)
-                .then(r => r.json())
-                .then(data => ({ ds, data }))
-                .catch(() => ({ ds, data: [] }))
-        );
+        const results = await Promise.all(promises);
+        results.forEach(({ ds, data }) => { monthMeetings[ds] = data; });
     }
-    const results = await Promise.all(promises);
-    results.forEach(({ ds, data }) => { monthMeetings[ds] = data; });
-    renderMonthView();
+
+    // Re-paint once after all data is loaded — no further fetch triggered
+    _paintMonthView();
 }
 
 /* ─── MINI CALENDAR ──────────────────────────────────── */
@@ -1396,9 +1447,8 @@ async function saveTask() {
             const msg = data.gcal_synced ? "Task added & synced to Google Calendar ✅" : "Task added!";
             showToast(msg, "success");
             closeTaskModal();
-            if (!monthTasks[dateVal]) monthTasks[dateVal] = [];
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
-            renderMonthView();
+            refreshMonthView();
         } else {
             showToast("Could not save task", "error");
         }
@@ -1418,7 +1468,7 @@ async function deleteCalendarTask(taskId, e) {
         if (data.success) {
             showToast("Task deleted", "");
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
-            renderMonthView();
+            refreshMonthView();
         }
     } catch {
         showToast("Could not delete task", "error");
