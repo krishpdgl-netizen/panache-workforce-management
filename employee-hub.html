@@ -1,411 +1,1226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Employee Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Hub | Panache</title>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-<style>
+        body {
+            display: flex;
+            background: #f4f6f9;
+        }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, sans-serif;
-}
+        /* ── SIDEBAR ──────────────────────────────────────── */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #111827;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
 
-body{
-    background:#f5f7fa;
-    padding:20px;
-}
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
 
-.page-header{
-    margin-bottom:20px;
-}
+        .menu a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
 
-.page-header h1{
-    color:#222;
-}
+        .menu a:hover,
+        .menu a.active { background: #2563eb; }
 
-.tabs{
-    display:flex;
-    gap:10px;
-    margin-bottom:20px;
-}
+        /* ── SIDEBAR TODOS ────────────────────────────────── */
+        .sidebar-notes {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 0.5px solid rgba(255,255,255,0.12);
+        }
 
-.tab-btn{
-    padding:12px 20px;
-    border:none;
-    border-radius:8px;
-    background:white;
-    cursor:pointer;
-    font-weight:600;
-    box-shadow:0 2px 5px rgba(0,0,0,0.08);
-}
+        .sidebar-notes-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
 
-.tab-btn.active{
-    background:#2563eb;
-    color:white;
-}
+        #sidebarTodos {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
 
-.tab-content{
-    display:none;
-}
+        .sidebar-todo-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
 
-.tab-content.active{
-    display:block;
-}
+        .sidebar-todo-circle {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
 
-.card{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    margin-bottom:20px;
-}
+        .sidebar-todo-input-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
 
-.card h2{
-    margin-bottom:15px;
-}
+        #sidebarTodoInput {
+            flex: 1;
+            background: rgba(255,255,255,0.08);
+            border: 0.5px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 12px;
+            color: #fff;
+            outline: none;
+        }
 
-.primary-btn{
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:12px 18px;
-    border-radius:8px;
-    cursor:pointer;
-}
+        .sidebar-add-btn {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            background: #2563eb;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            flex-shrink: 0;
+        }
 
-.primary-btn:hover{
-    opacity:.9;
-}
+        /* ── MAIN ─────────────────────────────────────────── */
+        .main {
+            margin-left: 250px;
+            padding: 25px;
+            width: calc(100% - 250px);
+        }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+        /* ── HEADER ───────────────────────────────────────── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
 
-table th{
-    background:#f0f4f8;
-    padding:12px;
-    text-align:left;
-}
+        .header h1 { color: #111827; }
 
-table td{
-    padding:12px;
-    border-bottom:1px solid #eee;
-}
+        .profile {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.6;
+        }
 
-.status{
-    padding:5px 10px;
-    border-radius:15px;
-    font-size:12px;
-    font-weight:bold;
-}
+        .logout-btn {
+            background: #dc2626;
+            padding: 10px 18px;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-.pending{
-    background:#fff3cd;
-    color:#856404;
-}
+        .logout-btn:hover { background: #b91c1c; }
 
-.approved{
-    background:#d4edda;
-    color:#155724;
-}
+        /* ── STAT CARDS ───────────────────────────────────── */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
 
-.rejected{
-    background:#f8d7da;
-    color:#721c24;
-}
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
 
-/* Modal */
+        .card h2 {
+            color: #2563eb;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
 
-.modal{
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.5);
-    justify-content:center;
-    align-items:center;
-}
+        .card p {
+            color: #6b7280;
+            font-size: 14px;
+        }
 
-.modal-content{
-    background:white;
-    padding:25px;
-    width:500px;
-    max-width:95%;
-    border-radius:12px;
-}
+        /* ── SECTION ──────────────────────────────────────── */
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
 
-.form-group{
-    margin-bottom:15px;
-}
+        .section h2 {
+            margin-bottom: 15px;
+            font-size: 17px;
+            color: #111827;
+        }
 
-.form-group label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:600;
-}
+        .section-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
 
-.form-group input,
-.form-group select,
-.form-group textarea{
-    width:100%;
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius:8px;
-}
+        .section-header-row h2 { margin-bottom: 0; }
 
-.modal-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-}
+        /* ── TABLE ────────────────────────────────────────── */
+        table { width: 100%; border-collapse: collapse; }
 
-.secondary-btn{
-    background:#ddd;
-    border:none;
-    padding:10px 16px;
-    border-radius:8px;
-    cursor:pointer;
-}
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+        }
 
-</style>
+        th {
+            background: #f3f4f6;
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #f9fafb; }
+
+        /* ── STATUS BADGES ────────────────────────────────── */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending  { background: #fef9c3; color: #a16207; }
+        .status-approved { background: #dcfce7; color: #15803d; }
+        .status-rejected { background: #fee2e2; color: #b91c1c; }
+
+        /* ── ACTION BUTTONS ───────────────────────────────── */
+        .action-btn {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-approve { background: #16a34a; color: white; }
+        .btn-approve:hover { background: #15803d; }
+
+        .btn-reject { background: #dc2626; color: white; }
+        .btn-reject:hover { background: #b91c1c; }
+
+        .btn-disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: default;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover { background: #1d4ed8; }
+
+        /* ── FILTER TABS ──────────────────────────────────── */
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            transition: 0.2s;
+        }
+
+        .filter-tab:hover { background: #f3f4f6; }
+        .filter-tab.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+        /* ── NOTIFICATION ROW ─────────────────────────────── */
+        .notification {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-left: 4px solid #2563eb;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .notification:last-child { margin-bottom: 0; }
+
+        /* ── NO DATA ──────────────────────────────────────── */
+        .no-data {
+            color: #9ca3af;
+            font-size: 14px;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        /* ── EMPTY STATE ──────────────────────────────────── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state .empty-icon { font-size: 36px; }
+        .empty-state .empty-title { font-size: 15px; font-weight: 600; color: #6b7280; }
+        .empty-state .empty-sub   { font-size: 13px; }
+
+        /* ── ANNOUNCEMENT BOX ─────────────────────────────── */
+        .announcement-box {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .announcement-box b { color: #1d4ed8; }
+
+        /* ── TOAST ────────────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #111827;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 9999;
+            max-width: 340px;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── SKELETON ─────────────────────────────────────── */
+        .skeleton-row td span {
+            display: block;
+            background: #e5e7eb;
+            border-radius: 5px;
+            height: 14px;
+            animation: shimmer 1.2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ── MODAL ────────────────────────────────────────── */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            width: 460px;
+            max-width: 95vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalIn 0.2s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .modal h2 {
+            font-size: 17px;
+            margin-bottom: 18px;
+            color: #111827;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .btn-cancel {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-cancel:hover { background: #d1d5db; }
+
+        /* ── FORM ─────────────────────────────────────────── */
+        .form-group { margin-bottom: 16px; }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            color: #111827;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        textarea.form-control { resize: vertical; min-height: 80px; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .duration-hint {
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        /* ── STICKY NOTES ─────────────────────────────────── */
+        #stickyToggle {
+            position: fixed;
+            bottom: 28px;
+            left: 20px;
+            width: 48px; height: 48px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.4);
+            z-index: 1000;
+            transition: transform 0.2s, background 0.2s;
+            user-select: none;
+        }
+
+        #stickyToggle:hover { transform: scale(1.1); background: #1d4ed8; }
+
+        #stickyPanel {
+            position: fixed;
+            bottom: 85px; left: 20px;
+            width: 300px; max-height: 420px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        #stickyPanel.open { display: flex; }
+
+        #stickyHeader {
+            background: #111827;
+            color: white;
+            padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 14px;
+        }
+
+        #stickyClose {
+            background: none; border: none; color: white;
+            font-size: 16px; cursor: pointer; opacity: 0.8;
+        }
+
+        #stickyClose:hover { opacity: 1; }
+
+        #stickyList {
+            flex: 1; overflow-y: auto; padding: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        #stickyList:empty::after {
+            content: "No notes yet. Add one below.";
+            color: #9ca3af; font-size: 13px; text-align: center; padding: 20px 0; display: block;
+        }
+
+        .sticky-note {
+            background: #fefce8; border-left: 4px solid #f59e0b; border-radius: 8px;
+            padding: 10px 12px; font-size: 13px; color: #111827;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            gap: 8px; line-height: 1.5; word-break: break-word;
+        }
+
+        .sticky-note-text { flex: 1; }
+
+        .sticky-note-delete {
+            background: none; border: none; color: #9ca3af;
+            cursor: pointer; font-size: 15px; line-height: 1; padding: 0; flex-shrink: 0;
+        }
+
+        .sticky-note-delete:hover { color: #dc2626; }
+
+        #stickyInputArea {
+            padding: 10px; border-top: 1px solid #e5e7eb;
+            display: flex; gap: 8px; background: #f9fafb;
+        }
+
+        #stickyInput {
+            flex: 1; padding: 8px 10px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 13px; font-family: 'Segoe UI', sans-serif;
+            resize: none; height: 60px; color: #111827; background: white;
+        }
+
+        #stickyInput:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        #stickyAddBtn {
+            background: #2563eb; color: white; border: none; border-radius: 8px;
+            padding: 0 14px; cursor: pointer; font-size: 13px; font-weight: 600;
+            white-space: nowrap; align-self: flex-end; height: 36px;
+        }
+
+        #stickyAddBtn:hover { background: #1d4ed8; }
+
+        /* ── RESPONSIVE ───────────────────────────────────── */
+        @media (max-width: 900px) {
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; width: calc(100% - 200px); }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; width: 100%; padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="page-header">
-    <h1>Employee Hub</h1>
-</div>
-
-<div class="tabs">
-    <button class="tab-btn active" onclick="showTab('leave')">Leave</button>
-    <button class="tab-btn" onclick="showTab('requests')">Requests</button>
-    <button class="tab-btn" onclick="showTab('announcements')">Announcements</button>
-    <button class="tab-btn" onclick="showTab('documents')">Documents</button>
-</div>
-
-<!-- LEAVE TAB -->
-
-<div id="leave" class="tab-content active">
-
-    <div class="card">
-
-        <h2>Leave Management</h2>
-
-        <button class="primary-btn" onclick="openLeaveModal()">
-            Apply Leave
-        </button>
-
+<!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+<div class="sidebar">
+    <div class="logo">Panache WMS</div>
+    <div class="menu">
+        <a href="employee-dashboard.html">Dashboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="history.html">History</a>
+        <a href="sales-dashboard.html">Sales Dashboard</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="employee-hub.html" class="active">Employee Hub</a>
     </div>
 
-    <div class="card">
-
-        <h2>My Leave Requests</h2>
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-
-            <tbody id="leaveTable">
-
-                <tr>
-                    <td>Casual Leave</td>
-                    <td>01-Jul-2026</td>
-                    <td>02-Jul-2026</td>
-                    <td>
-                        <span class="status pending">
-                            Pending
-                        </span>
-                    </td>
-                </tr>
-
-            </tbody>
-
-        </table>
-
+    <!-- Sidebar mini to-do -->
+    <div class="sidebar-notes">
+        <p class="sidebar-notes-label">My Notes</p>
+        <div id="sidebarTodos"></div>
+        <div class="sidebar-todo-input-row">
+            <input id="sidebarTodoInput" placeholder="Add a task..."
+                   onkeydown="if(event.key==='Enter') addSidebarTodo()" />
+            <button class="sidebar-add-btn" onclick="addSidebarTodo()">+</button>
+        </div>
     </div>
-
 </div>
 
-<!-- REQUESTS -->
+<!-- ── MAIN ────────────────────────────────────────────────── -->
+<div class="main">
 
-<div id="requests" class="tab-content">
-
-    <div class="card">
-
-        <h2>Employee Requests</h2>
-
-        <p>Coming Soon</p>
-
+    <!-- Header -->
+    <div class="header">
+        <h1>Employee Hub</h1>
+        <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+            <div class="profile">
+                <b id="profileName">Loading...</b><br>
+                <span id="profileEmail" style="font-weight:400;color:#6b7280;"></span><br>
+                <span id="profileId" style="font-weight:400;color:#6b7280;font-size:13px;"></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
     </div>
 
-</div>
-
-<!-- ANNOUNCEMENTS -->
-
-<div id="announcements" class="tab-content">
-
-    <div class="card">
-
-        <h2>Company Announcements</h2>
-
-        <p>No announcements yet.</p>
-
+    <!-- ── 1. Stat Cards ───────────────────────────────────── -->
+    <div class="cards" id="stats-cards">
+        <div class="card"><h2 id="stat-total">—</h2><p>Total Requests</p></div>
+        <div class="card"><h2 id="stat-pending" style="color:#d97706;">—</h2><p>Pending</p></div>
+        <div class="card"><h2 id="stat-approved" style="color:#16a34a;">—</h2><p>Approved</p></div>
+        <div class="card"><h2 id="stat-rejected" style="color:#dc2626;">—</h2><p>Rejected</p></div>
     </div>
 
-</div>
-
-<!-- DOCUMENTS -->
-
-<div id="documents" class="tab-content">
-
-    <div class="card">
-
-        <h2>Documents</h2>
-
-        <p>Coming Soon</p>
-
+    <!-- ── 2. My Leave Requests ────────────────────────────── -->
+    <div class="section">
+        <div class="section-header-row">
+            <h2>Leave Requests</h2>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div class="filter-tabs" id="myFilterTabs">
+                    <button class="filter-tab active" onclick="filterMyLeaves('all', this)">All</button>
+                    <button class="filter-tab" onclick="filterMyLeaves('Pending', this)">Pending</button>
+                    <button class="filter-tab" onclick="filterMyLeaves('Approved', this)">Approved</button>
+                    <button class="filter-tab" onclick="filterMyLeaves('Rejected', this)">Rejected</button>
+                </div>
+                <button class="btn-primary" onclick="openApplyModal()">+ Apply Leave</button>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Applied On</th>
+                    </tr>
+                </thead>
+                <tbody id="myLeaveBody">
+                    <tr class="skeleton-row"><td><span style="width:80%"></span></td><td><span style="width:70%"></span></td><td><span style="width:70%"></span></td><td><span style="width:40%"></span></td><td><span style="width:90%"></span></td><td><span style="width:60%"></span></td><td><span style="width:70%"></span></td></tr>
+                    <tr class="skeleton-row"><td><span style="width:70%"></span></td><td><span style="width:80%"></span></td><td><span style="width:75%"></span></td><td><span style="width:40%"></span></td><td><span style="width:85%"></span></td><td><span style="width:55%"></span></td><td><span style="width:65%"></span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="myLeaveEmpty" style="display:none;">
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <div class="empty-title">No leave requests yet</div>
+                <div class="empty-sub">Click "+ Apply Leave" to submit your first request</div>
+            </div>
+        </div>
     </div>
 
-</div>
+    <!-- ── 3. Approval Queue (managers & admins only) ──────── -->
+    <div class="section" id="approvalSection" style="display:none;border-left:4px solid #2563eb;">
+        <div class="section-header-row">
+            <h2>
+                Approval Queue
+                <span id="pendingBadge" style="background:#2563eb;color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;display:none;"></span>
+            </h2>
+            <div class="filter-tabs" id="apprFilterTabs">
+                <button class="filter-tab active" onclick="filterApproval('all', this)">All</button>
+                <button class="filter-tab" onclick="filterApproval('Pending', this)">Pending</button>
+                <button class="filter-tab" onclick="filterApproval('Approved', this)">Approved</button>
+                <button class="filter-tab" onclick="filterApproval('Rejected', this)">Rejected</button>
+            </div>
+        </div>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:16px;margin-top:-8px;">
+            Review and act on pending leave requests from your team.
+        </p>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="approvalBody">
+                    <tr class="skeleton-row"><td><span style="width:80%"></span></td><td><span></span></td><td><span></span></td><td><span></span></td><td><span style="width:40%"></span></td><td><span></span></td><td><span style="width:60%"></span></td><td><span style="width:80%"></span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="approvalEmpty" style="display:none;">
+            <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <div class="empty-title">All caught up!</div>
+                <div class="empty-sub">No leave requests match this filter.</div>
+            </div>
+        </div>
+    </div>
 
-<!-- LEAVE MODAL -->
+    <!-- ── 4. Announcements ────────────────────────────────── -->
+    <div class="section">
+        <h2>Announcements</h2>
+        <div class="announcement-box">
+            <b>📢 No announcements yet.</b><br>
+            <span style="font-size:13px;color:#374151;">Company-wide notices and updates will appear here.</span>
+        </div>
+    </div>
 
-<div class="modal" id="leaveModal">
+</div><!-- /main -->
 
-    <div class="modal-content">
-
-        <h2 style="margin-bottom:20px;">
-            Apply Leave
-        </h2>
+<!-- ── Apply Leave Modal ────────────────────────────────────── -->
+<div class="modal-backdrop" id="applyModal">
+    <div class="modal">
+        <h2>Apply for Leave</h2>
 
         <div class="form-group">
-
-            <label>Leave Type</label>
-
-            <select id="leaveType">
-
+            <label class="form-label">Leave Type <span style="color:#dc2626;">*</span></label>
+            <select id="leaveType" class="form-control">
+                <option value="">Select leave type…</option>
                 <option>Casual Leave</option>
                 <option>Sick Leave</option>
                 <option>Work From Home</option>
                 <option>Half Day</option>
-
+                <option>Earned Leave</option>
+                <option>Maternity / Paternity Leave</option>
             </select>
+        </div>
 
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Start Date <span style="color:#dc2626;">*</span></label>
+                <input type="date" id="leaveStart" class="form-control" onchange="updateDuration()" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">End Date <span style="color:#dc2626;">*</span></label>
+                <input type="date" id="leaveEnd" class="form-control" onchange="updateDuration()" />
+            </div>
+        </div>
+
+        <div class="form-group" id="durationHint" style="display:none;">
+            <div class="duration-hint">📅 Duration: <span id="durationText">—</span></div>
         </div>
 
         <div class="form-group">
-
-            <label>Start Date</label>
-
-            <input type="date" id="startDate">
-
+            <label class="form-label">Reason <span style="color:#dc2626;">*</span></label>
+            <textarea id="leaveReason" class="form-control" placeholder="Briefly describe the reason…"></textarea>
         </div>
 
-        <div class="form-group">
-
-            <label>End Date</label>
-
-            <input type="date" id="endDate">
-
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeApplyModal()">Cancel</button>
+            <button class="btn-primary" id="submitBtn" onclick="submitLeave()">Submit Request</button>
         </div>
-
-        <div class="form-group">
-
-            <label>Reason</label>
-
-            <textarea id="reason" rows="4"></textarea>
-
-        </div>
-
-        <div class="modal-actions">
-
-            <button
-                class="secondary-btn"
-                onclick="closeLeaveModal()">
-                Cancel
-            </button>
-
-            <button
-                class="primary-btn"
-                onclick="submitLeave()">
-                Submit
-            </button>
-
-        </div>
-
     </div>
-
 </div>
 
+<!-- ── Toast ────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── Sticky Notes Toggle ──────────────────────────────────── -->
+<div id="stickyToggle" onclick="toggleSticky()" title="Sticky Notes">📝</div>
+
+<div id="stickyPanel">
+    <div id="stickyHeader">
+        <span>📝 Sticky Notes</span>
+        <button id="stickyClose" onclick="toggleSticky()">✕</button>
+    </div>
+    <div id="stickyList"></div>
+    <div id="stickyInputArea">
+        <textarea id="stickyInput" placeholder="Write a note..."></textarea>
+        <button id="stickyAddBtn" onclick="addNote()">+ Add</button>
+    </div>
+</div>
+
+<!-- ── Scripts ──────────────────────────────────────────────── -->
 <script>
+/* ── Config ───────────────────────────────────────────────── */
+const BASE   = "https://backend-production-53f3.up.railway.app";
+const userId = localStorage.getItem("userId");
 
-function showTab(tabId){
+/* ── Profile ──────────────────────────────────────────────── */
+document.getElementById("profileName").textContent  = localStorage.getItem("userName")  || "—";
+document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "";
+document.getElementById("profileId").textContent    = userId ? "Employee ID: " + userId : "";
 
-    document.querySelectorAll('.tab-content')
-        .forEach(tab => tab.classList.remove('active'));
-
-    document.querySelectorAll('.tab-btn')
-        .forEach(btn => btn.classList.remove('active'));
-
-    document.getElementById(tabId)
-        .classList.add('active');
-
-    event.target.classList.add('active');
+function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
 }
 
-function openLeaveModal(){
-
-    document.getElementById('leaveModal')
-        .style.display = 'flex';
+/* ── Role visibility ──────────────────────────────────────── */
+const userRole = (localStorage.getItem("userRole") || "").toLowerCase();
+if (userRole === "admin" || userRole === "manager") {
+    document.getElementById("approvalSection").style.display = "";
 }
 
-function closeLeaveModal(){
-
-    document.getElementById('leaveModal')
-        .style.display = 'none';
+/* ── Toast ────────────────────────────────────────────────── */
+function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
 }
 
-async function submitLeave(){
+/* ── Helpers ──────────────────────────────────────────────── */
+function fmtDate(d) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
+}
 
-    const leaveData = {
+function daysBetween(a, b) {
+    const ms = new Date(b) - new Date(a);
+    if (ms < 0) return "—";
+    return Math.round(ms / 86400000) + 1;
+}
 
-        leave_type:
-            document.getElementById('leaveType').value,
+function truncate(str, n) {
+    if (!str) return "—";
+    return str.length > n ? str.slice(0, n) + "…" : str;
+}
 
-        start_date:
-            document.getElementById('startDate').value,
+function statusBadge(status) {
+    const map = { Pending:"pending", Approved:"approved", Rejected:"rejected" };
+    const cls = map[status] || "pending";
+    return `<span class="status-badge status-${cls}">${status}</span>`;
+}
 
-        end_date:
-            document.getElementById('endDate').value,
+/* ── Stat cards ───────────────────────────────────────────── */
+async function loadLeaveStats() {
+    try {
+        const res  = await fetch(`${BASE}/leave-stats`);
+        const data = await res.json();
+        document.getElementById("stat-total").textContent    = data.total    ?? 0;
+        document.getElementById("stat-pending").textContent  = data.pending  ?? 0;
+        document.getElementById("stat-approved").textContent = data.approved ?? 0;
+        document.getElementById("stat-rejected").textContent = data.rejected ?? 0;
 
-        reason:
-            document.getElementById('reason').value
+        const badge = document.getElementById("pendingBadge");
+        if (data.pending > 0) {
+            badge.textContent = data.pending + " pending";
+            badge.style.display = "";
+        }
+    } catch(e) {
+        console.error("loadLeaveStats:", e);
+    }
+}
 
+/* ── Data cache ───────────────────────────────────────────── */
+let _allLeaves  = [];
+let _myFilter   = "all";
+let _apprFilter = "all";
+
+/* ── Load all leave requests ──────────────────────────────── */
+async function loadLeaveRequests() {
+    try {
+        const res  = await fetch(`${BASE}/leave-requests`);
+        _allLeaves = await res.json();
+        renderMyLeaves();
+        renderApprovalQueue();
+    } catch(e) {
+        console.error("loadLeaveRequests:", e);
+        document.getElementById("myLeaveBody").innerHTML =
+            `<tr><td colspan="7" class="no-data" style="color:#dc2626;">Failed to load. Please refresh.</td></tr>`;
+    }
+}
+
+/* ── My Leave table ───────────────────────────────────────── */
+function renderMyLeaves() {
+    const tbody = document.getElementById("myLeaveBody");
+    const empty = document.getElementById("myLeaveEmpty");
+    let rows = _allLeaves.filter(r => String(r.user_id) === String(userId));
+    if (_myFilter !== "all") rows = rows.filter(r => r.status === _myFilter);
+
+    tbody.innerHTML = "";
+    if (!rows.length) { empty.style.display = ""; return; }
+    empty.style.display = "none";
+
+    rows.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><b>${r.leave_type}</b></td>
+            <td>${fmtDate(r.start_date)}</td>
+            <td>${fmtDate(r.end_date)}</td>
+            <td>${daysBetween(r.start_date, r.end_date)}</td>
+            <td title="${r.reason || ""}">${truncate(r.reason, 40)}</td>
+            <td>${statusBadge(r.status)}</td>
+            <td>${fmtDate(r.created_at)}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterMyLeaves(filter, btn) {
+    _myFilter = filter;
+    document.querySelectorAll("#myFilterTabs .filter-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderMyLeaves();
+}
+
+/* ── Approval Queue ───────────────────────────────────────── */
+function renderApprovalQueue() {
+    if (userRole !== "admin" && userRole !== "manager") return;
+
+    const tbody = document.getElementById("approvalBody");
+    const empty = document.getElementById("approvalEmpty");
+    let rows = [..._allLeaves];
+    if (_apprFilter !== "all") rows = rows.filter(r => r.status === _apprFilter);
+
+    tbody.innerHTML = "";
+    if (!rows.length) { empty.style.display = ""; return; }
+    empty.style.display = "none";
+
+    rows.forEach(r => {
+        const isPending = r.status === "Pending";
+        const initial   = (r.employee_name || "?")[0].toUpperCase();
+        const tr = document.createElement("tr");
+        tr.id = `appr-${r.id}`;
+        tr.innerHTML = `
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);
+                                display:flex;align-items:center;justify-content:center;font-size:12px;
+                                font-weight:700;color:#fff;flex-shrink:0;">${initial}</div>
+                    <b>${r.employee_name || "Unknown"}</b>
+                </div>
+            </td>
+            <td>${r.leave_type}</td>
+            <td>${fmtDate(r.start_date)}</td>
+            <td>${fmtDate(r.end_date)}</td>
+            <td>${daysBetween(r.start_date, r.end_date)}</td>
+            <td title="${r.reason || ""}">${truncate(r.reason, 38)}</td>
+            <td>${statusBadge(r.status)}</td>
+            <td>
+                ${isPending
+                    ? `<div style="display:flex;gap:6px;">
+                           <button class="action-btn btn-approve" id="btn-a-${r.id}" onclick="approveLeave(${r.id})">✓ Approve</button>
+                           <button class="action-btn btn-reject"  id="btn-r-${r.id}" onclick="rejectLeave(${r.id})">✕ Reject</button>
+                       </div>`
+                    : `<span class="btn-disabled">—</span>`}
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterApproval(filter, btn) {
+    _apprFilter = filter;
+    document.querySelectorAll("#apprFilterTabs .filter-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderApprovalQueue();
+}
+
+/* ── approveLeave ─────────────────────────────────────────── */
+async function approveLeave(id) {
+    const btn = document.getElementById(`btn-a-${id}`);
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+        const res  = await fetch(`${BASE}/leave-requests/${id}/approve`, { method:"POST" });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Leave request approved.");
+            await loadLeaveStats();
+            await loadLeaveRequests();
+        } else {
+            showToast("Failed to approve. Try again.");
+            if (btn) { btn.disabled = false; btn.textContent = "✓ Approve"; }
+        }
+    } catch(e) {
+        showToast("Network error. Please try again.");
+        if (btn) { btn.disabled = false; btn.textContent = "✓ Approve"; }
+    }
+}
+
+/* ── rejectLeave ──────────────────────────────────────────── */
+async function rejectLeave(id) {
+    const btn = document.getElementById(`btn-r-${id}`);
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+        const res  = await fetch(`${BASE}/leave-requests/${id}/reject`, { method:"POST" });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Leave request rejected.");
+            await loadLeaveStats();
+            await loadLeaveRequests();
+        } else {
+            showToast("Failed to reject. Try again.");
+            if (btn) { btn.disabled = false; btn.textContent = "✕ Reject"; }
+        }
+    } catch(e) {
+        showToast("Network error. Please try again.");
+        if (btn) { btn.disabled = false; btn.textContent = "✕ Reject"; }
+    }
+}
+
+/* ── Apply Leave Modal ────────────────────────────────────── */
+function openApplyModal() {
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("leaveStart").value = today;
+    document.getElementById("leaveEnd").value   = today;
+    updateDuration();
+    document.getElementById("applyModal").classList.add("open");
+    document.getElementById("leaveType").focus();
+}
+
+function closeApplyModal() {
+    document.getElementById("applyModal").classList.remove("open");
+    document.getElementById("leaveType").value  = "";
+    document.getElementById("leaveReason").value = "";
+    document.getElementById("durationHint").style.display = "none";
+    const btn = document.getElementById("submitBtn");
+    btn.disabled    = false;
+    btn.textContent = "Submit Request";
+}
+
+document.getElementById("applyModal").addEventListener("click", function(e) {
+    if (e.target === this) closeApplyModal();
+});
+
+function updateDuration() {
+    const s = document.getElementById("leaveStart").value;
+    const e = document.getElementById("leaveEnd").value;
+    const hint = document.getElementById("durationHint");
+    if (s && e) {
+        const days = daysBetween(s, e);
+        if (days !== "—") {
+            hint.style.display = "";
+            document.getElementById("durationText").textContent = `${days} day${days !== 1 ? "s" : ""}`;
+        } else { hint.style.display = "none"; }
+    } else { hint.style.display = "none"; }
+}
+
+/* ── submitLeave ──────────────────────────────────────────── */
+async function submitLeave() {
+    const type   = document.getElementById("leaveType").value.trim();
+    const start  = document.getElementById("leaveStart").value;
+    const end    = document.getElementById("leaveEnd").value;
+    const reason = document.getElementById("leaveReason").value.trim();
+
+    if (!type)        return showToast("Please select a leave type.");
+    if (!start)       return showToast("Please pick a start date.");
+    if (!end)         return showToast("Please pick an end date.");
+    if (end < start)  return showToast("End date cannot be before start date.");
+    if (!reason)      return showToast("Please provide a reason.");
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled    = true;
+    btn.textContent = "Submitting…";
+
+    try {
+        const res  = await fetch(`${BASE}/leave-requests`, {
+            method:  "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({
+                user_id:       parseInt(userId),
+                employee_name: localStorage.getItem("userName") || "Employee",
+                leave_type:    type,
+                start_date:    start,
+                end_date:      end,
+                reason
+            })
+        });
+        const data = await res.json();
+        if (data.success || data.leave_id) {
+            showToast("Leave request submitted successfully!");
+            closeApplyModal();
+            await loadLeaveStats();
+            await loadLeaveRequests();
+        } else {
+            showToast("Submission failed. Please try again.");
+            btn.disabled    = false;
+            btn.textContent = "Submit Request";
+        }
+    } catch(e) {
+        showToast("Network error. Please try again.");
+        btn.disabled    = false;
+        btn.textContent = "Submit Request";
+    }
+}
+
+/* ── Keyboard shortcuts ───────────────────────────────────── */
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeApplyModal();
+});
+
+/* ── Sidebar To-Do ────────────────────────────────────────── */
+(function() {
+    const KEY = "panache_todos";
+    function load()       { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+    function save(todos)  { localStorage.setItem(KEY, JSON.stringify(todos)); }
+
+    function render() {
+        const todos = load();
+        const box   = document.getElementById("sidebarTodos");
+        box.innerHTML = "";
+        todos.forEach((text, i) => {
+            const row = document.createElement("div");
+            row.className = "sidebar-todo-row";
+            row.innerHTML = `
+                <div class="sidebar-todo-circle" onclick="completeSidebarTodo(${i})" title="Mark complete"></div>
+                <span>${text}</span>`;
+            box.appendChild(row);
+        });
+    }
+
+    window.addSidebarTodo = function() {
+        const inp  = document.getElementById("sidebarTodoInput");
+        const text = inp.value.trim();
+        if (!text) return;
+        const todos = load();
+        todos.push(text);
+        save(todos);
+        inp.value = "";
+        render();
     };
 
-    console.log(leaveData);
+    window.completeSidebarTodo = function(i) {
+        const circle = document.getElementById("sidebarTodos").children[i].querySelector(".sidebar-todo-circle");
+        circle.style.background  = "#22c55e";
+        circle.style.borderColor = "#22c55e";
+        circle.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        setTimeout(() => {
+            const todos = load();
+            todos.splice(i, 1);
+            save(todos);
+            render();
+        }, 500);
+    };
 
-    // Backend API call will go here later
+    render();
+})();
 
-    alert("Leave Request Submitted");
+/* ── Sticky Notes ─────────────────────────────────────────── */
+const STICKY_KEY = "panache_sticky_notes";
 
-    closeLeaveModal();
+function toggleSticky() { document.getElementById("stickyPanel").classList.toggle("open"); }
+function getNotes()     { try { return JSON.parse(localStorage.getItem(STICKY_KEY)) || []; } catch { return []; } }
+function saveNotes(n)   { localStorage.setItem(STICKY_KEY, JSON.stringify(n)); }
+
+function renderNotes() {
+    const notes = getNotes();
+    const list  = document.getElementById("stickyList");
+    list.innerHTML = "";
+    notes.forEach((note, idx) => {
+        const div = document.createElement("div");
+        div.className = "sticky-note";
+        div.innerHTML = `
+            <span class="sticky-note-text">${note}</span>
+            <button class="sticky-note-delete" onclick="deleteNote(${idx})" title="Delete">✕</button>`;
+        list.appendChild(div);
+    });
 }
 
+function addNote() {
+    const input = document.getElementById("stickyInput");
+    const text  = input.value.trim();
+    if (!text) return;
+    const notes = getNotes();
+    notes.unshift(text);
+    saveNotes(notes);
+    input.value = "";
+    renderNotes();
+}
+
+function deleteNote(idx) {
+    const notes = getNotes();
+    notes.splice(idx, 1);
+    saveNotes(notes);
+    renderNotes();
+}
+
+document.getElementById("stickyInput").addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addNote(); }
+});
+
+renderNotes();
+
+/* ── Init ─────────────────────────────────────────────────── */
+loadLeaveStats();
+loadLeaveRequests();
 </script>
 
 </body>
