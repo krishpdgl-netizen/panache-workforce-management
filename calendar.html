@@ -1438,19 +1438,32 @@ async function saveTask() {
 
     try {
         const params = new URLSearchParams({
-            user_id: userId,
+            user_id:     userId,
             title,
             description: desc,
-            task_date: dateVal,
-            start_slot: startSlot,
-            end_slot: endSlot,
-            color,
-            sync_gcal: syncGcal,
+            task_date:   dateVal,
+            start_slot:  startSlot,
+            end_slot:    endSlot,
+            color:       color,
+            sync_gcal:   syncGcal ? "true" : "false",
         });
-        const res  = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
+        const res = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
             method: "POST",
         });
+
+        // Surface HTTP-level errors (FastAPI 422, 500, etc.)
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            const detail = Array.isArray(errBody.detail)
+                ? errBody.detail.map(d => d.msg || JSON.stringify(d)).join("; ")
+                : (errBody.detail || errBody.message || `HTTP ${res.status}`);
+            console.error("saveTask HTTP error:", res.status, errBody);
+            showToast("Could not save task: " + detail, "error");
+            return;
+        }
+
         const data = await res.json();
+        console.log("saveTask response:", data);
         if (data.success) {
             const msg = data.gcal_synced ? "Task added & synced to Google Calendar ✅" : "Task added!";
             showToast(msg, "success");
@@ -1458,9 +1471,11 @@ async function saveTask() {
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
             refreshMonthView();
         } else {
-            showToast("Could not save task", "error");
+            console.error("saveTask backend error:", data);
+            showToast("Could not save task: " + (data.message || "unknown error"), "error");
         }
     } catch (e) {
+        console.error("saveTask network error:", e);
         showToast("Network error — please retry", "error");
     } finally {
         btn.disabled = false; btn.textContent = "Save Task";
