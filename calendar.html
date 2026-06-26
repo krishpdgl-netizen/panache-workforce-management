@@ -29,7 +29,24 @@
         }
         .menu a:hover, .menu a.active { background: #2563eb; }
 
-       
+
+        /* Mini todo in sidebar */
+        .sidebar-notes { margin-top: auto; padding-top: 20px; border-top: .5px solid rgba(255,255,255,.12); }
+        .sidebar-notes-label {
+            font-size: 11px; font-weight: 500; color: rgba(255,255,255,.4);
+            letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px;
+        }
+        #sidebarTodos { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
+        .sidebar-todo-add { display: flex; gap: 6px; margin-top: 10px; }
+        .sidebar-todo-add input {
+            flex: 1; background: rgba(255,255,255,.08); border: .5px solid rgba(255,255,255,.15);
+            border-radius: 6px; padding: 6px 8px; font-size: 12px; color: #fff; outline: none;
+        }
+        .sidebar-todo-add button {
+            width: 28px; height: 28px; border-radius: 6px; background: #2563eb;
+            border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; flex-shrink: 0;
+        }
+
         /* ── MAIN ── */
         .main { margin-left: 260px; width: calc(100% - 260px); padding: 28px; }
 
@@ -313,6 +330,7 @@
         .color-swatch.selected { border-color: #111827; }
 
 
+
         /* ── MEETING DETAIL MODAL ── */
         .meeting-detail { padding: 4px 0; }
         .detail-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
@@ -410,7 +428,15 @@
     <div id="miniCal" class="mini-cal"></div>
     <nav class="menu" id="sidebarMenu"></nav>
 
-   
+
+    <div class="sidebar-notes">
+        <div class="sidebar-notes-label">Quick Notes</div>
+        <div id="sidebarTodos"></div>
+        <div class="sidebar-todo-add">
+            <input type="text" id="sidebarTodoInput" placeholder="Add a note…" onkeydown="if(event.key==='Enter') addSidebarTodo()">
+            <button onclick="addSidebarTodo()">+</button>
+        </div>
+    </div>
 </div>
 
 <!-- ── MAIN ── -->
@@ -566,7 +592,6 @@
             <div class="color-picker" id="taskColorPicker"></div>
             <input type="hidden" id="taskColor" value="#7c3aed">
         </div>
-
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
             <button class="btn-save-task" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
@@ -607,6 +632,7 @@ let allUsers      = [];
 let monthMeetings = {};   // keyed YYYY-MM-DD → meetings[]
 let monthTasks    = {};   // keyed YYYY-MM-DD → tasks[]
 
+
 let dragStart = null, dragEnd = null, isDragging = false;
 let pendingStart = null, pendingEnd = null;
 let pendingModalType = "meeting"; // "meeting" | "task"
@@ -633,8 +659,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderMonthView();
     setInterval(drawCurrentTimeLine, 30000);
     await loadUsers();
-
-
 });
 
 /* ─── SIDEBAR ───────────────────────────────────────── */
@@ -670,6 +694,7 @@ function setupSidebar() {
     renderSidebarTodos();
 }
 
+/* ─── GOOGLE CALENDAR STATUS ────────────────────────── */
 
 /* ─── SIDEBAR TODO ───────────────────────────────────── */
 const TODO_KEY = "panache_todos";
@@ -924,9 +949,9 @@ async function loadMonthData(year, month) {
         for (let d = 1; d <= daysInMonth; d++) {
             const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
             promises.push(
-                fetch(`${API_BASE}/meetings/month?user_id=${userId}&month=${monthStr}`)
+                fetch(`${API_BASE}/meetings/day?date=${ds}`)
                     .then(r => r.ok ? r.json() : [])
-                    .then(data => ({ ds, data: data.filter(m => String(m.meeting_date || m.date).slice(0,10) === ds) }))
+                    .then(data => ({ ds, data }))
                     .catch(() => ({ ds, data: [] }))
             );
         }
@@ -1006,14 +1031,13 @@ async function renderDayView(date) {
     let meetings = [], tasks = [];
 
     try {
-        const mRes = await fetch(`${API_BASE}/meetings/day?date=${ds}`);
-        if (mRes.ok) meetings = await mRes.json();
-    } catch { meetings = []; }
-
-    try {
-        const tRes = await fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`);
-        if (tRes.ok) tasks = await tRes.json();
-    } catch { tasks = []; }
+        const [mRes, tRes] = await Promise.all([
+            fetch(`${API_BASE}/meetings/day?date=${ds}`),
+            fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`)
+        ]);
+        meetings = await mRes.json();
+        tasks    = await tRes.json();
+    } catch { meetings = []; tasks = []; }
 
     monthMeetings[ds] = meetings;
     monthTasks[ds]    = tasks;
@@ -1263,7 +1287,7 @@ async function saveMeeting() {
             showToast("Meeting scheduled!", "success");
             closeMeetingModal();
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
-            refreshMonthView();
+            delete monthMeetings[dateVal];
         } else {
             showToast(data.message || "Could not save meeting", "error");
         }
@@ -1326,42 +1350,27 @@ async function saveTask() {
 
     try {
         const params = new URLSearchParams({
-            user_id:     userId,
+            user_id: userId,
             title,
             description: desc,
-            task_date:   dateVal,
-            start_slot:  startSlot,
-            end_slot:    endSlot,
-            color:       color,
+            task_date: dateVal,
+            start_slot: startSlot,
+            end_slot: endSlot,
+            color,
         });
-        const res = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
+        const res  = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
             method: "POST",
         });
-
-        // Surface HTTP-level errors (FastAPI 422, 500, etc.)
-        if (!res.ok) {
-            const errBody = await res.json().catch(() => ({}));
-            const detail = Array.isArray(errBody.detail)
-                ? errBody.detail.map(d => d.msg || JSON.stringify(d)).join("; ")
-                : (errBody.detail || errBody.message || `HTTP ${res.status}`);
-            console.error("saveTask HTTP error:", res.status, errBody);
-            showToast("Could not save task: " + detail, "error");
-            return;
-        }
-
         const data = await res.json();
-        console.log("saveTask response:", data);
         if (data.success) {
             showToast("Task added!", "success");
             closeTaskModal();
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
             refreshMonthView();
         } else {
-            console.error("saveTask backend error:", data);
-            showToast("Could not save task: " + (data.message || "unknown error"), "error");
+            showToast("Could not save task", "error");
         }
     } catch (e) {
-        console.error("saveTask network error:", e);
         showToast("Network error — please retry", "error");
     } finally {
         btn.disabled = false; btn.textContent = "Save Task";
