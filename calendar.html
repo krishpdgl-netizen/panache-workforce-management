@@ -629,10 +629,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupSidebar();
     populateSlotSelects();
     buildTaskColorPicker();
-    await loadUsers();
     renderMiniCal();
     renderMonthView();
     setInterval(drawCurrentTimeLine, 30000);
+    await loadUsers();
 
 
 });
