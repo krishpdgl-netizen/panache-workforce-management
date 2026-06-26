@@ -312,15 +312,6 @@
         .color-swatch:hover { transform: scale(1.15); }
         .color-swatch.selected { border-color: #111827; }
 
-        /* Sync to GCal checkbox */
-        .gcal-sync-row {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: #374151; font-weight: 600;
-            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
-            padding: 10px 14px; margin-bottom: 16px;
-        }
-        .gcal-sync-row input { accent-color: #16a34a; width: 16px; height: 16px; }
-        .gcal-sync-row .gcal-sync-note { font-size: 11px; color: #6b7280; font-weight: 400; margin-left: auto; }
 
         /* ── MEETING DETAIL MODAL ── */
         .meeting-detail { padding: 4px 0; }
@@ -575,12 +566,7 @@
             <div class="color-picker" id="taskColorPicker"></div>
             <input type="hidden" id="taskColor" value="#7c3aed">
         </div>
-        <!-- Sync to Google Calendar (only shown if GCal is connected) -->
-        <div class="gcal-sync-row" id="gcalSyncRow" style="display:none">
-            <input type="checkbox" id="syncGcal" checked>
-            <label for="syncGcal">Also add to my Google Calendar</label>
-            <span class="gcal-sync-note">Requires Google Calendar connected</span>
-        </div>
+
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
             <button class="btn-save-task" id="saveTaskBtn" onclick="saveTask()">Save Task</button>
@@ -620,7 +606,6 @@ let selectedDate  = null;
 let allUsers      = [];
 let monthMeetings = {};   // keyed YYYY-MM-DD → meetings[]
 let monthTasks    = {};   // keyed YYYY-MM-DD → tasks[]
-let gcalConnected = false;
 
 let dragStart = null, dragEnd = null, isDragging = false;
 let pendingStart = null, pendingEnd = null;
@@ -645,19 +630,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     populateSlotSelects();
     buildTaskColorPicker();
     await loadUsers();
-    await checkGCalStatus();
     renderMiniCal();
     renderMonthView();
     setInterval(drawCurrentTimeLine, 30000);
 
-    // Check if we just got redirected back from Google OAuth
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("gcal") === "connected") {
-        showToast("Google Calendar connected! ✅", "success");
-        history.replaceState(null, "", "calendar.html");
-        gcalConnected = true;
-        renderGCalBanner();
-    }
+
 });
 
 /* ─── SIDEBAR ───────────────────────────────────────── */
@@ -693,42 +670,6 @@ function setupSidebar() {
     renderSidebarTodos();
 }
 
-/* ─── GOOGLE CALENDAR STATUS ────────────────────────── */
-async function checkGCalStatus() {
-    try {
-        const res  = await fetch(`${API_BASE}/auth/google/status?user_id=${userId}`);
-        const data = await res.json();
-        gcalConnected = data.connected;
-    } catch {
-        gcalConnected = false;
-    }
-    renderGCalBanner();
-}
-
-function renderGCalBanner() {
-    const statusEl = document.getElementById("gcalStatus");
-    if (gcalConnected) {
-        statusEl.innerHTML = `
-            <span class="gcal-connected">✓ Connected</span><br>
-            <button class="gcal-disconnect-btn" onclick="disconnectGCal()">Disconnect</button>`;
-    } else {
-        statusEl.innerHTML = `
-            <span style="color:rgba(255,255,255,.5)">Not connected</span><br>
-            <a class="gcal-connect-btn" href="${API_BASE}/auth/google/login?user_id=${userId}">
-                Connect Google Calendar
-            </a>`;
-    }
-    // Show/hide sync checkbox in task modal
-    const row = document.getElementById("gcalSyncRow");
-    if (row) row.style.display = gcalConnected ? "flex" : "none";
-}
-
-async function disconnectGCal() {
-    await fetch(`${API_BASE}/auth/google/disconnect?user_id=${userId}`, { method: "DELETE" });
-    gcalConnected = false;
-    renderGCalBanner();
-    showToast("Google Calendar disconnected", "");
-}
 
 /* ─── SIDEBAR TODO ───────────────────────────────────── */
 const TODO_KEY = "panache_todos";
@@ -1350,7 +1291,6 @@ function openTaskModal(startSlot, endSlot, date) {
     document.getElementById("taskColor").value     = "#7c3aed";
     buildTaskColorPicker();  // reset selection
     updateTaskTimeDisplay();
-    renderGCalBanner();      // show/hide sync row
     document.getElementById("taskModal").classList.add("active");
 }
 
@@ -1376,7 +1316,6 @@ async function saveTask() {
     const startSlot = parseInt(document.getElementById("taskStartSlot").value);
     const endSlot   = parseInt(document.getElementById("taskEndSlot").value);
     const color     = document.getElementById("taskColor").value;
-    const syncGcal  = gcalConnected && document.getElementById("syncGcal")?.checked;
 
     if (!title)   { showToast("Task title is required", "error"); return; }
     if (!dateVal) { showToast("Please select a date", "error"); return; }
@@ -1394,7 +1333,6 @@ async function saveTask() {
             start_slot:  startSlot,
             end_slot:    endSlot,
             color:       color,
-            sync_gcal:   syncGcal ? "true" : "false",
         });
         const res = await fetch(`${API_BASE}/calendar-tasks/create?${params}`, {
             method: "POST",
@@ -1414,8 +1352,7 @@ async function saveTask() {
         const data = await res.json();
         console.log("saveTask response:", data);
         if (data.success) {
-            const msg = data.gcal_synced ? "Task added & synced to Google Calendar ✅" : "Task added!";
-            showToast(msg, "success");
+            showToast("Task added!", "success");
             closeTaskModal();
             if (currentView === "day" && selectedDate) renderDayView(selectedDate);
             refreshMonthView();
