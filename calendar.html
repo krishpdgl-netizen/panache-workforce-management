@@ -29,42 +29,7 @@
         }
         .menu a:hover, .menu a.active { background: #2563eb; }
 
-        /* Google Calendar connect banner in sidebar */
-        .gcal-banner {
-            margin-bottom: 14px; border-radius: 10px; padding: 12px 14px;
-            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
-            font-size: 12px; color: rgba(255,255,255,.75);
-        }
-        .gcal-banner .gcal-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-        .gcal-banner .gcal-connected { color: #4ade80; font-size: 11px; }
-        .gcal-connect-btn {
-            display: inline-block; margin-top: 8px; background: #2563eb;
-            color: white; border: none; border-radius: 7px; padding: 6px 12px;
-            font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none;
-        }
-        .gcal-disconnect-btn {
-            display: inline-block; margin-top: 6px; background: rgba(220,38,38,.15);
-            color: #f87171; border: none; border-radius: 7px; padding: 5px 10px;
-            font-size: 11px; font-weight: 600; cursor: pointer;
-        }
-
-        /* Mini todo in sidebar */
-        .sidebar-notes { margin-top: auto; padding-top: 20px; border-top: .5px solid rgba(255,255,255,.12); }
-        .sidebar-notes-label {
-            font-size: 11px; font-weight: 500; color: rgba(255,255,255,.4);
-            letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px;
-        }
-        #sidebarTodos { display: flex; flex-direction: column; gap: 6px; max-height: 160px; overflow-y: auto; }
-        .sidebar-todo-add { display: flex; gap: 6px; margin-top: 10px; }
-        .sidebar-todo-add input {
-            flex: 1; background: rgba(255,255,255,.08); border: .5px solid rgba(255,255,255,.15);
-            border-radius: 6px; padding: 6px 8px; font-size: 12px; color: #fff; outline: none;
-        }
-        .sidebar-todo-add button {
-            width: 28px; height: 28px; border-radius: 6px; background: #2563eb;
-            border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; flex-shrink: 0;
-        }
-
+       
         /* ── MAIN ── */
         .main { margin-left: 260px; width: calc(100% - 260px); padding: 28px; }
 
@@ -454,23 +419,7 @@
     <div id="miniCal" class="mini-cal"></div>
     <nav class="menu" id="sidebarMenu"></nav>
 
-    <!-- Google Calendar connect -->
-    <div class="gcal-banner" id="gcalBanner">
-        <div class="gcal-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Google Calendar
-        </div>
-        <div id="gcalStatus">Checking…</div>
-    </div>
-
-    <div class="sidebar-notes">
-        <div class="sidebar-notes-label">Quick Notes</div>
-        <div id="sidebarTodos"></div>
-        <div class="sidebar-todo-add">
-            <input type="text" id="sidebarTodoInput" placeholder="Add a note…" onkeydown="if(event.key==='Enter') addSidebarTodo()">
-            <button onclick="addSidebarTodo()">+</button>
-        </div>
-    </div>
+   
 </div>
 
 <!-- ── MAIN ── -->
