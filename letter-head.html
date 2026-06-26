@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letterhead Register | Panache WMS</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role) { window.location.href = "index.html"; }
+        if (role !== "admin" && role !== "manager") { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body { display:flex; background:#f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width:260px; height:100vh; background:#111827;
+            color:white; position:fixed; padding:20px;
+            display:flex; flex-direction:column;
+        }
+        .logo { font-size:22px; font-weight:bold; margin-bottom:30px; }
+        .menu a {
+            display:block; color:white; text-decoration:none;
+            padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
+        }
+        .menu a:hover, .menu a.active { background:#2563eb; }
+
+        /* MAIN */
+        .main { margin-left:260px; width:100%; padding:25px; }
+
+        .header {
+            display:flex; justify-content:space-between;
+            align-items:center; margin-bottom:25px;
+        }
+        .header h1 { color:#111827; }
+
+        .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
+        .logout-btn {
+            background:#dc2626; color:white; border:none;
+            padding:10px 20px; border-radius:8px; cursor:pointer;
+        }
+        .logout-btn:hover { background:#b91c1c; }
+
+        /* CARDS */
+        .cards {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+            gap:20px; margin-bottom:25px;
+        }
+        .card {
+            background:white; padding:20px; border-radius:15px;
+            box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
+        .card h2 { color:#2563eb; font-size:30px; margin-bottom:6px; }
+        .card p  { color:#6b7280; font-size:14px; }
+        .card.green h2  { color:#16a34a; }
+        .card.yellow h2 { color:#f59e0b; }
+        .card.red h2    { color:#dc2626; }
+        .card.purple h2 { color:#7c3aed; }
+
+        /* SECTION */
+        .section {
+            background:white; padding:22px; border-radius:15px;
+            margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08);
+        }
+        .section-header {
+            display:flex; justify-content:space-between;
+            align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;
+        }
+        .section-header h2 { color:#111827; }
+
+        .header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+        /* SEARCH + FILTER */
+        .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+        .toolbar input, .toolbar select {
+            padding:9px 14px; border:1px solid #d1d5db;
+            border-radius:8px; font-size:14px;
+        }
+        .toolbar input { flex:1; min-width:180px; }
+        .toolbar input:focus, .toolbar select:focus { outline:none; border-color:#2563eb; }
+
+        /* TABLE */
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
+        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
+        tr:hover td { background:#f9fafb; }
+
+        /* BUTTONS */
+        .btn-primary {
+            background:#2563eb; color:white; border:none;
+            padding:10px 18px; border-radius:8px; cursor:pointer;
+            font-size:14px; font-weight:600;
+        }
+        .btn-primary:hover { background:#1d4ed8; }
+
+        .btn-success {
+            background:#16a34a; color:white; border:none;
+            padding:10px 18px; border-radius:8px; cursor:pointer;
+            font-size:14px; font-weight:600;
+        }
+        .btn-success:hover { background:#15803d; }
+
+        .btn-danger {
+            background:#dc2626; color:white; border:none;
+            padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
+        }
+        .btn-danger:hover { background:#b91c1c; }
+
+        .btn-warning {
+            background:#f59e0b; color:white; border:none;
+            padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
+        }
+        .btn-warning:hover { background:#d97706; }
+
+        .btn-purple {
+            background:#7c3aed; color:white; border:none;
+            padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
+        }
+        .btn-purple:hover { background:#6d28d9; }
+
+        /* BADGES */
+        .badge {
+            display:inline-block; padding:3px 10px;
+            border-radius:99px; font-size:12px; font-weight:600;
+        }
+        .badge-green  { background:#dcfce7; color:#15803d; }
+        .badge-blue   { background:#dbeafe; color:#1d4ed8; }
+        .badge-yellow { background:#fef9c3; color:#a16207; }
+        .badge-orange { background:#ffedd5; color:#c2410c; }
+        .badge-red    { background:#fee2e2; color:#b91c1c; }
+        .badge-purple { background:#f3e8ff; color:#7c3aed; }
+        .badge-gray   { background:#f3f4f6; color:#6b7280; }
+
+        /* MODAL */
+        .modal-overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,0.5); z-index:1000;
+            align-items:center; justify-content:center;
+        }
+        .modal-overlay.active { display:flex; }
+        .modal {
+            background:white; border-radius:15px; padding:30px;
+            width:520px; max-width:95%; max-height:90vh; overflow-y:auto;
+            box-shadow:0 10px 40px rgba(0,0,0,0.2);
+        }
+        .modal h2 { margin-bottom:20px; color:#111827; }
+        .modal label {
+            display:block; margin-bottom:5px;
+            font-weight:600; color:#374151; font-size:14px;
+        }
+        .modal input, .modal select, .modal textarea {
+            width:100%; padding:10px 12px; border:1px solid #d1d5db;
+            border-radius:8px; margin-bottom:14px; font-size:14px;
+            font-family:'Segoe UI',sans-serif;
+        }
+        .modal textarea { resize:vertical; min-height:80px; }
+        .modal input:focus, .modal select:focus, .modal textarea:focus {
+            outline:none; border-color:#2563eb;
+        }
+        .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:5px; }
+        .btn-cancel {
+            background:#e5e7eb; color:#374151; border:none;
+            padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px;
+        }
+        .btn-save {
+            background:#2563eb; color:white; border:none;
+            padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;
+        }
+        .btn-save:hover { background:#1d4ed8; }
+
+        /* FORM GRID */
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+        /* NO DATA */
+        .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; right:30px;
+            background:#111827; color:white; padding:14px 22px;
+            border-radius:10px; font-size:14px; opacity:0;
+            transform:translateY(10px); transition:all 0.3s; z-index:9999;
+        }
+        .toast.show { opacity:1; transform:translateY(0); }
+        .toast.success { background:#16a34a; }
+        .toast.error   { background:#dc2626; }
+
+        /* PREVIEW AREA */
+        .lh-preview-box {
+            border:2px dashed #d1d5db; border-radius:10px; padding:15px;
+            background:#fafafa; margin-bottom:14px; font-size:13px; color:#6b7280;
+            text-align:center;
+        }
+
+        /* SERIAL NUMBER CELL */
+        .serial-no {
+            font-weight:700; color:#111827; font-family:'Courier New',monospace;
+            background:#f3f4f6; padding:3px 8px; border-radius:6px; font-size:13px;
+        }
+
+        /* TABS */
+        .tabs { display:flex; gap:8px; margin-bottom:18px; }
+        .tab {
+            padding:8px 18px; border-radius:8px; cursor:pointer;
+            font-size:14px; font-weight:600; border:2px solid #e5e7eb;
+            color:#6b7280; background:white; transition:.2s;
+        }
+        .tab.active { background:#2563eb; color:white; border-color:#2563eb; }
+
+        /* SIDEBAR TODOS */
+        #sidebarTodos::-webkit-scrollbar { width:3px; }
+        #sidebarTodos::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:3px; }
+
+        @media(max-width:1000px) {
+            .sidebar { width:200px; }
+            .main { margin-left:200px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">Panache Admin</div>
+    <div class="menu">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="sales-dashboard.html">Sales Dashboard</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="employee-hub.html">Employee Hub</a>
+        <a href="letterhead.html" class="active">Letterhead Register</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </div>
+
+    <!-- PERSONAL NOTES -->
+    <div style="margin-top:auto;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.12);">
+        <p style="font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px;">My notes</p>
+        <div id="sidebarTodos" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;">
+            <input id="sidebarTodoInput" placeholder="Add a task..."
+                   style="flex:1;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
+                   onkeydown="if(event.key==='Enter')addSidebarTodo()" />
+            <button onclick="addSidebarTodo()"
+                    style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR NOTES SCRIPT -->
+<script>
+(function() {
+    const KEY = "panache_todos";
+    function load()  { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+    function save(t) { localStorage.setItem(KEY, JSON.stringify(t)); }
+    function render() {
+        const todos = load();
+        const box = document.getElementById("sidebarTodos");
+        box.innerHTML = "";
+        todos.forEach((text, i) => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.4;";
+            row.innerHTML = `
+                <div onclick="completeSidebarTodo(${i})" title="Mark complete"
+                     style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+                <span>${text}</span>`;
+            box.appendChild(row);
+        });
+    }
+    window.addSidebarTodo = function() {
+        const inp = document.getElementById("sidebarTodoInput");
+        const text = inp.value.trim(); if (!text) return;
+        const todos = load(); todos.push(text); save(todos); inp.value = ""; render();
+    };
+    window.completeSidebarTodo = function(i) {
+        const circle = document.getElementById("sidebarTodos").children[i].querySelector("div");
+        circle.style.background = "#22c55e"; circle.style.borderColor = "#22c55e";
+        circle.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        setTimeout(() => { const t = load(); t.splice(i,1); save(t); render(); }, 500);
+    };
+    render();
+})();
+</script>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>📄 Letterhead Register</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="profile">
+                <b id="profileName">Admin</b><br>
+                <span id="profileEmail" style="font-size:12px;color:#6b7280;font-weight:400;"></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="cards">
+        <div class="card">
+            <h2 id="statTotal">—</h2>
+            <p>Total Issued</p>
+        </div>
+        <div class="card green">
+            <h2 id="statThisMonth">—</h2>
+            <p>Issued This Month</p>
+        </div>
+        <div class="card yellow">
+            <h2 id="statInternal">—</h2>
+            <p>Internal Use</p>
+        </div>
+        <div class="card purple">
+            <h2 id="statExternal">—</h2>
+            <p>External / Client</p>
+        </div>
+        <div class="card red">
+            <h2 id="statVoided">—</h2>
+            <p>Voided</p>
+        </div>
+        <div class="card">
+            <h2 id="statNextSerial">—</h2>
+            <p>Next Serial No.</p>
+        </div>
+    </div>
+
+    <!-- REGISTER TABLE -->
+    <div class="section">
+        <div class="section-header">
+            <h2>Letterhead Registry</h2>
+            <div class="header-actions">
+                <button class="btn-success" onclick="openGenerateModal()">⊕ Generate &amp; Issue</button>
+                <button class="btn-primary" onclick="openLogModal()">+ Log Existing</button>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" onclick="filterTab('all', this)">All</button>
+            <button class="tab" onclick="filterTab('Internal', this)">Internal</button>
+            <button class="tab" onclick="filterTab('External', this)">External</button>
+            <button class="tab" onclick="filterTab('Legal', this)">Legal</button>
+            <button class="tab" onclick="filterTab('HR', this)">HR</button>
+            <button class="tab" onclick="filterTab('Voided', this)">Voided</button>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="Search serial no., recipient, purpose..." oninput="applyFilters()">
+            <select id="filterDept" onchange="applyFilters()">
+                <option value="">All Departments</option>
+                <option>Sales</option>
+                <option>HR</option>
+                <option>Finance</option>
+                <option>Operations</option>
+                <option>Legal</option>
+                <option>Management</option>
+                <option>IT</option>
+            </select>
+            <select id="filterMonth" onchange="applyFilters()">
+                <option value="">All Time</option>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial No.</th>
+                    <th>Date Issued</th>
+                    <th>Purpose / Subject</th>
+                    <th>Category</th>
+                    <th>Department</th>
+                    <th>Issued To / Recipient</th>
+                    <th>Issued By</th>
+                    <th>Authorised By</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="letterheadTable">
+                <tr><td colspan="10" class="no-data">Loading...</td></tr>
+            </tbody>
+        </table>
+
+        <div id="pagination" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;align-items:center;font-size:14px;color:#6b7280;"></div>
+    </div>
+
+</div><!-- /main -->
+
+<!-- ============================================================
+     MODAL: GENERATE & ISSUE (auto serial + download)
+============================================================ -->
+<div class="modal-overlay" id="generateModal">
+    <div class="modal">
+        <h2>⊕ Generate &amp; Issue Letterhead</h2>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+            A new serial number will be assigned automatically. The letterhead document will be generated and downloaded as <b id="previewFileName">LH-XXXX.docx</b>.
+        </p>
+
+        <div class="form-row">
+            <div>
+                <label>Category *</label>
+                <select id="genCategory" onchange="updatePreviewName()">
+                    <option value="">Select category</option>
+                    <option>Internal</option>
+                    <option>External</option>
+                    <option>Legal</option>
+                    <option>HR</option>
+                </select>
+            </div>
+            <div>
+                <label>Department *</label>
+                <select id="genDept">
+                    <option value="">Select department</option>
+                    <option>Sales</option>
+                    <option>HR</option>
+                    <option>Finance</option>
+                    <option>Operations</option>
+                    <option>Legal</option>
+                    <option>Management</option>
+                    <option>IT</option>
+                </select>
+            </div>
+        </div>
+
+        <label>Purpose / Subject *</label>
+        <input type="text" id="genPurpose" placeholder="e.g. Employment Verification Letter for Rajesh Mehta">
+
+        <label>Issued To / Recipient *</label>
+        <input type="text" id="genRecipient" placeholder="e.g. Rajesh Mehta or HDFC Bank">
+
+        <div class="form-row">
+            <div>
+                <label>Issued By *</label>
+                <input type="text" id="genIssuedBy" placeholder="Name of issuing person">
+            </div>
+            <div>
+                <label>Authorised By *</label>
+                <input type="text" id="genAuthorisedBy" placeholder="Manager / Director name">
+            </div>
+        </div>
+
+        <label>Body Content (for letterhead document)</label>
+        <textarea id="genBody" placeholder="Enter the main content to be printed on the letterhead..."></textarea>
+
+        <label>Remarks (internal notes)</label>
+        <input type="text" id="genRemarks" placeholder="Optional internal remarks">
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeGenerateModal()">Cancel</button>
+            <button class="btn-save" style="background:#16a34a;" onclick="generateAndIssue()">⊕ Generate &amp; Download</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: LOG EXISTING (manual entry without generating doc)
+============================================================ -->
+<div class="modal-overlay" id="logModal">
+    <div class="modal">
+        <h2>+ Log Existing Letterhead</h2>
+        <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+            Use this to record a letterhead that was already issued offline or outside the system.
+        </p>
+
+        <div class="form-row">
+            <div>
+                <label>Serial Number *</label>
+                <input type="text" id="logSerial" placeholder="e.g. LH-0042">
+            </div>
+            <div>
+                <label>Date Issued *</label>
+                <input type="date" id="logDate">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Category *</label>
+                <select id="logCategory">
+                    <option value="">Select category</option>
+                    <option>Internal</option>
+                    <option>External</option>
+                    <option>Legal</option>
+                    <option>HR</option>
+                </select>
+            </div>
+            <div>
+                <label>Department *</label>
+                <select id="logDept">
+                    <option value="">Select department</option>
+                    <option>Sales</option>
+                    <option>HR</option>
+                    <option>Finance</option>
+                    <option>Operations</option>
+                    <option>Legal</option>
+                    <option>Management</option>
+                    <option>IT</option>
+                </select>
+            </div>
+        </div>
+
+        <label>Purpose / Subject *</label>
+        <input type="text" id="logPurpose" placeholder="e.g. Offer Letter for new hire">
+
+        <label>Issued To / Recipient *</label>
+        <input type="text" id="logRecipient" placeholder="Name or organisation">
+
+        <div class="form-row">
+            <div>
+                <label>Issued By *</label>
+                <input type="text" id="logIssuedBy" placeholder="Name">
+            </div>
+            <div>
+                <label>Authorised By</label>
+                <input type="text" id="logAuthorisedBy" placeholder="Optional">
+            </div>
+        </div>
+
+        <label>Remarks</label>
+        <input type="text" id="logRemarks" placeholder="Optional">
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeLogModal()">Cancel</button>
+            <button class="btn-save" onclick="logExisting()">Save Record</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: VOID LETTERHEAD
+============================================================ -->
+<div class="modal-overlay" id="voidModal">
+    <div class="modal" style="width:400px;">
+        <h2>Void Letterhead</h2>
+        <p style="font-size:14px;color:#6b7280;margin-bottom:18px;">
+            Voiding marks this letterhead as cancelled. This action is logged but not deleted.
+        </p>
+        <input type="hidden" id="voidId">
+        <label>Reason for Voiding *</label>
+        <textarea id="voidReason" placeholder="e.g. Issued in error, content needs correction..." style="min-height:90px;"></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeVoidModal()">Cancel</button>
+            <button class="btn-save" style="background:#dc2626;" onclick="confirmVoid()">Void Letterhead</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: VIEW DETAILS
+============================================================ -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal">
+        <h2>Letterhead Details</h2>
+        <div id="viewContent" style="font-size:14px;line-height:1.8;color:#374151;"></div>
+        <div class="modal-actions" style="margin-top:20px;">
+            <button class="btn-cancel" onclick="closeViewModal()">Close</button>
+            <button class="btn-purple" id="redownloadBtn" onclick="redownloadLetterhead()">⬇ Re-download Document</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+    const BASE = "https://your-api-base-url.railway.app"; // ← update this
+
+    // ── AUTH ─────────────────────────────────────────────
+    const userId   = localStorage.getItem("userId");
+    const userName = localStorage.getItem("userName") || "Admin";
+    const userRole = localStorage.getItem("userRole");
+
+    document.getElementById("profileName").textContent  = userName;
+    document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "";
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    // ── TOAST ────────────────────────────────────────────
+    function showToast(msg, type="") {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className = "toast show" + (type ? " "+type : "");
+        setTimeout(() => t.className = "toast", 3000);
+    }
+
+    // ── STATE ────────────────────────────────────────────
+    let allRecords   = [];
+    let filteredRecs = [];
+    let activeTab    = "all";
+    let currentPage  = 1;
+    const PAGE_SIZE  = 15;
+    let viewingRecord = null;
+
+    // ── LOAD DATA ────────────────────────────────────────
+    async function loadLetterheads() {
+        try {
+            const res  = await fetch(`${BASE}/letterheads`);
+            const data = await res.json();
+            allRecords = data;
+            buildMonthFilter();
+            applyFilters();
+            updateStats();
+        } catch(e) {
+            document.getElementById("letterheadTable").innerHTML =
+                `<tr><td colspan="10" class="no-data">Failed to load. Check backend connection.</td></tr>`;
+            console.error(e);
+        }
+    }
+
+    async function loadNextSerial() {
+        try {
+            const res  = await fetch(`${BASE}/letterheads/next-serial`);
+            const data = await res.json();
+            document.getElementById("statNextSerial").textContent = data.next_serial || "—";
+            return data.next_serial;
+        } catch(e) { return null; }
+    }
+
+    // ── STATS ────────────────────────────────────────────
+    function updateStats() {
+        const now   = new Date();
+        const total = allRecords.length;
+
+        const thisMonth = allRecords.filter(r => {
+            const d = new Date(r.date_issued);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+
+        const internal = allRecords.filter(r => r.category === "Internal" && r.status !== "Voided").length;
+        const external = allRecords.filter(r => (r.category === "External" || r.category === "Legal" || r.category === "HR") && r.status !== "Voided").length;
+        const voided   = allRecords.filter(r => r.status === "Voided").length;
+
+        document.getElementById("statTotal").textContent     = total;
+        document.getElementById("statThisMonth").textContent = thisMonth;
+        document.getElementById("statInternal").textContent  = internal;
+        document.getElementById("statExternal").textContent  = external;
+        document.getElementById("statVoided").textContent    = voided;
+
+        loadNextSerial();
+    }
+
+    // ── MONTH FILTER BUILDER ─────────────────────────────
+    function buildMonthFilter() {
+        const sel = document.getElementById("filterMonth");
+        const months = new Set();
+        allRecords.forEach(r => {
+            const d = new Date(r.date_issued);
+            months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+        });
+        [...months].sort().reverse().forEach(m => {
+            const [y, mo] = m.split("-");
+            const label   = new Date(y, mo-1).toLocaleString("default", { month:"long", year:"numeric" });
+            sel.innerHTML += `<option value="${m}">${label}</option>`;
+        });
+    }
+
+    // ── FILTERS ──────────────────────────────────────────
+    function filterTab(tab, el) {
+        activeTab = tab;
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        el.classList.add("active");
+        currentPage = 1;
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const q     = document.getElementById("searchInput").value.toLowerCase();
+        const dept  = document.getElementById("filterDept").value;
+        const month = document.getElementById("filterMonth").value;
+
+        filteredRecs = allRecords.filter(r => {
+            if (activeTab !== "all" && activeTab !== "Voided") {
+                if (r.category !== activeTab) return false;
+            }
+            if (activeTab === "Voided" && r.status !== "Voided") return false;
+            if (dept  && r.department !== dept)  return false;
+            if (month) {
+                const d = new Date(r.date_issued);
+                const rm = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+                if (rm !== month) return false;
+            }
+            if (q) {
+                const haystack = `${r.serial_no} ${r.purpose} ${r.recipient} ${r.issued_by} ${r.authorised_by} ${r.remarks}`.toLowerCase();
+                if (!haystack.includes(q)) return false;
+            }
+            return true;
+        });
+
+        renderTable();
+    }
+
+    // ── RENDER TABLE ─────────────────────────────────────
+    function renderTable() {
+        const start  = (currentPage - 1) * PAGE_SIZE;
+        const page   = filteredRecs.slice(start, start + PAGE_SIZE);
+        const tbody  = document.getElementById("letterheadTable");
+
+        if (!page.length) {
+            tbody.innerHTML = `<tr><td colspan="10" class="no-data">No records found.</td></tr>`;
+            renderPagination();
+            return;
+        }
+
+        tbody.innerHTML = page.map(r => {
+            const voided = r.status === "Voided";
+            return `
+            <tr style="${voided ? "opacity:0.55;" : ""}">
+                <td><span class="serial-no">${r.serial_no}</span></td>
+                <td>${formatDate(r.date_issued)}</td>
+                <td style="max-width:200px;">${r.purpose}</td>
+                <td>${categoryBadge(r.category)}</td>
+                <td><span class="badge badge-gray">${r.department || "—"}</span></td>
+                <td>${r.recipient || "—"}</td>
+                <td>${r.issued_by || "—"}</td>
+                <td>${r.authorised_by || "—"}</td>
+                <td style="max-width:140px;font-size:13px;color:#6b7280;">${r.remarks || "—"}</td>
+                <td>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn-warning" onclick="viewRecord(${r.id})">View</button>
+                        ${!voided ? `<button class="btn-danger" onclick="openVoidModal(${r.id})">Void</button>` : `<span class="badge badge-red">Voided</span>`}
+                    </div>
+                </td>
+            </tr>`;
+        }).join("");
+
+        renderPagination();
+    }
+
+    // ── PAGINATION ───────────────────────────────────────
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredRecs.length / PAGE_SIZE);
+        const box = document.getElementById("pagination");
+        if (totalPages <= 1) { box.innerHTML = ""; return; }
+
+        let html = `<span>Page ${currentPage} of ${totalPages} &nbsp;|&nbsp; ${filteredRecs.length} records</span>`;
+        if (currentPage > 1)         html += `<button class="btn-cancel" onclick="goPage(${currentPage-1})">← Prev</button>`;
+        if (currentPage < totalPages) html += `<button class="btn-primary" onclick="goPage(${currentPage+1})">Next →</button>`;
+        box.innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; renderTable(); }
+
+    // ── HELPERS ──────────────────────────────────────────
+    function formatDate(d) {
+        if (!d) return "—";
+        return new Date(d).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    function categoryBadge(cat) {
+        const map = {
+            "Internal": "badge-blue",
+            "External": "badge-purple",
+            "Legal":    "badge-orange",
+            "HR":       "badge-green",
+        };
+        return `<span class="badge ${map[cat] || "badge-gray"}">${cat || "—"}</span>`;
+    }
+
+    // ── GENERATE MODAL ───────────────────────────────────
+    let nextSerialVal = null;
+
+    async function openGenerateModal() {
+        nextSerialVal = await loadNextSerial();
+        updatePreviewName();
+        document.getElementById("genIssuedBy").value = userName;
+        document.getElementById("generateModal").classList.add("active");
+    }
+
+    function closeGenerateModal() {
+        document.getElementById("generateModal").classList.remove("active");
+        ["genCategory","genDept","genPurpose","genRecipient","genIssuedBy","genAuthorisedBy","genBody","genRemarks"]
+            .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+    }
+
+    function updatePreviewName() {
+        const cat = document.getElementById("genCategory").value || "XX";
+        const serial = nextSerialVal || "????";
+        document.getElementById("previewFileName").textContent = `${serial}.html`;
+    }
+
+    async function generateAndIssue() {
+        const category     = document.getElementById("genCategory").value.trim();
+        const dept         = document.getElementById("genDept").value.trim();
+        const purpose      = document.getElementById("genPurpose").value.trim();
+        const recipient    = document.getElementById("genRecipient").value.trim();
+        const issuedBy     = document.getElementById("genIssuedBy").value.trim();
+        const authorisedBy = document.getElementById("genAuthorisedBy").value.trim();
+        const body         = document.getElementById("genBody").value.trim();
+        const remarks      = document.getElementById("genRemarks").value.trim();
+
+        if (!category || !dept || !purpose || !recipient || !issuedBy) {
+            showToast("Please fill all required fields.", "error"); return;
+        }
+
+        try {
+            const params = new URLSearchParams({ category, department: dept, purpose, recipient, issued_by: issuedBy, authorised_by: authorisedBy, body_content: body, remarks, issued_by_user_id: userId });
+            const res  = await fetch(`${BASE}/letterheads/generate`, { method:"POST", body: params });
+            const data = await res.json();
+
+            if (!data.success) { showToast(data.message || "Failed to generate.", "error"); return; }
+
+            // Generate and download the document client-side
+            downloadLetterheadDoc({
+                serial_no:      data.serial_no,
+                date_issued:    data.date_issued || new Date().toISOString(),
+                purpose, recipient, issuedBy, authorisedBy,
+                category, department: dept, body
+            });
+
+            showToast(`${data.serial_no} issued and downloaded.`, "success");
+            closeGenerateModal();
+            loadLetterheads();
+
+        } catch(e) {
+            showToast("Network error. Check backend.", "error"); console.error(e);
+        }
+    }
+
+    // ── GENERATE HTML DOCUMENT ───────────────────────────
+    function downloadLetterheadDoc(r) {
+        const dateStr = formatDate(r.date_issued);
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${r.serial_no} — Panache WMS</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Times New Roman', serif; background:#fff; color:#1a1a1a; }
+
+  .page {
+    width:210mm; min-height:297mm; padding:18mm 20mm 20mm 20mm;
+    margin:0 auto; position:relative;
+  }
+
+  /* HEADER */
+  .lh-header {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:3px solid #111827; padding-bottom:14px; margin-bottom:22px;
+  }
+  .lh-logo-block .company { font-size:26px; font-weight:900; letter-spacing:-0.5px; color:#111827; }
+  .lh-logo-block .tagline { font-size:11px; color:#6b7280; margin-top:2px; letter-spacing:0.6px; text-transform:uppercase; }
+  .lh-meta { text-align:right; font-size:12px; line-height:1.8; color:#374151; }
+  .lh-meta .serial { font-size:14px; font-weight:700; color:#2563eb; font-family:'Courier New',monospace; }
+
+  /* CATEGORY BANNER */
+  .lh-category {
+    background:#f3f4f6; border-left:4px solid #2563eb;
+    padding:7px 14px; font-size:12px; font-weight:600;
+    letter-spacing:0.5px; text-transform:uppercase;
+    color:#1d4ed8; margin-bottom:24px;
+  }
+
+  /* ADDRESS BLOCK */
+  .lh-date { font-size:13px; color:#374151; margin-bottom:18px; }
+  .lh-recipient { margin-bottom:22px; }
+  .lh-recipient .to-label { font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:#9ca3af; }
+  .lh-recipient .to-name  { font-size:15px; font-weight:700; margin-top:2px; }
+
+  /* SUBJECT */
+  .lh-subject { font-size:14px; font-weight:700; margin-bottom:18px; border-bottom:1px solid #e5e7eb; padding-bottom:8px; }
+  .lh-subject span { color:#2563eb; }
+
+  /* BODY */
+  .lh-body { font-size:13px; line-height:1.9; color:#374151; margin-bottom:30px; white-space:pre-line; }
+
+  /* SIGNATURE */
+  .lh-sig { margin-top:40px; }
+  .lh-sig .sig-line { width:180px; border-bottom:1px solid #374151; margin-bottom:6px; height:40px; }
+  .lh-sig .sig-name  { font-size:13px; font-weight:700; }
+  .lh-sig .sig-title { font-size:12px; color:#6b7280; }
+
+  /* FOOTER */
+  .lh-footer {
+    position:absolute; bottom:18mm; left:20mm; right:20mm;
+    border-top:1px solid #e5e7eb; padding-top:10px;
+    display:flex; justify-content:space-between;
+    font-size:10px; color:#9ca3af;
+  }
+  .lh-watermark {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-30deg);
+    font-size:72px; font-weight:900; color:rgba(37,99,235,0.04);
+    letter-spacing:4px; text-transform:uppercase; pointer-events:none;
+    white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="lh-watermark">PANACHE WMS</div>
+
+  <div class="lh-header">
+    <div class="lh-logo-block">
+      <div class="company">Panache</div>
+      <div class="tagline">Workforce Management System</div>
+    </div>
+    <div class="lh-meta">
+      <div class="serial">${r.serial_no}</div>
+      <div>${dateStr}</div>
+      <div>Department: ${r.department}</div>
+    </div>
+  </div>
+
+  <div class="lh-category">${r.category} Communication</div>
+
+  <div class="lh-date">Date: ${dateStr}</div>
+
+  <div class="lh-recipient">
+    <div class="to-label">To</div>
+    <div class="to-name">${r.recipient}</div>
+  </div>
+
+  <div class="lh-subject">Subject: <span>${r.purpose}</span></div>
+
+  <div class="lh-body">${r.body || "To Whom It May Concern,\n\nThis letter is issued on company letterhead as per official records.\n\nPlease contact the issuing department for further details."}</div>
+
+  <div class="lh-sig">
+    <div class="sig-line"></div>
+    <div class="sig-name">${r.issuedBy}</div>
+    <div class="sig-title">Authorised By: ${r.authorisedBy || "—"}</div>
+    <div class="sig-title">${r.department}, Panache</div>
+  </div>
+
+  <div class="lh-footer">
+    <span>Panache Workforce Management System &nbsp;|&nbsp; Ref: ${r.serial_no}</span>
+    <span>This is a computer-generated document.</span>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+        const blob = new Blob([html], { type:"text/html" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = `${r.serial_no}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ── LOG EXISTING ─────────────────────────────────────
+    function openLogModal() {
+        document.getElementById("logDate").value = new Date().toISOString().split("T")[0];
+        document.getElementById("logIssuedBy").value = userName;
+        document.getElementById("logModal").classList.add("active");
+    }
+
+    function closeLogModal() {
+        document.getElementById("logModal").classList.remove("active");
+        ["logSerial","logCategory","logDept","logPurpose","logRecipient","logIssuedBy","logAuthorisedBy","logRemarks"]
+            .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
+    }
+
+    async function logExisting() {
+        const serial      = document.getElementById("logSerial").value.trim();
+        const dateIssued  = document.getElementById("logDate").value;
+        const category    = document.getElementById("logCategory").value;
+        const dept        = document.getElementById("logDept").value;
+        const purpose     = document.getElementById("logPurpose").value.trim();
+        const recipient   = document.getElementById("logRecipient").value.trim();
+        const issuedBy    = document.getElementById("logIssuedBy").value.trim();
+        const authBy      = document.getElementById("logAuthorisedBy").value.trim();
+        const remarks     = document.getElementById("logRemarks").value.trim();
+
+        if (!serial || !dateIssued || !category || !dept || !purpose || !recipient || !issuedBy) {
+            showToast("Please fill all required fields.", "error"); return;
+        }
+
+        try {
+            const params = new URLSearchParams({ serial_no: serial, date_issued: dateIssued, category, department: dept, purpose, recipient, issued_by: issuedBy, authorised_by: authBy, remarks, issued_by_user_id: userId });
+            const res  = await fetch(`${BASE}/letterheads/log`, { method:"POST", body: params });
+            const data = await res.json();
+
+            if (data.success) {
+                showToast("Record logged successfully.", "success");
+                closeLogModal(); loadLetterheads();
+            } else {
+                showToast(data.message || "Failed to log.", "error");
+            }
+        } catch(e) { showToast("Network error.", "error"); }
+    }
+
+    // ── VOID ─────────────────────────────────────────────
+    function openVoidModal(id) {
+        document.getElementById("voidId").value = id;
+        document.getElementById("voidReason").value = "";
+        document.getElementById("voidModal").classList.add("active");
+    }
+
+    function closeVoidModal() {
+        document.getElementById("voidModal").classList.remove("active");
+    }
+
+    async function confirmVoid() {
+        const id     = document.getElementById("voidId").value;
+        const reason = document.getElementById("voidReason").value.trim();
+        if (!reason) { showToast("Please enter a reason for voiding.", "error"); return; }
+
+        try {
+            const res  = await fetch(`${BASE}/letterheads/${id}/void`, {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify({ void_reason: reason })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Letterhead voided.", "success");
+                closeVoidModal(); loadLetterheads();
+            } else {
+                showToast("Failed to void.", "error");
+            }
+        } catch(e) { showToast("Network error.", "error"); }
+    }
+
+    // ── VIEW RECORD ──────────────────────────────────────
+    function viewRecord(id) {
+        viewingRecord = allRecords.find(r => r.id === id);
+        if (!viewingRecord) return;
+        const r = viewingRecord;
+
+        document.getElementById("viewContent").innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;">
+                <div><b>Serial No.</b><br><span class="serial-no">${r.serial_no}</span></div>
+                <div><b>Date Issued</b><br>${formatDate(r.date_issued)}</div>
+                <div><b>Category</b><br>${categoryBadge(r.category)}</div>
+                <div><b>Department</b><br>${r.department || "—"}</div>
+                <div><b>Issued To</b><br>${r.recipient}</div>
+                <div><b>Purpose</b><br>${r.purpose}</div>
+                <div><b>Issued By</b><br>${r.issued_by}</div>
+                <div><b>Authorised By</b><br>${r.authorised_by || "—"}</div>
+                <div><b>Status</b><br>${r.status === "Voided" ? `<span class="badge badge-red">Voided</span>` : `<span class="badge badge-green">Active</span>`}</div>
+                <div><b>Remarks</b><br>${r.remarks || "—"}</div>
+                ${r.void_reason ? `<div style="grid-column:span 2;"><b>Void Reason</b><br><span style="color:#dc2626;">${r.void_reason}</span></div>` : ""}
+                ${r.body_content ? `<div style="grid-column:span 2;"><b>Body Content</b><br><div style="background:#f9fafb;border-radius:8px;padding:12px;margin-top:6px;font-size:13px;white-space:pre-line;">${r.body_content}</div></div>` : ""}
+            </div>`;
+
+        document.getElementById("redownloadBtn").style.display = r.body_content ? "inline-block" : "none";
+        document.getElementById("viewModal").classList.add("active");
+    }
+
+    function closeViewModal() {
+        document.getElementById("viewModal").classList.remove("active");
+    }
+
+    function redownloadLetterhead() {
+        if (!viewingRecord) return;
+        const r = viewingRecord;
+        downloadLetterheadDoc({
+            serial_no:    r.serial_no,
+            date_issued:  r.date_issued,
+            purpose:      r.purpose,
+            recipient:    r.recipient,
+            issuedBy:     r.issued_by,
+            authorisedBy: r.authorised_by,
+            category:     r.category,
+            department:   r.department,
+            body:         r.body_content
+        });
+    }
+
+    // ── CLOSE ON OVERLAY CLICK ───────────────────────────
+    ["generateModal","logModal","voidModal","viewModal"].forEach(id => {
+        document.getElementById(id).addEventListener("click", function(e) {
+            if (e.target === this) this.classList.remove("active");
+        });
+    });
+
+    // ── INIT ─────────────────────────────────────────────
+    loadLetterheads();
+</script>
+
+</body>
+</html>
