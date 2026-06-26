@@ -563,7 +563,7 @@
      JAVASCRIPT
 ============================================================ -->
 <script>
-    const BASE   = "https://backend-production-53f3.up.railway.app";
+    const BASE = "https://your-api-base-url.railway.app"; // ← update this
 
     // ── AUTH ─────────────────────────────────────────────
     const userId   = localStorage.getItem("userId");
@@ -841,28 +841,52 @@
             showToast("Please fill all required fields.", "error"); return;
         }
 
+        // STEP 1: try to save to backend and get an official serial number
+        let serial_no   = nextSerialVal;
+        let date_issued = new Date().toISOString();
+
         try {
-            const params = new URLSearchParams({ category, department: dept, purpose, recipient, issued_by: issuedBy, authorised_by: authorisedBy, body_content: body, remarks, issued_by_user_id: userId });
-            const res  = await fetch(`${BASE}/letterheads/generate`, { method:"POST", body: params });
-            const data = await res.json();
-
-            if (!data.success) { showToast(data.message || "Failed to generate.", "error"); return; }
-
-            // Generate and download the document client-side
-            downloadLetterheadDoc({
-                serial_no:      data.serial_no,
-                date_issued:    data.date_issued || new Date().toISOString(),
-                purpose, recipient, issuedBy, authorisedBy,
-                category, department: dept, body
+            const params = new URLSearchParams({
+                category,
+                department:        dept,
+                purpose,
+                recipient,
+                issued_by:         issuedBy,
+                authorised_by:     authorisedBy,
+                body_content:      body,
+                remarks,
+                issued_by_user_id: userId || ""
             });
-
-            showToast(`${data.serial_no} issued and downloaded.`, "success");
-            closeGenerateModal();
-            loadLetterheads();
-
+            const res  = await fetch(`${BASE}/letterheads/generate?${params}`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                serial_no   = data.serial_no;
+                date_issued = data.date_issued || date_issued;
+            }
         } catch(e) {
-            showToast("Network error. Check backend.", "error"); console.error(e);
+            // Backend unreachable — fall back to a timestamp-based serial
+            // so the download still works
+            console.warn("Backend unreachable, using fallback serial:", e);
+            const ts  = Date.now().toString().slice(-6);
+            serial_no = serial_no || ("LH-" + ts);
         }
+
+        // STEP 2: download the document regardless of backend result
+        downloadLetterheadDoc({
+            serial_no,
+            date_issued,
+            purpose,
+            recipient,
+            issuedBy,
+            authorisedBy,
+            category,
+            department: dept,
+            body
+        });
+
+        showToast(serial_no + " generated and downloaded.", "success");
+        closeGenerateModal();
+        loadLetterheads();
     }
 
     // ── GENERATE HTML DOCUMENT ───────────────────────────
@@ -1019,8 +1043,13 @@
         }
 
         try {
-            const params = new URLSearchParams({ serial_no: serial, date_issued: dateIssued, category, department: dept, purpose, recipient, issued_by: issuedBy, authorised_by: authBy, remarks, issued_by_user_id: userId });
-            const res  = await fetch(`${BASE}/letterheads/log`, { method:"POST", body: params });
+            const params = new URLSearchParams({
+                serial_no: serial, date_issued: dateIssued, category,
+                department: dept, purpose, recipient,
+                issued_by: issuedBy, authorised_by: authBy,
+                remarks, issued_by_user_id: userId || ""
+            });
+            const res  = await fetch(`${BASE}/letterheads/log?${params}`, { method: "POST" });
             const data = await res.json();
 
             if (data.success) {
