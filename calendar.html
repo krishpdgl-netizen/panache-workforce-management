@@ -949,7 +949,7 @@ async function loadMonthData(year, month) {
         for (let d = 1; d <= daysInMonth; d++) {
             const ds = `${monthStr}-${String(d).padStart(2,"0")}`;
             promises.push(
-                fetch(`${API_BASE}/meetings/day?date=${ds}`)
+                fetch(`${API_BASE}/meetings/day?date=${ds}&user_id=${userId}`)
                     .then(r => r.ok ? r.json() : [])
                     .then(data => ({ ds, data }))
                     .catch(() => ({ ds, data: [] }))
@@ -1032,7 +1032,7 @@ async function renderDayView(date) {
 
     try {
         const [mRes, tRes] = await Promise.all([
-            fetch(`${API_BASE}/meetings/day?date=${ds}`),
+            fetch(`${API_BASE}/meetings/day?date=${ds}&user_id=${userId}`),
             fetch(`${API_BASE}/calendar-tasks?user_id=${userId}&date=${ds}`)
         ]);
         meetings = await mRes.json();
