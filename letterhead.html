@@ -8,7 +8,8 @@
     <script>
         const role = localStorage.getItem("userRole");
         if (!role) { window.location.href = "index.html"; }
-        if (role !== "admin" && role !== "manager") { window.location.href = "index.html"; }
+        // employees get read-only access; only admin/manager can generate or void
+        const isReadOnly = (role === "employee");
     </script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
@@ -223,15 +224,9 @@
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-    <div class="logo">Panache Admin</div>
-    <div class="menu">
-        <a href="admin-dashboard.html">Dashboard</a>
-        <a href="settings.html">Settings</a>
-        <a href="sales-dashboard.html">Sales Dashboard</a>
-        <a href="calendar.html">Calendar</a>
-        <a href="employee-hub.html">Employee Hub</a>
-        <a href="letterhead.html" class="active">Letterhead Register</a>
-        <a href="#" onclick="logout()">Logout</a>
+    <div class="logo" id="sidebarLogo">Panache WMS</div>
+    <div class="menu" id="sidebarMenu">
+        <!-- filled by JS based on role -->
     </div>
 
     <!-- PERSONAL NOTES -->
@@ -330,9 +325,8 @@
     <div class="section">
         <div class="section-header">
             <h2>Letterhead Registry</h2>
-            <div class="header-actions">
-                <button class="btn-success" onclick="openGenerateModal()">⊕ Generate &amp; Issue</button>
-                <button class="btn-primary" onclick="openLogModal()">+ Log Existing</button>
+            <div class="header-actions" id="adminActions">
+                <!-- shown only for admin/manager -->
             </div>
         </div>
 
@@ -573,8 +567,54 @@
 
     // ── AUTH ─────────────────────────────────────────────
     const userId   = localStorage.getItem("userId");
-    const userName = localStorage.getItem("userName") || "Admin";
+    const userName = localStorage.getItem("userName") || "User";
     const userRole = localStorage.getItem("userRole");
+
+    // ── BUILD SIDEBAR ────────────────────────────────────
+    (function buildSidebar() {
+        const logo = document.getElementById("sidebarLogo");
+        const menu = document.getElementById("sidebarMenu");
+
+        const links = userRole === "employee"
+            ? [
+                { href: "employee-dashboard.html", label: "Dashboard" },
+                { href: "settings.html",           label: "Settings" },
+                { href: "history.html",             label: "History" },
+                { href: "sales-dashboard.html",     label: "Sales Dashboard" },
+                { href: "calendar.html",            label: "Calendar" },
+                { href: "employee-hub.html",        label: "Employee Hub" },
+                { href: "letterhead.html",          label: "Letterhead Register", active: true },
+            ]
+            : userRole === "manager"
+            ? [
+                { href: "manager-dashboard.html",  label: "Dashboard" },
+                { href: "settings.html",            label: "Settings" },
+                { href: "sales-dashboard.html",     label: "Sales Dashboard" },
+                { href: "calendar.html",            label: "Calendar" },
+                { href: "employee-hub.html",        label: "Employee Hub" },
+                { href: "letterhead.html",          label: "Letterhead Register", active: true },
+            ]
+            : [
+                { href: "admin-dashboard.html",    label: "Dashboard" },
+                { href: "settings.html",            label: "Settings" },
+                { href: "sales-dashboard.html",     label: "Sales Dashboard" },
+                { href: "calendar.html",            label: "Calendar" },
+                { href: "employee-hub.html",        label: "Employee Hub" },
+                { href: "letterhead.html",          label: "Letterhead Register", active: true },
+            ];
+
+        logo.textContent = userRole === "admin" ? "Panache Admin" : "Panache WMS";
+        menu.innerHTML   = links.map(l =>
+            `<a href="${l.href}"${l.active ? ' class="active"' : ""}>${l.label}</a>`
+        ).join("") + `<a href="#" onclick="logout()">Logout</a>`;
+    })();
+
+    // ── SHOW ADMIN ACTIONS ───────────────────────────────
+    if (!isReadOnly) {
+        document.getElementById("adminActions").innerHTML = `
+            <button class="btn-success" onclick="openGenerateModal()">⊕ Generate &amp; Issue</button>
+            <button class="btn-primary" onclick="openLogModal()">+ Log Existing</button>`;
+    }
 
     document.getElementById("profileName").textContent  = userName;
     document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "";
@@ -726,7 +766,7 @@
                 <td>
                     <div style="display:flex;gap:6px;">
                         <button class="btn-warning" onclick="viewRecord(${r.id})">View</button>
-                        ${!voided ? `<button class="btn-danger" onclick="openVoidModal(${r.id})">Void</button>` : `<span class="badge badge-red">Voided</span>`}
+                        ${voided ? `<span class="badge badge-red">Voided</span>` : (!isReadOnly ? `<button class="btn-danger" onclick="openVoidModal(${r.id})">Void</button>` : "")}
                     </div>
                 </td>
             </tr>`;
