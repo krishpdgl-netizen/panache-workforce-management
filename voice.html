@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -584,14 +583,585 @@ No employee submissions.
 
 </div>
 
+<div class="modal" id="voiceModal">
+
 <div
-class="modal"
-id="voiceModal">
+style="
+background:white;
+width:700px;
+max-width:95%;
+border-radius:12px;
+padding:30px;
+max-height:90vh;
+overflow-y:auto;
+">
+
+<div
+style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+">
+
+<h2>Employee Voice</h2>
+
+<button
+onclick="closeVoiceModal()"
+style="
+border:none;
+background:none;
+font-size:24px;
+cursor:pointer;
+">
+
+&times;
+
+</button>
+
+</div>
+
+<div style="margin-bottom:20px;">
+
+<label style="font-weight:bold;">
+
+Identity
+
+</label>
+
+<div style="margin-top:10px;">
+
+<label>
+
+<input
+type="radio"
+name="anonymous"
+value="false"
+checked>
+
+Reveal my identity
+
+</label>
+
+<br><br>
+
+<label>
+
+<input
+type="radio"
+name="anonymous"
+value="true">
+
+Submit anonymously
+
+</label>
 
 </div>
 
 </div>
 
+<div style="margin-bottom:20px;">
+
+<label>
+
+Category
+
+</label>
+
+<select
+id="voiceCategory"
+style="
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:8px;
+">
+
+<option>Suggestion</option>
+
+<option>Workplace Concern</option>
+
+<option>Manager Feedback</option>
+
+<option>HR Concern</option>
+
+<option>Payroll</option>
+
+<option>Facilities</option>
+
+<option>IT Support</option>
+
+<option>Ethics</option>
+
+<option>Harassment</option>
+
+<option>Other</option>
+
+</select>
+
+</div>
+
+<div style="margin-bottom:20px;">
+
+<label>
+
+Priority
+
+</label>
+
+<select
+id="voicePriority"
+style="
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:8px;
+">
+
+<option>Low</option>
+
+<option>Medium</option>
+
+<option>High</option>
+
+<option>Critical</option>
+
+</select>
+
+</div>
+
+<div style="margin-bottom:20px;">
+
+<label>
+
+Subject
+
+</label>
+
+<input
+id="voiceSubject"
+type="text"
+style="
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:8px;
+border:1px solid #ccc;
+">
+
+</div>
+
+<div style="margin-bottom:20px;">
+
+<label>
+
+Description
+
+</label>
+
+<textarea
+
+id="voiceDescription"
+
+rows="7"
+
+style="
+width:100%;
+padding:12px;
+margin-top:8px;
+border-radius:8px;
+resize:vertical;
+border:1px solid #ccc;
+">
+
+</textarea>
+
+</div>
+
+<div style="margin-bottom:20px;">
+
+<label>
+
+Attachment (optional)
+
+</label>
+
+<input
+type="file"
+id="voiceAttachment"
+style="
+display:block;
+margin-top:10px;
+">
+
+</div>
+
+<div
+style="
+margin-bottom:25px;
+">
+
+<label>
+
+<input
+type="checkbox"
+id="voiceAgreement">
+
+I confirm the information provided is accurate to the best of my knowledge.
+
+</label>
+
+</div>
+
+<div
+style="
+display:flex;
+justify-content:flex-end;
+gap:15px;
+">
+
+<button
+
+onclick="closeVoiceModal()"
+
+style="
+padding:12px 20px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+">
+
+Cancel
+
+</button>
+
+<button
+
+onclick="submitVoice()"
+
+class="primary-btn">
+
+Submit
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<script>
+const API_URL = "https://backend-production-53f3.up.railway.app";
+
+function openVoiceModal(){
+
+document.getElementById("voiceModal").style.display="flex";
+
+}
+
+function closeVoiceModal(){
+
+document.getElementById("voiceModal").style.display="none";
+
+}
+
+window.onclick=function(e){
+
+let modal=document.getElementById("voiceModal");
+
+if(e.target===modal){
+
+closeVoiceModal();
+
+}
+
+}
+
+async function submitVoice() {
+
+    if (!document.getElementById("voiceAgreement").checked) {
+        alert("Please confirm the declaration.");
+        return;
+    }
+
+    const anonymous =
+        document.querySelector('input[name="anonymous"]:checked').value === "true";
+
+    const data = {
+
+        user_id: Number(localStorage.getItem("userId")),
+
+        employee_name: localStorage.getItem("fullName"),
+
+        is_anonymous: anonymous,
+
+        category: document.getElementById("voiceCategory").value,
+
+        priority: document.getElementById("voicePriority").value,
+
+        subject: document.getElementById("voiceSubject").value,
+
+        description: document.getElementById("voiceDescription").value,
+
+        attachment: null
+
+    };
+
+    try {
+
+        const response = await fetch(`${API_URL}/employee-voice`, {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type": "application/json"
+
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+        const result = await response.json();
+
+        if(result.success){
+
+            alert("Thank you! Your submission has been received.");
+
+            closeVoiceModal();
+
+            loadMyVoice();
+
+        }
+
+        else{
+
+            alert("Submission failed.");
+
+        }
+
+    }
+
+    catch(err){
+
+        console.error(err);
+
+        alert("Server error.");
+
+    }
+
+}
+
+const anonymous=document.querySelector(
+'input[name="anonymous"]:checked'
+).value==="true";
+
+const data={
+
+user_id:localStorage.getItem("userId"),
+
+employee_name:localStorage.getItem("fullName"),
+
+is_anonymous:anonymous,
+
+category:document.getElementById("voiceCategory").value,
+
+priority:document.getElementById("voicePriority").value,
+
+subject:document.getElementById("voiceSubject").value,
+
+description:document.getElementById("voiceDescription").value,
+
+attachment:null
+
+};
+
+console.log(data);
+
+// Backend API call goes here later
+
+alert("Submission created successfully.");
+
+closeVoiceModal();
+
+}
+
+async function loadMyVoice(){
+
+    const userId = localStorage.getItem("userId");
+
+    const response = await fetch(
+
+        `${API_URL}/employee-voice/my/${userId}`
+
+    );
+
+    const data = await response.json();
+
+    const table = document.getElementById("voiceTable");
+
+    if(data.length===0){
+
+        table.innerHTML=`
+        <tr>
+            <td colspan="5" class="empty">
+                No submissions found.
+            </td>
+        </tr>
+        `;
+
+        return;
+
+    }
+
+    table.innerHTML="";
+
+    data.forEach(item=>{
+
+        table.innerHTML+=`
+
+        <tr>
+
+            <td>${item.subject}</td>
+
+            <td>${item.category}</td>
+
+            <td>${item.priority}</td>
+
+            <td>
+
+                <span class="status">
+
+                    ${item.status}
+
+                </span>
+
+            </td>
+
+            <td>
+
+                ${new Date(item.created_at).toLocaleDateString()}
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+async function loadAdminVoice(){
+
+    const role = localStorage.getItem("role");
+
+    if(role!=="Admin") return;
+
+    document.getElementById("adminSection").style.display="block";
+
+    const response=await fetch(
+
+        `${API_URL}/employee-voice`
+
+    );
+
+    const data=await response.json();
+
+    const table=document.getElementById("adminVoiceTable");
+
+    table.innerHTML="";
+
+    data.forEach(item=>{
+
+        table.innerHTML+=`
+
+        <tr>
+
+            <td>
+
+                ${item.employee_name}
+
+            </td>
+
+            <td>
+
+                ${item.category}
+
+            </td>
+
+            <td>
+
+                ${item.priority}
+
+            </td>
+
+            <td>
+
+                ${item.status}
+
+            </td>
+
+            <td>
+
+                <button>
+
+                    View
+
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+async function loadStatistics(){
+
+    const role = localStorage.getItem("role");
+
+    if(role!=="Admin") return;
+
+    const response=await fetch(
+
+        `${API_URL}/employee-voice`
+
+    );
+
+    const data=await response.json();
+
+    document.getElementById("submittedCount").innerText=
+
+        data.filter(x=>x.status==="Submitted").length;
+
+    document.getElementById("reviewCount").innerText=
+
+        data.filter(x=>x.status==="Under Review").length;
+
+    document.getElementById("resolvedCount").innerText=
+
+        data.filter(x=>x.status==="Resolved").length;
+
+    document.getElementById("anonymousCount").innerText=
+
+        data.filter(x=>x.is_anonymous).length;
+
+}
+
+loadMyVoice();
+
+loadAdminVoice();
+
+loadStatistics();
+
+</script>
 </body>
 
 </html>
