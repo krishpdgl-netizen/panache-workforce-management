@@ -841,8 +841,8 @@
             showToast("Please fill all required fields.", "error"); return;
         }
 
-        // STEP 1: try to save to backend and get an official serial number
-        let serial_no   = nextSerialVal;
+        // STEP 1: save to backend — must succeed before we download
+        let serial_no   = null;
         let date_issued = new Date().toISOString();
 
         try {
@@ -858,16 +858,20 @@
             });
             const res  = await fetch(`${BASE}/letterheads/generate?${params}`, { method: "POST" });
             const data = await res.json();
-            if (data.success) {
-                serial_no   = data.serial_no;
-                date_issued = data.date_issued || date_issued;
+
+            if (!res.ok || !data.success) {
+                showToast("Failed to save: " + (data.message || data.detail || res.status), "error");
+                console.error("Backend error:", data);
+                return; // abort — don't download if not saved
             }
+
+            serial_no   = data.serial_no;
+            date_issued = data.date_issued || date_issued;
+
         } catch(e) {
-            // Backend unreachable — fall back to a timestamp-based serial
-            // so the download still works
-            console.warn("Backend unreachable, using fallback serial:", e);
-            const ts  = Date.now().toString().slice(-6);
-            serial_no = serial_no || ("LH-" + ts);
+            showToast("Network error — could not reach backend.", "error");
+            console.error("Network error:", e);
+            return; // abort
         }
 
         // STEP 2: download the document regardless of backend result
