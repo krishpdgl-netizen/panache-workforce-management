@@ -1117,10 +1117,32 @@
   @media print {
     body { background: #fff; padding: 0; }
     .sheet { box-shadow: none; width: 100%; min-height: 100vh; }
+    .print-tip { display: none !important; }
   }
 </style>
 </head>
 <body>
+
+<!-- Print tip banner — hidden on print -->
+<div class="print-tip" style="
+  background:#1a3a6e; color:#fff; text-align:center;
+  padding:10px; font-family:Arial,sans-serif; font-size:13px;
+  position:sticky; top:0; z-index:999;">
+  📄 To save as PDF: in the print dialog, set <b>Destination → Save as PDF</b>, then click Save.
+  &nbsp;&nbsp;
+  <button onclick="window.print()" style="background:#e63329;color:#fff;border:none;padding:5px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;">🖨 Print / Save as PDF</button>
+  &nbsp;
+  <button onclick="window.close()" style="background:#374151;color:#fff;border:none;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:13px;">✕ Close</button>
+</div>
+
+<script>
+  // Auto-trigger print when page loads
+  window.addEventListener('load', () => {
+    setTimeout(() => window.print(), 600);
+  });
+  // Close tab after print/cancel
+  window.onafterprint = () => window.close();
+</script>
 <div class="sheet">
 
   <div class="top-bar"></div>
@@ -1181,13 +1203,16 @@
 </body>
 </html>`;
 
-        const blob = new Blob([html], { type:"text/html" });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement("a");
-        a.href     = url;
-        a.download = `${r.serial_no}.html`;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Open in new tab and trigger print dialog (Save as PDF)
+        const blob   = new Blob([html], { type: "text/html" });
+        const url    = URL.createObjectURL(blob);
+        const win    = window.open(url, "_blank");
+        win.onload = () => {
+            win.focus();
+            win.print();
+            // revoke after a delay to allow print dialog to open
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        };
     }
 
     // ── LOG EXISTING ─────────────────────────────────────
