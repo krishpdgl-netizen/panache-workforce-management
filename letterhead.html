@@ -924,25 +924,28 @@
 <head>
 <meta charset="UTF-8">
 <title>${r.serial_no} — Panache Newage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   @page { size: A4 portrait; margin: 0; }
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    font-family: 'Arial', sans-serif;
-    background: #d0d4dc;
-    color: #1a1a1a;
-    padding: 36px 0 60px;
+  :root {
+    --ink:      #10233f;
+    --ink-soft: #324a6e;
+    --ember:    #a8402c;
+    --graphite: #333b46;
+    --mist:     #8b93a3;
+    --hair:     #e6e9ee;
+    --wash:     #f7f8fa;
   }
 
-  :root {
-    --navy: #16294f;
-    --navy-light: #2a5298;
-    --red: #e63329;
-    --ink: #20242c;
-    --muted: #6b7280;
-    --hair: #e3e6ec;
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #d7dae1;
+    color: var(--graphite);
+    padding: 36px 0 60px;
   }
 
   /* ── A4 SHEET ── */
@@ -952,248 +955,225 @@
     background: #fff;
     margin: 0 auto;
     position: relative;
-    box-shadow: 0 10px 50px rgba(20,30,60,0.22);
+    box-shadow: 0 10px 50px rgba(16,35,63,0.22);
     display: flex;
-    flex-direction: column;
+  }
+
+  /* ── LEDGER SPINE ── */
+  .spine {
+    width: 15mm;
+    flex-shrink: 0;
+    background: var(--ink);
+    position: relative;
     overflow: hidden;
   }
-
-  /* ── WATERMARK ── */
-  .watermark {
+  .spine-seal {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%) rotate(-32deg);
-    font-size: 130px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    font-family: Arial Black, Arial, sans-serif;
-    color: var(--navy);
-    opacity: 0.035;
+    top: 17mm;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8.5mm;
+    height: 8.5mm;
+    border-radius: 50%;
+    border: 1px solid var(--ember);
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .spine-seal span {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+  }
+  .spine-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) rotate(-90deg);
+    transform-origin: center;
     white-space: nowrap;
-    pointer-events: none;
-    z-index: 0;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+  }
+  .spine-text .serial {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.92);
   }
 
-  /* ── TOP COLOUR BAR ── */
-  .top-bar {
-    width: 100%;
-    height: 6px;
-    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 55%, var(--red) 100%);
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+  /* ── MAIN COLUMN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
-  /* ── HEADER ROW ── */
-  .header {
+  /* ── META ROW ── */
+  .meta-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 26px 22mm 0 22mm;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* left: thin ref block */
-  .ref-block {
-    padding: 8px 14px 9px 0;
-    border-left: 2.5px solid var(--navy);
-    padding-left: 12px;
-  }
-  .ref-label {
-    font-size: 7.5px;
-    text-transform: uppercase;
-    letter-spacing: 1.4px;
-    color: #9ca3af;
-    font-weight: 700;
-  }
-  .ref-no {
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-top: 3px;
-    letter-spacing: 0.3px;
-  }
-  .ref-dept {
+    padding: 17mm 20mm 0 14mm;
     font-size: 8.5px;
-    color: var(--muted);
-    margin-top: 5px;
+    font-weight: 600;
+    letter-spacing: 1.1px;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    color: var(--mist);
   }
+  .meta-row b { color: var(--ink-soft); }
 
-  /* right: logo */
-  .logo-block { text-align: right; line-height: 1; }
-  .logo-panache {
-    font-size: 32px;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    color: var(--navy);
-    font-family: Arial Black, Arial, sans-serif;
+  /* ── TITLE ── */
+  .title-wrap {
+    padding: 30px 20mm 28px 14mm;
+    text-align: center;
   }
-  .logo-panache .r { color: var(--red); }
-  .logo-newage {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 7px;
-    color: var(--navy-light);
-    margin-top: 4px;
-    text-indent: 7px;
+  .title-eyebrow {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ember);
+    margin-bottom: 9px;
   }
-  .logo-rule {
-    margin-top: 8px;
-    margin-left: auto;
-    width: 90px;
+  .title {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+  }
+  .title-rule {
+    width: 36px;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--red));
-  }
-
-  /* ── THIN RULE UNDER HEADER ── */
-  .header-rule {
-    margin: 18px 22mm 0 22mm;
-    height: 1px;
-    background: var(--hair);
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
+    background: var(--ember);
+    margin: 12px auto 0;
   }
 
   /* ── CONTENT AREA ── */
   .content {
     flex: 1;
-    padding: 30px 22mm 0 22mm;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ── LETTER TITLE ── */
-  .letter-title-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 30px;
-  }
-  .letter-title-wrap::before,
-  .letter-title-wrap::after {
-    content: "";
-    height: 1px;
-    width: 46px;
-    background: var(--hair);
-  }
-  .letter-title {
-    text-align: center;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-    color: var(--navy);
-    white-space: nowrap;
+    padding: 0 20mm 0 14mm;
+    font-family: 'Source Serif 4', Georgia, serif;
   }
 
   /* ── DATE & ADDRESS ── */
   .date-line {
     font-size: 12.5px;
-    margin-bottom: 18px;
-    color: var(--ink);
+    margin-bottom: 20px;
+    color: var(--graphite);
   }
-  .date-line strong { color: var(--navy); }
+  .date-line b {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-right: 6px;
+  }
   .address-block {
-    font-size: 12.5px;
-    line-height: 1.9;
+    font-size: 13px;
+    line-height: 1.85;
     margin-bottom: 22px;
-    color: var(--ink);
+    color: var(--graphite);
   }
+  .address-block .to-label {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--mist);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .address-block strong { color: var(--ink); }
 
   /* ── SALUTATION ── */
   .salutation {
-    font-size: 12.5px;
+    font-size: 13px;
     margin-bottom: 18px;
-    color: var(--ink);
+    color: var(--graphite);
   }
+  .salutation strong { color: var(--ink); }
 
   /* ── BODY ── */
-  .body-text { margin-bottom: 30px; }
+  .body-text { margin-bottom: 32px; }
 
   /* ── SIGN-OFF ── */
-  .signoff { font-size: 12.5px; color: var(--ink); margin-bottom: 6px; }
+  .signoff { font-size: 13px; color: var(--graphite); margin-bottom: 6px; }
   .signoff-entity {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 54px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 50px;
   }
   .sig-line {
-    width: 150px;
+    width: 145px;
     height: 1px;
-    background: #9ca3af;
-    margin-bottom: 7px;
+    background: var(--hair);
+    margin-bottom: 8px;
   }
-  .sig-name  { font-size: 12.5px; font-weight: 700; color: var(--ink); }
-  .sig-title { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sig-name  { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .sig-title {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.3px;
+    color: var(--mist);
+    margin-top: 3px;
+  }
 
   /* ── FOOTER ── */
   .footer {
     flex-shrink: 0;
-    margin-top: 32px;
-    position: relative;
-    z-index: 1;
-    background: #f7f8fa;
+    margin-top: 28px;
     border-top: 1px solid var(--hair);
-  }
-  .footer-accent {
-    height: 3px;
-    background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 60%, var(--red) 100%);
-  }
-  .footer-inner {
-    padding: 16px 22mm 18px 22mm;
+    padding: 15px 20mm 18px 14mm;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 24px;
+    font-family: 'Inter', Arial, sans-serif;
   }
   .footer-name {
-    font-size: 11.5px;
-    font-weight: 900;
-    color: var(--navy);
-    letter-spacing: 0.4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.3px;
     margin-bottom: 2px;
   }
   .footer-formerly {
-    font-size: 8px;
-    color: #9ca3af;
+    font-size: 7.5px;
+    color: var(--mist);
     font-style: italic;
     margin-bottom: 6px;
   }
   .footer-address {
     font-size: 8.5px;
-    color: var(--muted);
+    color: var(--mist);
     line-height: 1.7;
-    max-width: 320px;
+    max-width: 300px;
   }
+  .footer-address b { color: var(--ink-soft); }
   .footer-contact {
     font-size: 8.5px;
-    color: var(--muted);
-    line-height: 2;
+    color: var(--mist);
+    line-height: 1.95;
     text-align: right;
     white-space: nowrap;
   }
-  .footer-contact b { color: #374151; }
+  .footer-contact b { color: var(--ink-soft); }
   .footer-cin {
     font-size: 7.5px;
-    color: #b0b5bd;
+    color: #b7bcc4;
     margin-top: 5px;
-    letter-spacing: 0.3px;
-  }
-
-  /* ── BOTTOM COLOUR BAR ── */
-  .bottom-bar {
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, var(--red) 0%, var(--navy-light) 40%, var(--navy) 100%);
-    flex-shrink: 0;
+    letter-spacing: 0.2px;
   }
 
   @media print {
@@ -1207,12 +1187,12 @@
 
 <!-- Print tip banner — hidden on print -->
 <div class="print-tip" style="
-  background:#1a3a6e; color:#fff; text-align:center;
+  background:#10233f; color:#fff; text-align:center;
   padding:10px; font-family:Arial,sans-serif; font-size:13px;
   position:sticky; top:0; z-index:999;">
   📄 To save as PDF: in the print dialog, set <b>Destination → Save as PDF</b>, then click Save.
   &nbsp;&nbsp;
-  <button onclick="window.print()" style="background:#e63329;color:#fff;border:none;padding:5px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;">🖨 Print / Save as PDF</button>
+  <button onclick="window.print()" style="background:#a8402c;color:#fff;border:none;padding:5px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;">🖨 Print / Save as PDF</button>
   &nbsp;
   <button onclick="window.close()" style="background:#374151;color:#fff;border:none;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:13px;">✕ Close</button>
 </div>
@@ -1227,76 +1207,70 @@
 <\/script>
 <div class="sheet">
 
-  <div class="watermark">PANACHĚ</div>
-
-  <div class="top-bar"></div>
-
-  <!-- HEADER: ref left, logo right -->
-  <div class="header">
-    <div class="ref-block">
-      <div class="ref-label">Reference No.</div>
-      <div class="ref-no">${r.serial_no}</div>
-      <div class="ref-dept">${r.department} Department</div>
-    </div>
-    <div class="logo-block">
-      <div class="logo-panache">PANACH<span class="r">ě</span></div>
-      <div class="logo-newage">N E W A G E</div>
-      <div class="logo-rule"></div>
-    </div>
+  <!-- LEDGER SPINE -->
+  <div class="spine">
+    <div class="spine-seal"><span>P</span></div>
+    <div class="spine-text">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED &nbsp;·&nbsp; <span class="serial">${r.serial_no}</span></div>
   </div>
 
-  <div class="header-rule"></div>
+  <div class="main">
 
-  <!-- CONTENT -->
-  <div class="content">
-
-    <div class="letter-title-wrap"><div class="letter-title">${r.purpose}</div></div>
-
-    <div class="date-line"><strong>Date:</strong> ${dateStr}</div>
-
-    <div class="address-block">
-      To,<br>
-      <strong>${r.recipient}</strong>
+    <!-- META ROW -->
+    <div class="meta-row">
+      <div>Department &nbsp;<b>${r.department}</b></div>
+      <div>Date &nbsp;<b>${dateStr}</b></div>
     </div>
 
-    <div class="salutation">Dear <strong>${r.recipient}</strong>,</div>
+    <!-- TITLE -->
+    <div class="title-wrap">
+      <div class="title-eyebrow">Official Correspondence</div>
+      <div class="title">${r.purpose}</div>
+      <div class="title-rule"></div>
+    </div>
 
-    <div class="body-text">${formatBody(r.body || "This letter is issued on official company letterhead as per records.\n\nPlease contact the issuing department for further details.")}</div>
+    <!-- CONTENT -->
+    <div class="content">
 
-    <div class="signoff">Warm regards,</div>
-    <div class="signoff-entity">For Panache Newage Technology Private Limited</div>
+      <div class="address-block">
+        <span class="to-label">To</span>
+        <strong>${r.recipient}</strong>
+      </div>
 
-    <div class="sig-line"></div>
-    <div class="sig-name">${r.issuedBy}</div>
-    <div class="sig-title">Authorised Signatory${r.authorisedBy ? " &nbsp;·&nbsp; Auth: " + r.authorisedBy : ""}</div>
+      <div class="salutation">Dear <strong>${r.recipient}</strong>,</div>
 
-  </div>
+      <div class="body-text">${formatBody(r.body || "This letter is issued on official company letterhead as per records.\n\nPlease contact the issuing department for further details.")}</div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-accent"></div>
-    <div class="footer-inner">
+      <div class="signoff">Warm regards,</div>
+      <div class="signoff-entity">For Panache Newage Technology Private Limited</div>
+
+      <div class="sig-line"></div>
+      <div class="sig-name">${r.issuedBy}</div>
+      <div class="sig-title">Authorised Signatory${r.authorisedBy ? " &nbsp;·&nbsp; Auth: " + r.authorisedBy : ""}</div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
       <div>
         <div class="footer-name">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED</div>
         <div class="footer-formerly">(Formerly known as ICT Infratech Services Private Limited)</div>
         <div class="footer-address">
-          <b>Registered Office:</b> B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India
+          <b>Registered Office</b><br>B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India
         </div>
       </div>
       <div class="footer-contact">
-        <div><b>☏</b> +91 98207 47487</div>
-        <div><b>✉</b> info@panachenewage.com</div>
-        <div><b>🌐</b> www.panachenewage.com</div>
-        <div class="footer-cin">CIN: U74110MH2007PTC168503</div>
+        <div><b>Phone</b> &nbsp;+91 98207 47487</div>
+        <div><b>Email</b> &nbsp;info@panachenewage.com</div>
+        <div><b>Web</b> &nbsp;www.panachenewage.com</div>
+        <div class="footer-cin">CIN U74110MH2007PTC168503</div>
       </div>
     </div>
+
   </div>
-
-  <div class="bottom-bar"></div>
-
 </div>
 </body>
 </html>`;
+
 
         // Open in new tab and trigger print dialog (Save as PDF)
         const blob   = new Blob([html], { type: "text/html" });
