@@ -305,11 +305,11 @@
         </div>
         <div class="card yellow">
             <h2 id="statInternal">—</h2>
-            <p>Internal Use</p>
+            <p>HR / Legal</p>
         </div>
         <div class="card purple">
             <h2 id="statExternal">—</h2>
-            <p>External / Client</p>
+            <p>Sales / Finance</p>
         </div>
         <div class="card red">
             <h2 id="statVoided">—</h2>
@@ -333,10 +333,11 @@
         <!-- TABS -->
         <div class="tabs">
             <button class="tab active" onclick="filterTab('all', this)">All</button>
-            <button class="tab" onclick="filterTab('Internal', this)">Internal</button>
-            <button class="tab" onclick="filterTab('External', this)">External</button>
-            <button class="tab" onclick="filterTab('Legal', this)">Legal</button>
+            <button class="tab" onclick="filterTab('Sales', this)">Sales</button>
             <button class="tab" onclick="filterTab('HR', this)">HR</button>
+            <button class="tab" onclick="filterTab('Finance', this)">Finance</button>
+            <button class="tab" onclick="filterTab('Operations', this)">Operations</button>
+            <button class="tab" onclick="filterTab('Legal', this)">Legal</button>
             <button class="tab" onclick="filterTab('Voided', this)">Voided</button>
         </div>
 
@@ -364,7 +365,6 @@
                     <th>Serial No.</th>
                     <th>Date Issued</th>
                     <th>Purpose / Subject</th>
-                    <th>Category</th>
                     <th>Department</th>
                     <th>Issued To / Recipient</th>
                     <th>Issued By</th>
@@ -395,16 +395,6 @@
 
         <div class="form-row">
             <div>
-                <label>Category *</label>
-                <select id="genCategory" onchange="updatePreviewName()">
-                    <option value="">Select category</option>
-                    <option>Internal</option>
-                    <option>External</option>
-                    <option>Legal</option>
-                    <option>HR</option>
-                </select>
-            </div>
-            <div>
                 <label>Department *</label>
                 <select id="genDept">
                     <option value="">Select department</option>
@@ -417,13 +407,14 @@
                     <option>IT</option>
                 </select>
             </div>
+            <div>
+                <label>Issued To / Recipient *</label>
+                <input type="text" id="genRecipient" placeholder="e.g. Rajesh Mehta or HDFC Bank">
+            </div>
         </div>
 
         <label>Purpose / Subject *</label>
         <input type="text" id="genPurpose" placeholder="e.g. Employment Verification Letter for Rajesh Mehta">
-
-        <label>Issued To / Recipient *</label>
-        <input type="text" id="genRecipient" placeholder="e.g. Rajesh Mehta or HDFC Bank">
 
         <div class="form-row">
             <div>
@@ -459,48 +450,36 @@
             Use this to record a letterhead that was already issued offline or outside the system.
         </p>
 
+        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#0369a1;">
+            ℹ️ A serial number will be <b>automatically assigned</b> from the shared counter so the sequence stays continuous.
+        </div>
         <div class="form-row">
             <div>
-                <label>Serial Number *</label>
-                <input type="text" id="logSerial" placeholder="e.g. LH-0042">
+                <label>Date Used *</label>
+                <input type="date" id="logDate">
             </div>
             <div>
-                <label>Date Issued *</label>
-                <input type="date" id="logDate">
+                <label>Issued To / Recipient *</label>
+                <input type="text" id="logRecipient" placeholder="Name or organisation">
             </div>
         </div>
 
-        <div class="form-row">
-            <div>
-                <label>Category *</label>
-                <select id="logCategory">
-                    <option value="">Select category</option>
-                    <option>Internal</option>
-                    <option>External</option>
-                    <option>Legal</option>
-                    <option>HR</option>
-                </select>
-            </div>
-            <div>
-                <label>Department *</label>
-                <select id="logDept">
-                    <option value="">Select department</option>
-                    <option>Sales</option>
-                    <option>HR</option>
-                    <option>Finance</option>
-                    <option>Operations</option>
-                    <option>Legal</option>
-                    <option>Management</option>
-                    <option>IT</option>
-                </select>
-            </div>
+        <div>
+            <label>Department *</label>
+            <select id="logDept">
+                <option value="">Select department</option>
+                <option>Sales</option>
+                <option>HR</option>
+                <option>Finance</option>
+                <option>Operations</option>
+                <option>Legal</option>
+                <option>Management</option>
+                <option>IT</option>
+            </select>
         </div>
 
         <label>Purpose / Subject *</label>
         <input type="text" id="logPurpose" placeholder="e.g. Offer Letter for new hire">
-
-        <label>Issued To / Recipient *</label>
-        <input type="text" id="logRecipient" placeholder="Name or organisation">
 
         <div class="form-row">
             <div>
@@ -613,7 +592,23 @@
     if (!isReadOnly) {
         document.getElementById("adminActions").innerHTML = `
             <button class="btn-success" onclick="openGenerateModal()">⊕ Generate &amp; Issue</button>
-            <button class="btn-primary" onclick="openLogModal()">+ Log Existing</button>`;
+            <button class="btn-primary" onclick="openLogModal()">+ Log Existing</button>
+            <button class="btn-danger" onclick="resetSerials()" title="Wipe all records and reset counter to LH-00001">↺ Reset Serials</button>`;
+    }
+
+    async function resetSerials() {
+        if (!confirm("⚠️ This will DELETE all letterhead records and reset the counter to LH-00001.\n\nThis cannot be undone. Are you sure?")) return;
+        if (!confirm("Second confirmation: Are you absolutely sure you want to wipe all records?")) return;
+        try {
+            const res  = await fetch(BASE + "/letterheads/reset", { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                showToast("All records cleared. Next serial: LH-00001", "success");
+                loadLetterheads();
+            } else {
+                showToast(data.message || "Reset failed.", "error");
+            }
+        } catch(e) { showToast("Network error.", "error"); }
     }
 
     document.getElementById("profileName").textContent  = userName;
@@ -675,8 +670,8 @@
             return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         }).length;
 
-        const internal = allRecords.filter(r => r.category === "Internal" && r.status !== "Voided").length;
-        const external = allRecords.filter(r => (r.category === "External" || r.category === "Legal" || r.category === "HR") && r.status !== "Voided").length;
+        const internal = allRecords.filter(r => (r.department === "HR" || r.department === "Legal") && r.status !== "Voided").length;
+        const external = allRecords.filter(r => (r.department === "Sales" || r.department === "Finance") && r.status !== "Voided").length;
         const voided   = allRecords.filter(r => r.status === "Voided").length;
 
         document.getElementById("statTotal").textContent     = total;
@@ -719,7 +714,7 @@
 
         filteredRecs = allRecords.filter(r => {
             if (activeTab !== "all" && activeTab !== "Voided") {
-                if (r.category !== activeTab) return false;
+                if (r.department !== activeTab) return false;
             }
             if (activeTab === "Voided" && r.status !== "Voided") return false;
             if (dept  && r.department !== dept)  return false;
@@ -757,7 +752,6 @@
                 <td><span class="serial-no">${r.serial_no}</span></td>
                 <td>${formatDate(r.date_issued)}</td>
                 <td style="max-width:200px;">${r.purpose}</td>
-                <td>${categoryBadge(r.category)}</td>
                 <td><span class="badge badge-gray">${r.department || "—"}</span></td>
                 <td>${r.recipient || "—"}</td>
                 <td>${r.issued_by || "—"}</td>
@@ -824,11 +818,10 @@
     function updatePreviewName() {
         const cat = document.getElementById("genCategory").value || "XX";
         const serial = nextSerialVal || "????";
-        document.getElementById("previewFileName").textContent = `${serial}.html`;
+        document.getElementById("previewFileName").textContent = `${nextSerialVal || 'LH-00001'}.html`;
     }
 
     async function generateAndIssue() {
-        const category     = document.getElementById("genCategory").value.trim();
         const dept         = document.getElementById("genDept").value.trim();
         const purpose      = document.getElementById("genPurpose").value.trim();
         const recipient    = document.getElementById("genRecipient").value.trim();
@@ -837,7 +830,7 @@
         const body         = document.getElementById("genBody").value.trim();
         const remarks      = document.getElementById("genRemarks").value.trim();
 
-        if (!category || !dept || !purpose || !recipient || !issuedBy) {
+        if (!dept || !purpose || !recipient || !issuedBy) {
             showToast("Please fill all required fields.", "error"); return;
         }
 
@@ -847,7 +840,6 @@
 
         try {
             const params = new URLSearchParams({
-                category,
                 department:        dept,
                 purpose,
                 recipient,
@@ -893,19 +885,30 @@
     function downloadLetterheadDoc(r) {
         const dateStr = formatDate(r.date_issued);
 
-        // Format body: lines starting with a digit+dot become bold headings,
-        // lines starting with • or - become bullet points
         function formatBody(text) {
             if (!text) return "";
-            return text.split("\n").map(line => {
-                const trimmed = line.trim();
-                if (!trimmed) return "<br>";
-                if (/^\d+\./.test(trimmed))
-                    return `<p style="font-weight:700;margin:16px 0 8px 0;font-size:13px;">${trimmed}</p>`;
-                if (/^[•\-\*]/.test(trimmed))
-                    return `<li style="margin-left:24px;margin-bottom:4px;">${trimmed.replace(/^[•\-\*]\s*/,"")}</li>`;
-                return `<p style="margin-bottom:8px;font-size:13px;line-height:1.8;">${trimmed}</p>`;
-            }).join("");
+            let html = "";
+            let inList = false;
+            text.split("\n").forEach(line => {
+                const t = line.trim();
+                if (!t) {
+                    if (inList) { html += "</ul>"; inList = false; }
+                    html += `<div style="height:10px;"></div>`;
+                    return;
+                }
+                if (/^\d+\./.test(t)) {
+                    if (inList) { html += "</ul>"; inList = false; }
+                    html += `<p style="font-weight:700;font-size:13px;margin:18px 0 6px 0;">${t}</p>`;
+                } else if (/^[•\-\*]/.test(t)) {
+                    if (!inList) { html += `<ul style="margin:4px 0 8px 24px;padding:0;">`; inList = true; }
+                    html += `<li style="margin-bottom:4px;line-height:1.7;">${t.replace(/^[•\-\*]\s*/,"")}</li>`;
+                } else {
+                    if (inList) { html += "</ul>"; inList = false; }
+                    html += `<p style="font-size:13px;line-height:1.8;margin-bottom:10px;">${t}</p>`;
+                }
+            });
+            if (inList) html += "</ul>";
+            return html;
         }
 
         const html = `<!DOCTYPE html>
@@ -914,125 +917,141 @@
 <meta charset="UTF-8">
 <title>${r.serial_no} — Panache Newage</title>
 <style>
-  @page { size: A4; margin: 0; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; background:#fff; color:#1a1a1a; font-size:13px; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #e8eaf0;
+    color: #1a1a1a;
+    font-size: 13px;
+    padding: 30px 0 60px 0;
+  }
 
   .page {
-    width:210mm; min-height:297mm;
-    padding:14mm 18mm 52mm 18mm;
-    margin:0 auto; position:relative;
+    width: 794px;
+    min-height: 1123px;
+    background: #fff;
+    margin: 0 auto;
+    padding: 52px 64px 160px 64px;
+    position: relative;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.13);
   }
 
-  /* ── TOP HEADER ── */
+  /* ── TOP LOGO ── */
   .lh-top {
-    display:flex; justify-content:flex-end;
-    padding-bottom:10mm; margin-bottom:6mm;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 40px;
   }
-  .lh-logo {
-    text-align:right; line-height:1;
+  .lh-logo { text-align: right; line-height: 1.1; }
+  .brand-panache {
+    font-size: 32px; font-weight: 900; letter-spacing: 1px;
+    color: #1a3a6e;
   }
-  .lh-logo .brand-panache {
-    font-size:28px; font-weight:900; letter-spacing:1px;
-    color:#1a3a6e; font-family:Arial,sans-serif;
+  .brand-panache .red { color: #e63329; }
+  .brand-newage {
+    font-size: 12px; font-weight: 700; letter-spacing: 7px;
+    color: #1a3a6e; margin-top: 2px;
   }
-  .lh-logo .brand-panache span { color:#e63329; }
-  .lh-logo .brand-newage {
-    font-size:13px; font-weight:700; letter-spacing:6px;
-    color:#1a3a6e; text-transform:uppercase; margin-top:2px;
-  }
-  .lh-logo .serial-tag {
-    font-size:10px; color:#6b7280; margin-top:4px;
-    font-family:'Courier New',monospace;
+  .serial-tag {
+    font-size: 10px; color: #9ca3af; margin-top: 6px;
+    font-family: 'Courier New', monospace;
   }
 
   /* ── TITLE ── */
   .lh-title {
-    text-align:center; font-size:16px; font-weight:700;
-    text-decoration:underline; letter-spacing:0.5px;
-    margin-bottom:14mm; text-transform:uppercase;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 36px;
   }
 
-  /* ── DATE & RECIPIENT ── */
-  .lh-date-block { margin-bottom:8mm; line-height:2; font-size:13px; }
-  .lh-date-block b { font-weight:700; }
+  /* ── DATE BLOCK ── */
+  .lh-date-block {
+    font-size: 13px;
+    line-height: 2;
+    margin-bottom: 24px;
+  }
 
   /* ── SALUTATION ── */
-  .lh-salutation { margin-bottom:6mm; font-size:13px; }
+  .lh-salutation {
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
 
   /* ── BODY ── */
-  .lh-body { margin-bottom:10mm; color:#1a1a1a; }
+  .lh-body { margin-bottom: 32px; }
 
-  /* ── SIGN-OFF ── */
-  .lh-signoff { margin-bottom:12mm; font-size:13px; }
-  .lh-signoff-entity {
-    font-size:14px; font-weight:700; margin-bottom:18mm;
-  }
-  .lh-sig-label { font-size:13px; font-weight:700; }
+  /* ── SIGN OFF ── */
+  .lh-signoff { font-size: 13px; margin-bottom: 8px; }
+  .lh-entity  { font-size: 13px; font-weight: 700; margin-bottom: 64px; }
+  .lh-sig-label { font-size: 13px; font-weight: 700; }
+  .lh-sig-sub   { font-size: 12px; color: #6b7280; margin-top: 4px; }
 
-  /* ── FOOTER ── */
+  /* ── FOOTER (pinned to bottom of page) ── */
   .lh-footer {
-    position:absolute;
-    bottom:0; left:0; right:0;
-    padding:5mm 18mm 6mm 18mm;
-    border-top:3px solid #1a3a6e;
-    background:#fff;
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px 64px 20px 64px;
+    border-top: 3px solid #1a3a6e;
+    background: #fff;
   }
-  .lh-footer .co-name {
-    font-size:14px; font-weight:900; color:#1a3a6e;
-    letter-spacing:0.5px; margin-bottom:1mm;
+  .footer-co-name {
+    font-size: 13px; font-weight: 900;
+    color: #1a3a6e; letter-spacing: 0.3px;
+    margin-bottom: 2px;
   }
-  .lh-footer .co-formerly {
-    font-size:9px; color:#6b7280; font-style:italic; margin-bottom:2mm;
+  .footer-formerly {
+    font-size: 9.5px; color: #9ca3af;
+    font-style: italic; margin-bottom: 5px;
   }
-  .lh-footer .co-details {
-    font-size:9px; color:#374151; line-height:1.7;
+  .footer-details {
+    font-size: 9.5px; color: #374151; line-height: 1.8;
   }
-  .lh-footer .co-details b { font-weight:700; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; width: 100%; min-height: 100vh; padding: 40px 56px 140px 56px; }
+  }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- TOP LOGO -->
   <div class="lh-top">
     <div class="lh-logo">
-      <div class="brand-panache">PANACH<span>ě</span></div>
+      <div class="brand-panache">PANACH<span class="red">ě</span></div>
       <div class="brand-newage">N E W A G E</div>
-      <div class="serial-tag">Ref: ${r.serial_no} &nbsp;|&nbsp; ${r.department}</div>
+      <div class="serial-tag">Ref: ${r.serial_no} &nbsp;&nbsp;|&nbsp;&nbsp; ${r.department}</div>
     </div>
   </div>
 
-  <!-- TITLE -->
   <div class="lh-title">${r.purpose}</div>
 
-  <!-- DATE & RECIPIENT -->
   <div class="lh-date-block">
-    <b>Date:</b> ${dateStr}<br>
+    <strong>Date:</strong> ${dateStr}<br>
     To,<br>
-    <b>${r.recipient},</b>
+    <strong>${r.recipient},</strong>
   </div>
 
-  <!-- SALUTATION -->
-  <div class="lh-salutation">Dear <b>${r.recipient},</b></div>
+  <div class="lh-salutation">Dear <strong>${r.recipient},</strong></div>
 
-  <!-- BODY -->
   <div class="lh-body">${formatBody(r.body || "This letter is issued on official company letterhead as per records.\n\nPlease contact the issuing department for further details.")}</div>
 
-  <!-- SIGN-OFF -->
   <div class="lh-signoff">Warm regards,</div>
-  <div class="lh-signoff-entity">For Panache Newage Technology Private Limited</div>
+  <div class="lh-entity">For Panache Newage Technology Private Limited</div>
   <div class="lh-sig-label">Authorised Signatory</div>
-  <div style="font-size:12px;color:#6b7280;margin-top:3px;">${r.issuedBy}${r.authorisedBy ? " &nbsp;|&nbsp; Auth: " + r.authorisedBy : ""}</div>
+  <div class="lh-sig-sub">${r.issuedBy}${r.authorisedBy ? " &nbsp;|&nbsp; Authorised by: " + r.authorisedBy : ""}</div>
 
-  <!-- FOOTER -->
   <div class="lh-footer">
-    <div class="co-name">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED</div>
-    <div class="co-formerly">(Formerly known as ICT Infratech Services Private Limited)</div>
-    <div class="co-details">
-      <b>Registered Office:</b> B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India<br>
-      <b>Contact No.:</b> +91 98207 47487 &nbsp;|&nbsp; <b>E-mail:</b> info@panachenewage.com &nbsp;|&nbsp; <b>Website:</b> www.panachenewage.com<br>
-      CIN: U74110MH2007PTC168503
+    <div class="footer-co-name">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED</div>
+    <div class="footer-formerly">(Formerly known as ICT Infratech Services Private Limited)</div>
+    <div class="footer-details">
+      <strong>Registered Office:</strong> B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India &nbsp;&nbsp;
+      <strong>Contact No.:</strong> +91 98207 47487 &nbsp;|&nbsp; <strong>E-mail:</strong> info@panachenewage.com &nbsp;|&nbsp; <strong>Website:</strong> www.panachenewage.com &nbsp;|&nbsp; CIN: U74110MH2007PTC168503
     </div>
   </div>
 
@@ -1058,14 +1077,12 @@
 
     function closeLogModal() {
         document.getElementById("logModal").classList.remove("active");
-        ["logSerial","logCategory","logDept","logPurpose","logRecipient","logIssuedBy","logAuthorisedBy","logRemarks"]
+        ["logDate","logCategory","logDept","logPurpose","logRecipient","logIssuedBy","logAuthorisedBy","logRemarks"]
             .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
     }
 
     async function logExisting() {
-        const serial      = document.getElementById("logSerial").value.trim();
         const dateIssued  = document.getElementById("logDate").value;
-        const category    = document.getElementById("logCategory").value;
         const dept        = document.getElementById("logDept").value;
         const purpose     = document.getElementById("logPurpose").value.trim();
         const recipient   = document.getElementById("logRecipient").value.trim();
@@ -1073,13 +1090,13 @@
         const authBy      = document.getElementById("logAuthorisedBy").value.trim();
         const remarks     = document.getElementById("logRemarks").value.trim();
 
-        if (!serial || !dateIssued || !category || !dept || !purpose || !recipient || !issuedBy) {
+        if (!dateIssued || !dept || !purpose || !recipient || !issuedBy) {
             showToast("Please fill all required fields.", "error"); return;
         }
 
         try {
             const params = new URLSearchParams({
-                serial_no: serial, date_issued: dateIssued, category,
+                date_issued: dateIssued,
                 department: dept, purpose, recipient,
                 issued_by: issuedBy, authorised_by: authBy,
                 remarks, issued_by_user_id: userId || ""
@@ -1088,7 +1105,7 @@
             const data = await res.json();
 
             if (data.success) {
-                showToast("Record logged successfully.", "success");
+                showToast(`Logged as ${data.serial_no}`, "success");
                 closeLogModal(); loadLetterheads();
             } else {
                 showToast(data.message || "Failed to log.", "error");
