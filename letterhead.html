@@ -820,13 +820,11 @@
 
     function closeGenerateModal() {
         document.getElementById("generateModal").classList.remove("active");
-        ["genCategory","genDept","genPurpose","genRecipient","genIssuedBy","genAuthorisedBy","genBody","genRemarks"]
+        ["genDept","genPurpose","genRecipient","genIssuedBy","genAuthorisedBy","genBody","genRemarks"]
             .forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; });
     }
 
     function updatePreviewName() {
-        const cat = document.getElementById("genCategory").value || "XX";
-        const serial = nextSerialVal || "????";
         document.getElementById("previewFileName").textContent = `${nextSerialVal || 'LH-00001'}.html`;
     }
 
