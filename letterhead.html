@@ -894,24 +894,22 @@
 
         function formatBody(text) {
             if (!text) return "";
-            let html = "";
-            let inList = false;
+            let html = ""; let inList = false;
             text.split("\n").forEach(line => {
                 const t = line.trim();
                 if (!t) {
                     if (inList) { html += "</ul>"; inList = false; }
-                    html += `<div style="height:10px;"></div>`;
-                    return;
+                    html += `<div style="height:8px;"></div>`; return;
                 }
                 if (/^\d+\./.test(t)) {
                     if (inList) { html += "</ul>"; inList = false; }
-                    html += `<p style="font-weight:700;font-size:13px;margin:18px 0 6px 0;">${t}</p>`;
+                    html += `<p style="font-weight:700;font-size:12.5px;margin:16px 0 5px 0;color:#1a3a6e;">${t}</p>`;
                 } else if (/^[•\-\*]/.test(t)) {
-                    if (!inList) { html += `<ul style="margin:4px 0 8px 24px;padding:0;">`; inList = true; }
-                    html += `<li style="margin-bottom:4px;line-height:1.7;">${t.replace(/^[•\-\*]\s*/,"")}</li>`;
+                    if (!inList) { html += `<ul style="margin:4px 0 8px 28px;padding:0;">`; inList = true; }
+                    html += `<li style="margin-bottom:5px;line-height:1.75;font-size:12.5px;">${t.replace(/^[•\-\*]\s*/,"")}</li>`;
                 } else {
                     if (inList) { html += "</ul>"; inList = false; }
-                    html += `<p style="font-size:13px;line-height:1.8;margin-bottom:10px;">${t}</p>`;
+                    html += `<p style="font-size:12.5px;line-height:1.85;margin-bottom:10px;color:#222;">${t}</p>`;
                 }
             });
             if (inList) html += "</ul>";
@@ -924,143 +922,257 @@
 <meta charset="UTF-8">
 <title>${r.serial_no} — Panache Newage</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
+  @page { size: A4 portrait; margin: 0; }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    font-family: Arial, sans-serif;
-    background: #e8eaf0;
+    font-family: 'Arial', sans-serif;
+    background: #d0d4dc;
     color: #1a1a1a;
-    font-size: 13px;
-    padding: 30px 0 60px 0;
+    padding: 36px 0 60px;
   }
 
-  .page {
-    width: 794px;
-    min-height: 1123px;
+  /* ── A4 SHEET ── */
+  .sheet {
+    width: 210mm;
+    min-height: 297mm;
     background: #fff;
     margin: 0 auto;
-    padding: 52px 64px 160px 64px;
     position: relative;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.13);
-  }
-
-  /* ── TOP LOGO ── */
-  .lh-top {
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 40px;
-  }
-  .lh-logo { text-align: right; line-height: 1.1; }
-  .brand-panache {
-    font-size: 32px; font-weight: 900; letter-spacing: 1px;
-    color: #1a3a6e;
-  }
-  .brand-panache .red { color: #e63329; }
-  .brand-newage {
-    font-size: 12px; font-weight: 700; letter-spacing: 7px;
-    color: #1a3a6e; margin-top: 2px;
-  }
-  .serial-tag {
-    font-size: 10px; color: #9ca3af; margin-top: 6px;
-    font-family: 'Courier New', monospace;
+    flex-direction: column;
   }
 
-  /* ── TITLE ── */
-  .lh-title {
-    text-align: center;
-    font-size: 15px;
-    font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  /* ── TOP COLOUR BAR ── */
+  .top-bar {
+    width: 100%;
+    height: 7px;
+    background: linear-gradient(90deg, #1a3a6e 0%, #2a5298 60%, #e63329 100%);
+    flex-shrink: 0;
+  }
+
+  /* ── HEADER ROW ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 22px 22mm 0 22mm;
+    flex-shrink: 0;
+  }
+
+  /* left: thin ref block */
+  .ref-block {
+    padding-top: 6px;
+  }
+  .ref-label {
+    font-size: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 36px;
+    letter-spacing: 1.2px;
+    color: #9ca3af;
+    font-weight: 600;
+  }
+  .ref-no {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a3a6e;
+    margin-top: 2px;
+  }
+  .ref-dept {
+    font-size: 9px;
+    color: #9ca3af;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
   }
 
-  /* ── DATE BLOCK ── */
-  .lh-date-block {
-    font-size: 13px;
-    line-height: 2;
-    margin-bottom: 24px;
+  /* right: logo */
+  .logo-block { text-align: right; line-height: 1; }
+  .logo-panache {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #1a3a6e;
+    font-family: Arial Black, Arial, sans-serif;
+  }
+  .logo-panache .r { color: #e63329; }
+  .logo-newage {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    color: #1a3a6e;
+    margin-top: 1px;
+    text-indent: 8px;
+  }
+
+  /* ── THIN RULE UNDER HEADER ── */
+  .header-rule {
+    margin: 14px 22mm 0 22mm;
+    height: 1.5px;
+    background: linear-gradient(90deg, #1a3a6e, #e8eaf0);
+    flex-shrink: 0;
+  }
+
+  /* ── CONTENT AREA ── */
+  .content {
+    flex: 1;
+    padding: 24px 22mm 0 22mm;
+  }
+
+  /* ── LETTER TITLE ── */
+  .letter-title {
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-decoration-color: #1a3a6e;
+    text-underline-offset: 5px;
+    margin-bottom: 26px;
+  }
+
+  /* ── DATE & ADDRESS ── */
+  .date-line {
+    font-size: 12.5px;
+    margin-bottom: 16px;
+    color: #222;
+  }
+  .address-block {
+    font-size: 12.5px;
+    line-height: 1.9;
+    margin-bottom: 20px;
+    color: #222;
   }
 
   /* ── SALUTATION ── */
-  .lh-salutation {
-    font-size: 13px;
-    margin-bottom: 18px;
+  .salutation {
+    font-size: 12.5px;
+    margin-bottom: 16px;
+    color: #222;
   }
 
   /* ── BODY ── */
-  .lh-body { margin-bottom: 32px; }
+  .body-text { margin-bottom: 28px; }
 
-  /* ── SIGN OFF ── */
-  .lh-signoff { font-size: 13px; margin-bottom: 8px; }
-  .lh-entity  { font-size: 13px; font-weight: 700; margin-bottom: 64px; }
-  .lh-sig-label { font-size: 13px; font-weight: 700; }
-  .lh-sig-sub   { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  /* ── SIGN-OFF ── */
+  .signoff { font-size: 12.5px; color: #222; margin-bottom: 6px; }
+  .signoff-entity {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 52px;
+  }
+  .sig-line {
+    width: 140px;
+    height: 1px;
+    background: #374151;
+    margin-bottom: 6px;
+  }
+  .sig-name  { font-size: 12.5px; font-weight: 700; color: #1a1a1a; }
+  .sig-title { font-size: 11px; color: #6b7280; margin-top: 2px; }
 
-  /* ── FOOTER (pinned to bottom of page) ── */
-  .lh-footer {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 14px 64px 20px 64px;
+  /* ── FOOTER ── */
+  .footer {
+    flex-shrink: 0;
+    margin-top: 32px;
     border-top: 3px solid #1a3a6e;
+    padding: 12px 22mm 18px 22mm;
     background: #fff;
   }
-  .footer-co-name {
-    font-size: 13px; font-weight: 900;
-    color: #1a3a6e; letter-spacing: 0.3px;
+  .footer-name {
+    font-size: 12px;
+    font-weight: 900;
+    color: #1a3a6e;
+    letter-spacing: 0.4px;
     margin-bottom: 2px;
   }
   .footer-formerly {
-    font-size: 9.5px; color: #9ca3af;
-    font-style: italic; margin-bottom: 5px;
+    font-size: 8.5px;
+    color: #9ca3af;
+    font-style: italic;
+    margin-bottom: 5px;
   }
   .footer-details {
-    font-size: 9.5px; color: #374151; line-height: 1.8;
+    font-size: 8.5px;
+    color: #4b5563;
+    line-height: 1.9;
+  }
+  .footer-details b { color: #374151; }
+
+  /* ── BOTTOM COLOUR BAR ── */
+  .bottom-bar {
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #e63329 0%, #2a5298 40%, #1a3a6e 100%);
+    flex-shrink: 0;
   }
 
   @media print {
     body { background: #fff; padding: 0; }
-    .page { box-shadow: none; width: 100%; min-height: 100vh; padding: 40px 56px 140px 56px; }
+    .sheet { box-shadow: none; width: 100%; min-height: 100vh; }
   }
 </style>
 </head>
 <body>
-<div class="page">
+<div class="sheet">
 
-  <div class="lh-top">
-    <div class="lh-logo">
-      <div class="brand-panache">PANACH<span class="red">ě</span></div>
-      <div class="brand-newage">N E W A G E</div>
-      <div class="serial-tag">Ref: ${r.serial_no} &nbsp;&nbsp;|&nbsp;&nbsp; ${r.department}</div>
+  <div class="top-bar"></div>
+
+  <!-- HEADER: ref left, logo right -->
+  <div class="header">
+    <div class="ref-block">
+      <div class="ref-label">Reference No.</div>
+      <div class="ref-no">${r.serial_no}</div>
+      <div class="ref-dept">${r.department} Department</div>
+    </div>
+    <div class="logo-block">
+      <div class="logo-panache">PANACH<span class="r">ě</span></div>
+      <div class="logo-newage">N E W A G E</div>
     </div>
   </div>
 
-  <div class="lh-title">${r.purpose}</div>
+  <div class="header-rule"></div>
 
-  <div class="lh-date-block">
-    <strong>Date:</strong> ${dateStr}<br>
-    To,<br>
-    <strong>${r.recipient},</strong>
+  <!-- CONTENT -->
+  <div class="content">
+
+    <div class="letter-title">${r.purpose}</div>
+
+    <div class="date-line"><strong>Date:</strong> ${dateStr}</div>
+
+    <div class="address-block">
+      To,<br>
+      <strong>${r.recipient}</strong>
+    </div>
+
+    <div class="salutation">Dear <strong>${r.recipient}</strong>,</div>
+
+    <div class="body-text">${formatBody(r.body || "This letter is issued on official company letterhead as per records.\n\nPlease contact the issuing department for further details.")}</div>
+
+    <div class="signoff">Warm regards,</div>
+    <div class="signoff-entity">For Panache Newage Technology Private Limited</div>
+
+    <div class="sig-line"></div>
+    <div class="sig-name">${r.issuedBy}</div>
+    <div class="sig-title">Authorised Signatory${r.authorisedBy ? " &nbsp;·&nbsp; Auth: " + r.authorisedBy : ""}</div>
+
   </div>
 
-  <div class="lh-salutation">Dear <strong>${r.recipient},</strong></div>
-
-  <div class="lh-body">${formatBody(r.body || "This letter is issued on official company letterhead as per records.\n\nPlease contact the issuing department for further details.")}</div>
-
-  <div class="lh-signoff">Warm regards,</div>
-  <div class="lh-entity">For Panache Newage Technology Private Limited</div>
-  <div class="lh-sig-label">Authorised Signatory</div>
-  <div class="lh-sig-sub">${r.issuedBy}${r.authorisedBy ? " &nbsp;|&nbsp; Authorised by: " + r.authorisedBy : ""}</div>
-
-  <div class="lh-footer">
-    <div class="footer-co-name">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED</div>
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-name">PANACHE NEWAGE TECHNOLOGY PRIVATE LIMITED</div>
     <div class="footer-formerly">(Formerly known as ICT Infratech Services Private Limited)</div>
     <div class="footer-details">
-      <strong>Registered Office:</strong> B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India &nbsp;&nbsp;
-      <strong>Contact No.:</strong> +91 98207 47487 &nbsp;|&nbsp; <strong>E-mail:</strong> info@panachenewage.com &nbsp;|&nbsp; <strong>Website:</strong> www.panachenewage.com &nbsp;|&nbsp; CIN: U74110MH2007PTC168503
+      <b>Registered Office:</b> B Wing, 507 B, Raheja Plaza Premises CSL, L.B.S Marg, Ghatkopar West, Mumbai 400 086, Maharashtra, India<br>
+      <b>Contact No.:</b> +91 98207 47487 &nbsp;|&nbsp; <b>E-mail:</b> info@panachenewage.com &nbsp;|&nbsp; <b>Website:</b> www.panachenewage.com &nbsp;|&nbsp; CIN: U74110MH2007PTC168503
     </div>
   </div>
+
+  <div class="bottom-bar"></div>
 
 </div>
 </body>
