@@ -365,10 +365,10 @@
                 <tr>
                     <th>Serial No.</th>
                     <th>Date Issued</th>
+                    <th>Issued By</th>
                     <th>Issued To / Recipient</th>
                     <th>Purpose / Subject</th>
                     <th>Department</th>
-                    <th>Issued By</th>
                     <th>Authorised By</th>
                     <th>Remarks</th>
                     <th>Actions</th>
@@ -760,10 +760,10 @@
             <tr style="${voided ? "opacity:0.55;" : ""}">
                 <td><span class="serial-no">${r.serial_no}</span></td>
                 <td>${formatDate(r.date_issued)}</td>
+                <td>${r.issued_by || "—"}</td>
                 <td>${r.recipient || "—"}</td>
                 <td style="max-width:200px;">${r.purpose}</td>
                 <td><span class="badge badge-gray">${r.department || "—"}</span></td>
-                <td>${r.issued_by || "—"}</td>
                 <td>${r.authorised_by || "—"}</td>
                 <td style="max-width:140px;font-size:13px;color:#6b7280;">${r.remarks || "—"}</td>
                 <td>
@@ -927,7 +927,12 @@
 <style>
   @page { size: A4 portrait; margin: 0; }
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 
   body {
     font-family: 'Arial', sans-serif;
@@ -1118,6 +1123,11 @@
     body { background: #fff; padding: 0; }
     .sheet { box-shadow: none; width: 100%; min-height: 100vh; }
     .print-tip { display: none !important; }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
   }
 </style>
 </head>
@@ -1142,7 +1152,7 @@
   });
   // Close tab after print/cancel
   window.onafterprint = () => window.close();
-<\/script>
+</script>
 <div class="sheet">
 
   <div class="top-bar"></div>
