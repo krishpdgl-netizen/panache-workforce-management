@@ -261,6 +261,57 @@
             .sidebar { width: 200px; }
             .main { margin-left: 200px; width: calc(100% - 200px); }
         }
+
+        /* REMINDER WIDGET + BELL */
+        .reminder-widget {
+            background: white; padding: 20px 22px; border-radius: 15px;
+            margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
+        .reminder-widget-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+        }
+        .reminder-widget-header h2 { font-size: 17px; color: #111827; }
+        .reminder-widget-header a { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }
+        .reminder-list { display: flex; flex-direction: column; gap: 10px; }
+        .reminder-item {
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            border-radius: 10px; background: #f9fafb; border-left: 4px solid #d1d5db;
+        }
+        .reminder-item.crit  { border-left-color: #dc2626; background: #fef2f2; }
+        .reminder-item.high  { border-left-color: #f97316; background: #fff7ed; }
+        .reminder-item.med   { border-left-color: #f59e0b; background: #fffbeb; }
+        .reminder-item.low   { border-left-color: #6b7280; }
+        .reminder-dot { font-size: 16px; line-height:1; flex-shrink:0; }
+        .reminder-item-body { flex: 1; min-width:0; }
+        .reminder-item-title { font-weight: 600; color: #111827; font-size: 14px; }
+        .reminder-item-sub { font-size: 12px; color: #6b7280; }
+        .reminder-item-amt { font-size: 13px; font-weight: 700; color: #111827; white-space:nowrap; }
+
+        .bell-wrap { position: relative; }
+        .bell-btn {
+            width: 42px; height: 42px; border-radius: 50%; background: white;
+            border: 1px solid #e5e7eb; cursor: pointer; font-size: 18px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .bell-btn:hover { background: #f3f4f6; }
+        .bell-count {
+            position: absolute; top: -4px; right: -4px; background: #dc2626; color: white;
+            font-size: 10px; font-weight: 700; border-radius: 99px; min-width: 17px; height: 17px;
+            display: flex; align-items: center; justify-content: center; padding: 0 4px;
+        }
+        .bell-dropdown {
+            display: none; position: absolute; top: 50px; right: 0; width: 340px;
+            max-height: 420px; overflow-y: auto; background: white; border-radius: 12px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.18); z-index: 2000; padding: 10px;
+        }
+        .bell-dropdown.active { display: block; }
+        .bell-dropdown-header { font-weight: 700; font-size: 13px; color: #111827; padding: 6px 8px 10px; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
+        .bell-item { padding: 9px 8px; border-radius: 8px; font-size: 13px; }
+        .bell-item:hover { background: #f9fafb; }
+        .bell-item-title { font-weight: 600; color: #111827; }
+        .bell-item-sub { font-size: 12px; color: #6b7280; margin-top:2px; }
+        .bell-empty { text-align:center; padding: 30px 10px; color: #9ca3af; font-size: 13px; }
+
     </style>
 </head>
 
@@ -278,6 +329,7 @@
         <a href="employee-hub.html">Employee Hub</a>
         <a href="letterhead.html">Letter head manager</a>
         <a href="attendance.html">Attendance manager</a>
+        <a href="reminder.html">Reminders</a>
 
     </div>
 <!-- ── PERSONAL TO-DO ─────────────────────────────── -->
@@ -367,11 +419,26 @@
                 <span id="profileEmail"></span><br>
                 <span id="profileId"></span>
             </div>
+            <div class="bell-wrap" id="bellWrap">
+                <button class="bell-btn" onclick="toggleBellDropdown()">🔔<span class="bell-count" id="bellCount" style="display:none;"></span></button>
+                <div class="bell-dropdown" id="bellDropdown"></div>
+            </div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <!-- CARDS -->
+    <!-- REMINDER WIDGET -->
+    <div class="reminder-widget">
+        <div class="reminder-widget-header">
+            <h2>🔔 Upcoming Reminders</h2>
+            <a href="reminder.html">View All</a>
+        </div>
+        <div class="reminder-list" id="reminderWidgetList">
+            <div style="color:#9ca3af;font-size:14px;">Loading reminders...</div>
+        </div>
+    </div>
+
     <div class="cards">
         <div class="card">
             <h2 id="assignedTasks">—</h2>
@@ -898,5 +965,97 @@ async function respondTeamRequest(requestId, action, btn) {
 
 loadTeamRequests();
 </script>
+
+<script>
+(function() {
+    const RBASE = "https://backend-production-53f3.up.railway.app";
+    const ruid  = localStorage.getItem("userId");
+    const rrole = localStorage.getItem("userRole") || "employee";
+    if (!ruid) return;
+
+    function priorityClass(p) {
+        if (p === "Critical") return "crit";
+        if (p === "High") return "high";
+        if (p === "Medium") return "med";
+        return "low";
+    }
+    function dot(p) {
+        if (p === "Critical" || p === "High") return "🔴";
+        if (p === "Medium") return "🟠";
+        return "🟡";
+    }
+    function lineFor(days) {
+        if (days < 0) return `Overdue by ${Math.abs(days)} day(s)`;
+        if (days === 0) return "Due Today";
+        if (days === 1) return "Due Tomorrow";
+        return `Due in ${days} Days`;
+    }
+
+    async function loadWidgetAndBell() {
+        let items = [];
+        try {
+            const res = await fetch(`${RBASE}/reminders/today?user_id=${ruid}&role=${rrole}`);
+            items = await res.json();
+        } catch (e) { items = []; }
+
+        renderWidget(items);
+        renderBell(items);
+    }
+
+    function renderWidget(items) {
+        const list = document.getElementById("reminderWidgetList");
+        if (!list) return;
+        if (!items || items.length === 0) {
+            list.innerHTML = `<div style="color:#9ca3af;font-size:14px;padding:6px 2px;">No reminders today.</div>`;
+            return;
+        }
+        list.innerHTML = items.slice(0, 6).map(r => `
+            <div class="reminder-item ${priorityClass(r.priority)}">
+                <span class="reminder-dot">${dot(r.priority)}</span>
+                <div class="reminder-item-body">
+                    <div class="reminder-item-title">${r.title}</div>
+                    <div class="reminder-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
+                </div>
+                ${r.amount ? `<div class="reminder-item-amt">₹${Number(r.amount).toLocaleString("en-IN")}</div>` : ""}
+            </div>
+        `).join("");
+    }
+
+    function renderBell(items) {
+        const countEl = document.getElementById("bellCount");
+        const dropEl  = document.getElementById("bellDropdown");
+        if (!countEl || !dropEl) return;
+
+        if (!items || items.length === 0) {
+            countEl.style.display = "none";
+            dropEl.innerHTML = `<div class="bell-dropdown-header">Notifications</div><div class="bell-empty">No reminders today.</div>`;
+            return;
+        }
+        countEl.style.display = "flex";
+        countEl.innerText = items.length > 9 ? "9+" : items.length;
+
+        dropEl.innerHTML = `<div class="bell-dropdown-header">Reminders & Notifications</div>` +
+            items.map(r => `
+                <div class="bell-item" onclick="window.location.href='reminder.html'">
+                    <div class="bell-item-title">${dot(r.priority)} ${r.title}</div>
+                    <div class="bell-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
+                </div>
+            `).join("");
+    }
+
+    window.toggleBellDropdown = function() {
+        document.getElementById("bellDropdown").classList.toggle("active");
+    };
+    document.addEventListener("click", function(e) {
+        const wrap = document.getElementById("bellWrap");
+        if (wrap && !wrap.contains(e.target)) {
+            document.getElementById("bellDropdown").classList.remove("active");
+        }
+    });
+
+    loadWidgetAndBell();
+})();
+</script>
+
 </body>
 </html>
