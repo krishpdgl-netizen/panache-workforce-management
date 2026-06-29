@@ -237,15 +237,17 @@
                 <span id="todayDateLabel" style="font-size:14px;color:#6b7280;"></span>
             </div>
             <!-- PUNCH IN / OUT CARD -->
-            <div id="punchCard" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
-                <div>
-                    <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Current Time (IST)</div>
-                    <div id="liveClock" style="font-size:28px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;">--:--:--</div>
-                </div>
-                <div id="punchStatus" style="font-size:14px;color:#6b7280;">Loading…</div>
-                <div style="display:flex;gap:10px;">
-                    <button id="btnCheckin"  class="btn-primary"  onclick="doPunch('in')"  style="display:none;padding:12px 28px;font-size:15px;">🟢 Punch In</button>
-                    <button id="btnCheckout" class="btn-success"  onclick="doPunch('out')" style="display:none;padding:12px 28px;font-size:15px;">🔴 Punch Out</button>
+            <div id="punchCard" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:18px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+                    <div>
+                        <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Current Time (IST)</div>
+                        <div id="liveClock" style="font-size:28px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;">--:--:--</div>
+                    </div>
+                    <div id="punchStatus" style="font-size:14px;color:#6b7280;">Loading…</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button id="btnCheckin"  class="btn-primary"  onclick="doPunch('in')"  style="display:none;padding:12px 28px;font-size:15px;">🟢 Punch In</button>
+                        <button id="btnCheckout" class="btn-success"  onclick="doPunch('out')" style="display:none;padding:12px 28px;font-size:15px;">🔴 Punch Out</button>
+                    </div>
                 </div>
             </div>
             <div id="todayBox"></div>
@@ -824,16 +826,31 @@ async function loadPunchState() {
     const rec   = rows.find(r => String(r.emp_id) === String(EMP_ID)) || null;
 
     if (!rec || !rec.check_in) {
+        // Not checked in yet — show Punch In
         statusEl.innerHTML = `<span style="color:#f59e0b;font-weight:600;">⏳ Not checked in yet</span>`;
         btnIn.style.display  = "inline-block";
         btnOut.style.display = "none";
     } else if (rec.check_in && !rec.check_out) {
+        // Checked in, not out yet — show Punch Out
         statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:#f59e0b;font-size:13px;">⚠️ ${rec.late_minutes} min late</span>`:""}`;
         btnIn.style.display  = "none";
         btnOut.style.display = "inline-block";
     } else {
-        statusEl.innerHTML = `<span style="color:#6b7280;font-weight:600;">✅ Checked in: <b>${rec.check_in}</b> &nbsp;|&nbsp; Checked out: <b>${rec.check_out}</b></span><br><span style="color:#2563eb;font-size:13px;">Hours: ${rec.working_hours||"—"}${rec.overtime>0?" · OT: "+rec.overtime+"h":""}</span>`;
-        btnIn.style.display  = "none";
+        // Both check_in and check_out exist — show summary but still allow Punch In
+        // (backend now supports re-punch which resets the day cleanly)
+        statusEl.innerHTML = `
+            <div>
+                <span style="color:#6b7280;font-weight:600;">
+                    ✅ Checked in: <b>${rec.check_in}</b> &nbsp;|&nbsp; Checked out: <b>${rec.check_out}</b>
+                </span><br>
+                <span style="color:#2563eb;font-size:13px;">
+                    Hours: ${rec.working_hours||"—"}${rec.overtime>0?" · OT: "+rec.overtime+"h":""}
+                </span><br>
+                <span style="color:#9ca3af;font-size:12px;">
+                    Punching in again will restart today's record.
+                </span>
+            </div>`;
+        btnIn.style.display  = "inline-block";
         btnOut.style.display = "none";
     }
 }
@@ -1036,9 +1053,9 @@ async function renderAttendanceTable() {
         <td>${r.working_hours||"—"}</td><td>${statusBadge(r.status)}</td>
         <td>${r.late_minutes||0} min</td><td>${r.overtime||0}h</td>
         <td style="font-size:13px;">${r.remarks||"—"}</td>
-        <td>
+        <td style="white-space:nowrap;">
             <button class="btn-warning" onclick="editAttendance(${r.id})" style="margin-right:4px;">Edit</button>
-            <button class="btn-danger" onclick="deleteAttendance(${r.id})">Delete</button>
+            <button class="btn-danger"  onclick="deleteAttendance(${r.id})">Delete</button>
         </td>
     </tr>`).join("");
 }
