@@ -357,30 +357,37 @@
         setTimeout(() => t.classList.remove("show"), 3000);
     }
 
-    // ── LOAD EMPLOYEES INTO DROPDOWN ─────────────────────────
+    // ── LOAD TEAM MEMBERS INTO DROPDOWN ─────────────────────
     async function loadEmployees() {
+        const managerId = localStorage.getItem("userId");
+        if (!managerId) { showToast("Session expired. Please log in again."); return; }
+
         try {
-            const res       = await fetch(`${BASE}/employees`);
-            const employees = await res.json();
-            const select    = document.getElementById("taskAssignedTo");
+            const res     = await fetch(`${BASE}/team?manager_id=${managerId}`);
+            const members = await res.json();
+            const select  = document.getElementById("taskAssignedTo");
 
-            select.innerHTML = '<option value="">Select employee...</option>';
+            if (!Array.isArray(members) || members.length === 0) {
+                select.innerHTML = '<option value="">No team members found</option>';
+                showToast("No team members assigned to you yet.");
+                return;
+            }
 
-            employees.forEach(emp => {
-                const opt   = document.createElement("option");
-                opt.value   = emp.id;                               // sends user_id to backend
+            select.innerHTML = '<option value="">Select team member...</option>';
+
+            members.forEach(emp => {
+                const opt       = document.createElement("option");
+                opt.value       = emp.id;
                 opt.textContent = `${emp.full_name} (ID: ${emp.id})`;
                 select.appendChild(opt);
             });
 
-            // Show AI box once employees are loaded
-            if (employees.length > 0) {
-                showAIRecommendation(employees);
-            }
+            // Show AI box once team is loaded
+            showAIRecommendation(members);
 
         } catch (e) {
             console.error("loadEmployees error:", e);
-            showToast("Could not load employee list.");
+            showToast("Could not load team members. Please refresh.");
         }
     }
 
