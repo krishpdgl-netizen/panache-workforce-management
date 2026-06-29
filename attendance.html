@@ -640,9 +640,26 @@ let CORR_WINDOW_HRS = 24; // fetched from /attendance/settings on init
 
 const role     = localStorage.getItem("userRole") || "employee";
 const userObj  = JSON.parse(localStorage.getItem("currentUser") || "{}");
-const EMP_ID   = String(userObj.id || userObj.employeeId || "");
-const EMP_NAME = userObj.name || userObj.full_name || "Employee";
+// Support all key variants different pages might store: id / user_id / employeeId / emp_id
+const EMP_ID   = String(
+    userObj.id          ||
+    userObj.user_id     ||
+    userObj.employeeId  ||
+    userObj.emp_id      ||
+    // Also check if currentUser was stored as { user: { id } }
+    (userObj.user && (userObj.user.id || userObj.user.user_id)) ||
+    ""
+);
+// Support all name key variants
+const EMP_NAME = userObj.name || userObj.full_name || userObj.fullName ||
+    userObj.employee_name ||
+    (userObj.user && (userObj.user.name || userObj.user.full_name)) ||
+    "Employee";
 const isAdmin  = ["admin","hr","super_admin"].includes(role);
+
+// Debug: log what's in localStorage so we can diagnose session issues
+console.log("[Attendance] currentUser from localStorage:", userObj);
+console.log("[Attendance] Resolved EMP_ID:", EMP_ID, "| EMP_NAME:", EMP_NAME, "| role:", role);
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -806,7 +823,8 @@ async function loadPunchState() {
 
     // Guard: EMP_ID must be a valid non-empty value
     if (!EMP_ID) {
-        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">⚠️ Session error — please log out and log in again.</span>`;
+        const storedKeys = Object.keys(userObj).join(", ") || "none";
+        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">⚠️ Session error: employee ID not found.<br><span style="font-size:12px;font-weight:400;">Stored keys: [${storedKeys}]. Please log out and log in again.</span></span>`;
         btnIn.style.display  = "none";
         btnOut.style.display = "none";
         return;
