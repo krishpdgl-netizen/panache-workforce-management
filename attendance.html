@@ -696,10 +696,16 @@ function closeModal(id) { document.getElementById(id).classList.remove("active")
 async function api(path, opts={}) {
     try {
         const r = await fetch(API+path, { headers:{"Content-Type":"application/json"}, ...opts });
+        if (!r.ok) {
+            console.error(`API ${path} returned ${r.status}`);
+            // Try to parse error body, fall back to status text
+            try { return await r.json(); } catch { return {success:false, message:`Server error ${r.status}`}; }
+        }
         return await r.json();
     } catch(e) {
-        console.error(path, e);
-        return null;
+        // Network error = server is down or CORS blocked
+        console.error(`API ${path} network error:`, e.message);
+        return {success:false, message:"Cannot reach server. Check your connection or try again shortly."};
     }
 }
 
@@ -861,7 +867,26 @@ async function doPunch(type) {
     btnIn.disabled = btnOut.disabled = true;
 
     const endpoint = type === "in" ? "/attendance/checkin" : "/attendance/checkout";
-    const res = await api(`${endpoint}?emp_id=${EMP_ID}`, {method:"POST"});
+    let res = await api(`${endpoint}?emp_id=${EMP_ID}`, {method:"POST"});
+
+    // If already checked in, use PUT to overwrite the existing record cleanly
+    if (res && !res.success && res.already_checked_in && res.record_id && type === "in") {
+        const now = new Date();
+        const ist = new Date(now.toLocaleString("en-US", {timeZone:"Asia/Kolkata"}));
+        const ci  = String(ist.getHours()).padStart(2,"0") + ":" + String(ist.getMinutes()).padStart(2,"0");
+        res = await api(`/attendance/${res.record_id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                check_in: ci,
+                check_out: null,
+                working_hours: null,
+                overtime: 0,
+                status: "Present",
+                source: "self"
+            })
+        });
+        if (res?.success) res.message = `Punched in at ${ci}`;
+    }
 
     btnIn.disabled = btnOut.disabled = false;
 
@@ -870,7 +895,7 @@ async function doPunch(type) {
         await loadPunchState();
         renderMyAttendance();
     } else {
-        showToast(res?.message || "Error. Try again.", "error");
+        showToast(res?.message || "Server error. Please try again.", "error");
     }
 }
 
