@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Data | Panache</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role || role !== "admin") { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body { display: flex; background: #f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px; height: 100vh; background: #111827; color: white;
+            position: fixed; left: 0; top: 0; padding: 20px; overflow-y: auto;
+        }
+        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
+        .menu a {
+            display: block; color: white; text-decoration: none;
+            padding: 12px; margin-bottom: 8px; border-radius: 8px; transition: 0.3s;
+        }
+        .menu a:hover, .menu a.active { background: #2563eb; }
+        .logout-btn {
+            background: #dc2626; color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 12px;
+        }
+        .logout-btn:hover { background: #b91c1c; }
+
+        /* MAIN */
+        .main { margin-left: 260px; width: 100%; padding: 30px; }
+
+        .header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 30px;
+        }
+        .header h1 { color: #111827; font-size: 26px; }
+        .profile {
+            background: white; padding: 10px 20px;
+            border-radius: 10px; font-weight: bold; font-size: 14px;
+        }
+
+        /* PAGE DESCRIPTION */
+        .page-desc {
+            background: #eff6ff; border-left: 5px solid #2563eb;
+            padding: 16px 20px; border-radius: 10px; margin-bottom: 28px;
+            font-size: 14px; color: #1e40af;
+        }
+        .page-desc b { display: block; font-size: 15px; margin-bottom: 4px; }
+
+        /* CATEGORY GROUPS */
+        .group {
+            background: white; border-radius: 16px;
+            padding: 24px 26px; margin-bottom: 22px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.07);
+        }
+        .group-header {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 18px; padding-bottom: 14px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .group-header .icon { font-size: 22px; }
+        .group-header h2 { font-size: 16px; color: #111827; font-weight: 700; }
+        .group-header .count {
+            background: #f3f4f6; color: #6b7280; font-size: 12px;
+            font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-left: auto;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        /* DOWNLOAD BUTTON */
+        .dl-btn {
+            display: flex; align-items: center; gap: 12px;
+            background: #f9fafb; border: 1.5px solid #e5e7eb;
+            border-radius: 12px; padding: 14px 16px; cursor: pointer;
+            transition: all 0.2s; text-align: left; text-decoration: none;
+            color: #111827; position: relative; overflow: hidden;
+        }
+        .dl-btn:hover {
+            border-color: #2563eb; background: #eff6ff;
+            transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.12);
+        }
+        .dl-btn:active { transform: translateY(0); }
+        .dl-btn.loading {
+            pointer-events: none; border-color: #93c5fd; background: #dbeafe;
+        }
+        .dl-btn .btn-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: #e0e7ff; display: flex; align-items: center;
+            justify-content: center; font-size: 18px; flex-shrink: 0;
+        }
+        .dl-btn .btn-text { flex: 1; min-width: 0; }
+        .dl-btn .btn-label { font-weight: 600; font-size: 14px; color: #111827; }
+        .dl-btn .btn-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .dl-btn .dl-arrow {
+            font-size: 16px; color: #9ca3af; transition: color 0.2s;
+        }
+        .dl-btn:hover .dl-arrow { color: #2563eb; }
+
+        /* Spinner inside button */
+        .spinner {
+            display: none; width: 18px; height: 18px;
+            border: 2px solid #93c5fd; border-top-color: #2563eb;
+            border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
+        }
+        .dl-btn.loading .dl-arrow { display: none; }
+        .dl-btn.loading .spinner { display: block; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px; background: #111827;
+            color: white; padding: 14px 22px; border-radius: 10px; font-size: 14px;
+            opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 9999;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background: #15803d; }
+        .toast.error   { background: #dc2626; }
+
+        /* DOWNLOAD ALL STRIP */
+        .dl-all-bar {
+            background: #111827; border-radius: 14px; padding: 20px 26px;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+        }
+        .dl-all-bar p { color: #d1d5db; font-size: 14px; }
+        .dl-all-bar b { color: white; display: block; font-size: 16px; margin-bottom: 3px; }
+        .dl-all-btn {
+            background: #2563eb; color: white; border: none; padding: 12px 24px;
+            border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+            white-space: nowrap; display: flex; align-items: center; gap: 8px;
+        }
+        .dl-all-btn:hover { background: #1d4ed8; }
+        .dl-all-btn:disabled { background: #4b5563; cursor: not-allowed; }
+
+        /* Progress bar for download all */
+        .progress-wrap { display: none; margin-bottom: 22px; }
+        .progress-wrap.show { display: block; }
+        .progress-label { font-size: 13px; color: #374151; margin-bottom: 6px; font-weight: 500; }
+        .progress-bar-bg { background: #e5e7eb; border-radius: 99px; height: 8px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: #2563eb; border-radius: 99px; transition: width 0.3s; width: 0%; }
+
+        @media (max-width: 900px) {
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">Panache WMS</div>
+    <div class="menu">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="admin-export.html" class="active">Export Data</a>
+        <a href="team-members.html">Team Members</a>
+        <a href="reports.html">Reports</a>
+        <a href="settings.html">Settings</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="reminder.html">Reminders</a>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="header">
+        <h1>📥 Export Data</h1>
+        <div class="profile">
+            <b id="profileName">Loading...</b>
+            <span id="profileEmail" style="font-weight:normal;font-size:13px;color:#6b7280;"></span>
+        </div>
+    </div>
+
+    <div class="page-desc">
+        <b>Download any database table as an Excel file</b>
+        Click a table button to instantly download that table's data. Each file is formatted with auto-sized columns and named with today's date.
+    </div>
+
+    <!-- SALES PROJECTIONS (Excel file, not SQL) -->
+    <div class="group" style="border: 2px solid #d1fae5; background: #f0fdf4;">
+        <div class="group-header" style="border-bottom-color: #d1fae5;">
+            <span class="icon">📈</span>
+            <h2 style="color: #15803d;">Sales Projections</h2>
+            <span class="count" style="background:#d1fae5;color:#15803d;">Live Excel file</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="downloadSales()" style="border-color:#86efac;background:#f0fdf4;" id="salesBtn">
+                <div class="btn-icon" style="background:#dcfce7;">📊</div>
+                <div class="btn-text">
+                    <div class="btn-label">Sales Tracker</div>
+                    <div class="btn-sub">All weeks · projections &amp; actuals</div>
+                </div>
+                <div class="dl-arrow" style="color:#16a34a;">⬇</div>
+                <div class="spinner" style="border-color:#86efac;border-top-color:#16a34a;"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- DOWNLOAD ALL -->
+    <div class="dl-all-bar">
+        <div>
+            <b>📦 Download Everything</b>
+            <p>Export all tables into a single Excel workbook — one sheet per table.</p>
+        </div>
+        <button class="dl-all-btn" id="dlAllBtn" onclick="downloadAll()">
+            ⬇ Download All Tables
+        </button>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label" id="progressLabel">Preparing...</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+    </div>
+
+    <!-- GROUP: PEOPLE -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">👥</span>
+            <h2>People</h2>
+            <span class="count">2 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('users')">
+                <div class="btn-icon">👤</div>
+                <div class="btn-text">
+                    <div class="btn-label">Users</div>
+                    <div class="btn-sub">All user accounts &amp; roles</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('team_members')">
+                <div class="btn-icon">🤝</div>
+                <div class="btn-text">
+                    <div class="btn-label">Team Members</div>
+                    <div class="btn-sub">Manager–employee mappings</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: TASKS -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">✅</span>
+            <h2>Tasks</h2>
+            <span class="count">3 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('tasks')">
+                <div class="btn-icon">📋</div>
+                <div class="btn-text">
+                    <div class="btn-label">Tasks</div>
+                    <div class="btn-sub">All assigned tasks &amp; statuses</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('task_history')">
+                <div class="btn-icon">📜</div>
+                <div class="btn-text">
+                    <div class="btn-label">Task History</div>
+                    <div class="btn-sub">Status change log</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('task_remarks')">
+                <div class="btn-icon">💬</div>
+                <div class="btn-text">
+                    <div class="btn-label">Task Remarks</div>
+                    <div class="btn-sub">Manager corrections &amp; notes</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: ATTENDANCE -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">🕐</span>
+            <h2>Attendance</h2>
+            <span class="count">5 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('attendance')">
+                <div class="btn-icon">📅</div>
+                <div class="btn-text">
+                    <div class="btn-label">Attendance</div>
+                    <div class="btn-sub">Daily check-in/out records</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('attendance_audit')">
+                <div class="btn-icon">🔍</div>
+                <div class="btn-text">
+                    <div class="btn-label">Attendance Audit</div>
+                    <div class="btn-sub">Audit trail for changes</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('attendance_corrections')">
+                <div class="btn-icon">✏️</div>
+                <div class="btn-text">
+                    <div class="btn-label">Corrections</div>
+                    <div class="btn-sub">Approved time corrections</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('attendance_settings')">
+                <div class="btn-icon">⚙️</div>
+                <div class="btn-text">
+                    <div class="btn-label">Attendance Settings</div>
+                    <div class="btn-sub">Work hour configuration</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('correction_timeline')">
+                <div class="btn-icon">⏱️</div>
+                <div class="btn-text">
+                    <div class="btn-label">Correction Timeline</div>
+                    <div class="btn-sub">Correction request history</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: PAYROLL -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">💰</span>
+            <h2>Payroll</h2>
+            <span class="count">4 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('payroll')">
+                <div class="btn-icon">💵</div>
+                <div class="btn-text">
+                    <div class="btn-label">Payroll</div>
+                    <div class="btn-sub">Monthly payroll records</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('salary_structure')">
+                <div class="btn-icon">📊</div>
+                <div class="btn-text">
+                    <div class="btn-label">Salary Structure</div>
+                    <div class="btn-sub">CTC components per employee</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('payslips')">
+                <div class="btn-icon">🧾</div>
+                <div class="btn-text">
+                    <div class="btn-label">Payslips</div>
+                    <div class="btn-sub">Generated payslip records</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('payroll_locks')">
+                <div class="btn-icon">🔒</div>
+                <div class="btn-text">
+                    <div class="btn-label">Payroll Locks</div>
+                    <div class="btn-sub">Locked payroll months</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: LEAVE & HR -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">🏖️</span>
+            <h2>Leave &amp; HR</h2>
+            <span class="count">2 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('leave_requests')">
+                <div class="btn-icon">📝</div>
+                <div class="btn-text">
+                    <div class="btn-label">Leave Requests</div>
+                    <div class="btn-sub">All leave applications</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('employee_voice')">
+                <div class="btn-icon">🎤</div>
+                <div class="btn-text">
+                    <div class="btn-label">Employee Voice</div>
+                    <div class="btn-sub">Feedback &amp; suggestions</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: CALENDAR & MEETINGS -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">📆</span>
+            <h2>Calendar &amp; Meetings</h2>
+            <span class="count">3 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('calendar_tasks')">
+                <div class="btn-icon">🗓️</div>
+                <div class="btn-text">
+                    <div class="btn-label">Calendar Tasks</div>
+                    <div class="btn-sub">Personal calendar entries</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('meetings')">
+                <div class="btn-icon">🤝</div>
+                <div class="btn-text">
+                    <div class="btn-label">Meetings</div>
+                    <div class="btn-sub">Scheduled meetings</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('meeting_attendees')">
+                <div class="btn-icon">🙋</div>
+                <div class="btn-text">
+                    <div class="btn-label">Meeting Attendees</div>
+                    <div class="btn-sub">Who attended each meeting</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- GROUP: OTHER -->
+    <div class="group">
+        <div class="group-header">
+            <span class="icon">📁</span>
+            <h2>Other</h2>
+            <span class="count">5 tables</span>
+        </div>
+        <div class="btn-grid">
+            <button class="dl-btn" onclick="download('reminders')">
+                <div class="btn-icon">🔔</div>
+                <div class="btn-text">
+                    <div class="btn-label">Reminders</div>
+                    <div class="btn-sub">All reminder entries</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('holidays')">
+                <div class="btn-icon">🎉</div>
+                <div class="btn-text">
+                    <div class="btn-label">Holidays</div>
+                    <div class="btn-sub">Company holiday list</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('holiday_date')">
+                <div class="btn-icon">📆</div>
+                <div class="btn-text">
+                    <div class="btn-label">Holiday Dates</div>
+                    <div class="btn-sub">Individual holiday dates</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('letterheads')">
+                <div class="btn-icon">📄</div>
+                <div class="btn-text">
+                    <div class="btn-label">Letterheads</div>
+                    <div class="btn-sub">Generated letters</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+            <button class="dl-btn" onclick="download('letterhead_serial_counter')">
+                <div class="btn-icon">🔢</div>
+                <div class="btn-text">
+                    <div class="btn-label">Serial Counter</div>
+                    <div class="btn-sub">Letter serial number tracker</div>
+                </div>
+                <div class="dl-arrow">⬇</div>
+                <div class="spinner"></div>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const BASE = "https://backend-production-53f3.up.railway.app";
+
+    document.getElementById("profileName").textContent  = localStorage.getItem("userName") || "Admin";
+    document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "";
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+    function showToast(msg, type = "") {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className = "toast show" + (type ? " " + type : "");
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.className = "toast", 3500);
+    }
+
+    // ── SINGLE TABLE DOWNLOAD ────────────────────────────────
+    async function download(tableName) {
+        // Find the button that triggered this
+        const btn = document.querySelector(`button[onclick="download('${tableName}')"]`);
+        if (btn) btn.classList.add("loading");
+
+        try {
+            const res = await fetch(`${BASE}/admin/export/${tableName}`);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Server error ${res.status}`);
+            }
+
+            const blob = await res.blob();
+            const today = new Date().toISOString().slice(0, 10);
+            const url   = URL.createObjectURL(blob);
+            const a     = document.createElement("a");
+            a.href      = url;
+            a.download  = `${tableName}_${today}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`✓ ${tableName}.xlsx downloaded`, "success");
+        } catch (e) {
+            console.error("Export error:", e);
+            showToast(`✗ Failed: ${e.message}`, "error");
+        } finally {
+            if (btn) btn.classList.remove("loading");
+        }
+    }
+
+    // ── DOWNLOAD ALL TABLES ──────────────────────────────────
+    const ALL_TABLES = [
+        "users", "team_members",
+        "tasks", "task_history", "task_remarks",
+        "attendance", "attendance_audit", "attendance_corrections",
+        "attendance_settings", "correction_timeline",
+        "payroll", "salary_structure", "payslips", "payroll_locks",
+        "leave_requests", "employee_voice",
+        "calendar_tasks", "meetings", "meeting_attendees",
+        "reminders", "holidays", "holiday_date",
+        "letterheads", "letterhead_serial_counter"
+    ];
+
+    async function downloadAll() {
+        const btn       = document.getElementById("dlAllBtn");
+        const wrap      = document.getElementById("progressWrap");
+        const bar       = document.getElementById("progressBar");
+        const label     = document.getElementById("progressLabel");
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Downloading...";
+        wrap.classList.add("show");
+
+        const today   = new Date().toISOString().slice(0, 10);
+        let completed = 0;
+        const errors  = [];
+
+        for (const table of ALL_TABLES) {
+            const pct = Math.round((completed / ALL_TABLES.length) * 100);
+            bar.style.width   = pct + "%";
+            label.textContent = `Downloading: ${table} (${completed + 1} / ${ALL_TABLES.length})`;
+
+            try {
+                const res = await fetch(`${BASE}/admin/export/${table}`);
+                if (!res.ok) throw new Error(`${table}: server error`);
+
+                const blob = await res.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement("a");
+                a.href     = url;
+                a.download = `${table}_${today}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // Small pause between downloads so browser doesn't block them
+                await new Promise(r => setTimeout(r, 400));
+            } catch (e) {
+                errors.push(table);
+            }
+
+            completed++;
+        }
+
+        bar.style.width   = "100%";
+        label.textContent = errors.length
+            ? `Done with ${errors.length} error(s): ${errors.join(", ")}`
+            : `All ${ALL_TABLES.length} tables downloaded successfully!`;
+
+        setTimeout(() => wrap.classList.remove("show"), 5000);
+
+        btn.disabled    = false;
+        btn.textContent = "⬇ Download All Tables";
+
+        showToast(
+            errors.length ? `⚠ ${errors.length} tables failed` : "✓ All tables downloaded",
+            errors.length ? "error" : "success"
+        );
+    }
+
+    // ── SALES PROJECTIONS DOWNLOAD ───────────────────────────
+    async function downloadSales() {
+        const btn = document.getElementById("salesBtn");
+        btn.classList.add("loading");
+        try {
+            const res = await fetch(`${BASE}/sales/download`);
+            if (!res.ok) throw new Error(`Server error ${res.status}`);
+            const blob = await res.blob();
+            const today = new Date().toISOString().slice(0, 10);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `sales_projections_${today}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("✓ Sales projections downloaded", "success");
+        } catch (e) {
+            showToast(`✗ Failed: ${e.message}`, "error");
+        } finally {
+            btn.classList.remove("loading");
+        }
+    }
+</script>
+
+</body>
+</html>
