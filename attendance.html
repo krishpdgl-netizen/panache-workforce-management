@@ -638,35 +638,15 @@
 const API = "https://backend-production-53f3.up.railway.app";
 let CORR_WINDOW_HRS = 24; // fetched from /attendance/settings on init
 
-const role     = localStorage.getItem("userRole") || "employee";
-const userObj  = JSON.parse(localStorage.getItem("currentUser") || "{}");
+// Login page (index.html) stores these individual keys — read them directly
+const role      = localStorage.getItem("userRole")  || "employee";
+let EMP_ID      = localStorage.getItem("userId")    || "";
+let EMP_NAME    = localStorage.getItem("userName")  || "Employee";
+let EMP_EMAIL   = localStorage.getItem("userEmail") || "";
 
-// Debug: log raw stored object so we can see exactly what the login page saved
-console.log("[Attendance] currentUser raw:", userObj);
-console.log("[Attendance] All keys:", Object.keys(userObj));
+const isAdmin   = ["admin","hr","super_admin"].includes(role);
 
-// Resolve ID from every possible key name any page might use
-function _resolveId(o) {
-    if (!o) return "";
-    const direct = o.id != null ? o.id : (o.user_id != null ? o.user_id : (o.userId != null ? o.userId : (o.employeeId != null ? o.employeeId : (o.emp_id != null ? o.emp_id : (o.employee_id != null ? o.employee_id : null)))));
-    if (direct != null && direct !== "") return String(direct);
-    if (o.user) {
-        const nested = o.user.id != null ? o.user.id : (o.user.user_id != null ? o.user.user_id : null);
-        if (nested != null && nested !== "") return String(nested);
-    }
-    return "";
-}
-function _resolveName(o) {
-    if (!o) return "Employee";
-    return o.name || o.full_name || o.fullName || o.employee_name || o.emp_name ||
-           (o.user && (o.user.name || o.user.full_name)) || "Employee";
-}
-
-let EMP_ID   = _resolveId(userObj);
-let EMP_NAME = _resolveName(userObj);
-const isAdmin  = ["admin","hr","super_admin"].includes(role);
-
-console.log("[Attendance] Resolved EMP_ID:", EMP_ID, "| EMP_NAME:", EMP_NAME, "| role:", role);
+console.log("[Attendance] Session =>", { EMP_ID, EMP_NAME, EMP_EMAIL, role });
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -830,7 +810,7 @@ async function loadPunchState() {
 
     // Guard: EMP_ID must be a valid non-empty value
     if (!EMP_ID) {
-        const storedKeys = Object.keys(userObj).join(", ") || "none";
+        const storedKeys = `userId=${EMP_ID}, userName=${EMP_NAME}, userEmail=${EMP_EMAIL}`;
         statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">⚠️ Session error: employee ID not found.<br><span style="font-size:12px;font-weight:400;">Stored keys: [${storedKeys}]. Please log out and log in again.</span></span>`;
         btnIn.style.display  = "none";
         btnOut.style.display = "none";
@@ -1121,7 +1101,7 @@ async function saveAttendance() {
         late_minutes:parseInt(document.getElementById("att-late").value)||0,
         overtime:parseFloat(document.getElementById("att-ot").value)||0,
         remarks:document.getElementById("att-remarks").value, source:"manual",
-        created_by: userObj.id || null
+        created_by: EMP_ID || null
     };
     const editId=document.getElementById("att-edit-id").value;
     let res;
@@ -1598,45 +1578,7 @@ function exportCSV(type) {
 function logout() { localStorage.removeItem("userRole"); localStorage.removeItem("currentUser"); window.location.href="index.html"; }
 
 // ── INIT ──────────────────────────────────────────────────────
-(async function init(){
-    // ── Self-healing: if EMP_ID is empty, try to recover from backend ──
-    if (!EMP_ID && !isAdmin) {
-        const email = userObj.email || userObj.userEmail || "";
-        console.warn("[Attendance] EMP_ID empty, attempting recovery. email:", email);
-        if (email) {
-            try {
-                const res = await fetch(`${API}/user?email=${encodeURIComponent(email)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    // /user returns { success, full_name, email, role } — no id
-                    // Try /profile approach via /employees list
-                }
-            } catch(e) {}
-        }
-        // Fallback: try /employees and match by name or email
-        try {
-            const emps = await fetch(`${API}/employees`).then(r=>r.json()).catch(()=>[]);
-            const storedEmail = userObj.email || userObj.userEmail || "";
-            const storedName  = EMP_NAME !== "Employee" ? EMP_NAME : "";
-            const match = emps.find(e =>
-                (storedEmail && e.email === storedEmail) ||
-                (storedName  && e.full_name === storedName)
-            );
-            if (match) {
-                EMP_ID   = String(match.id);
-                EMP_NAME = match.full_name || EMP_NAME;
-                // Patch localStorage so future page loads work too
-                const patched = { ...userObj, id: match.id, name: match.full_name, email: match.email, role: match.role };
-                localStorage.setItem("currentUser", JSON.stringify(patched));
-                console.log("[Attendance] Self-healed EMP_ID:", EMP_ID, "from /employees match:", match);
-            } else {
-                console.error("[Attendance] Could not recover EMP_ID. Stored object:", userObj, "Employees list:", emps);
-            }
-        } catch(e) {
-            console.error("[Attendance] Recovery fetch failed:", e);
-        }
-    }
-
+(function init(){
     document.getElementById("profileName").textContent=EMP_NAME||"User";
     document.getElementById("profileRole").textContent=role.charAt(0).toUpperCase()+role.slice(1);
 
