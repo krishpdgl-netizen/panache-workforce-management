@@ -683,8 +683,10 @@
         <label>Description</label>
         <input type="text" id="editDescription">
 
-        <label>Assigned To (Employee ID)</label>
-        <input type="number" id="editAssignedTo">
+        <label>Assign To (Team Member)</label>
+        <select id="editAssignedTo">
+            <option value="">— Select team member —</option>
+        </select>
 
         <label>Priority</label>
         <select id="editPriority">
@@ -742,22 +744,24 @@ localStorage.getItem("userId");
         }
     }
     loadStats();
-    // ── EMPLOYEES ────────────────────────────────────────────
+    // ── TEAM MEMBERS (manager's team only) ──────────────────
+    let teamMembers = [];
+
     async function loadEmployees() {
         try {
-            const res = await fetch(`${BASE}/employees`);
-            const employees = await res.json();
+            const res = await fetch(`${BASE}/team?manager_id=${managerId}`);
+            teamMembers = await res.json();
             let html = "";
-            employees.forEach(emp => {
+            teamMembers.forEach(emp => {
                 html += `
                     <tr>
                         <td>${emp.id}</td>
                         <td>${emp.full_name}</td>
                         <td>${emp.email}</td>
-                        <td>${emp.role}</td>
+                        <td>${emp.task_count}</td>
                     </tr>`;
             });
-            document.getElementById("employeeTable").innerHTML = html;
+            document.getElementById("employeeTable").innerHTML = html || `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px;">No team members found.</td></tr>`;
         } catch (e) {
             console.error("loadEmployees error:", e);
         }
@@ -848,12 +852,23 @@ localStorage.getItem("userId");
             const task = await res.json();
             if (!task || task.success === false) { showToast("Could not load task."); return; }
 
-            document.getElementById("editTaskId").value     = task.id;
-            document.getElementById("editTitle").value      = task.title;
+            document.getElementById("editTaskId").value      = task.id;
+            document.getElementById("editTitle").value       = task.title;
             document.getElementById("editDescription").value = task.description || "";
-            document.getElementById("editAssignedTo").value = task.assigned_to;
-            document.getElementById("editPriority").value   = task.priority;
-            document.getElementById("editDueDate").value    = task.due_date ? task.due_date.split("T")[0] : "";
+            document.getElementById("editPriority").value    = task.priority;
+            document.getElementById("editDueDate").value     = task.due_date ? task.due_date.split("T")[0] : "";
+
+            // Populate dropdown with team members only
+            const sel = document.getElementById("editAssignedTo");
+            sel.innerHTML = `<option value="">— Select team member —</option>`;
+            (teamMembers.length ? teamMembers : await fetch(`${BASE}/team?manager_id=${managerId}`).then(r => r.json()))
+                .forEach(emp => {
+                    const opt = document.createElement("option");
+                    opt.value = emp.id;
+                    opt.textContent = `${emp.full_name} (ID: ${emp.id})`;
+                    if (emp.id === task.assigned_to) opt.selected = true;
+                    sel.appendChild(opt);
+                });
 
             document.getElementById("editModal").classList.add("active");
         } catch (e) {
