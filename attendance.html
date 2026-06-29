@@ -799,13 +799,24 @@ function goBack() { showView(lastView && lastView!=="salaryslip" ? lastView : (i
 // ── PUNCH IN / OUT ────────────────────────────────────────────
 async function loadPunchState() {
     if (isAdmin) return;
-    const today = new Date().toISOString().split("T")[0];
-    const rows  = await api(`/attendance?emp_id=${EMP_ID}&att_date=${today}`) || [];
-    const rec   = rows[0] || null;
     const statusEl = document.getElementById("punchStatus");
     const btnIn    = document.getElementById("btnCheckin");
     const btnOut   = document.getElementById("btnCheckout");
     if (!btnIn) return;
+
+    // Guard: EMP_ID must be a valid non-empty value
+    if (!EMP_ID) {
+        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">⚠️ Session error — please log out and log in again.</span>`;
+        btnIn.style.display  = "none";
+        btnOut.style.display = "none";
+        return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    // Always filter by both emp_id AND att_date so we never get another employee's record
+    const rows  = await api(`/attendance?emp_id=${encodeURIComponent(EMP_ID)}&att_date=${today}`) || [];
+    // Find the record that strictly belongs to this employee (defensive check)
+    const rec   = rows.find(r => String(r.emp_id) === String(EMP_ID)) || null;
 
     if (!rec || !rec.check_in) {
         statusEl.innerHTML = `<span style="color:#f59e0b;font-weight:600;">⏳ Not checked in yet</span>`;
@@ -863,7 +874,10 @@ async function renderMyAttendance() {
     }
 
     const tbox = document.getElementById("todayBox");
-    const rec = Array.isArray(todayRec) ? todayRec[0] : null;
+    // Strictly match emp_id so we never show another employee's record
+    const rec = Array.isArray(todayRec)
+        ? (todayRec.find(r => String(r.emp_id) === String(EMP_ID)) || null)
+        : null;
     if (rec) {
         tbox.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
             <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Status</div><div style="margin-top:6px;">${statusBadge(rec.status)}</div></div>
@@ -1043,8 +1057,15 @@ function openAddAttendance() {
 }
 
 async function editAttendance(id) {
-    const rows = await api("/attendance") || [];
-    const r = rows.find(a=>a.id===id); if (!r) return;
+    // Fetch only the specific record by ID to avoid mixing up data across employees
+    const rows = await api(`/attendance?id=${id}`) || [];
+    let r = rows.find(a => a.id === id);
+    // Fallback: if the backend doesn't support ?id= filter, search from a small date window
+    if (!r) {
+        const allRows = await api("/attendance") || [];
+        r = allRows.find(a => a.id === id);
+    }
+    if (!r) { showToast("Record not found.", "error"); return; }
     document.getElementById("attModalTitle").textContent="Edit Attendance Record";
     document.getElementById("att-edit-id").value=id;
     document.getElementById("att-empid").value=r.emp_id;
