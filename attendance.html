@@ -623,12 +623,12 @@
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────
-const API = "https://backend-production-53f3.up.railway.app/"; // ← replace with your actual API base URL
-const CORR_WINDOW_HRS = 24; // matches attendance_settings default
+const API = "https://backend-production-53f3.up.railway.app";
+let CORR_WINDOW_HRS = 24; // fetched from /attendance/settings on init
 
 const role     = localStorage.getItem("userRole") || "employee";
 const userObj  = JSON.parse(localStorage.getItem("currentUser") || "{}");
-const EMP_ID   = userObj.employeeId || userObj.id || "";
+const EMP_ID   = String(userObj.id || userObj.employeeId || "");
 const EMP_NAME = userObj.name || userObj.full_name || "Employee";
 const isAdmin  = ["admin","hr","super_admin"].includes(role);
 
@@ -697,7 +697,20 @@ function numToWords(n) {
     return numToWords(Math.floor(n/10000000))+" Crore"+(n%10000000?" "+numToWords(n%10000000):"");
 }
 
-// ── SIDEBAR ──────────────────────────────────────────────────
+async function fetchCorrWindow() {
+    try {
+        const s = await api("/attendance/settings");
+        if (s && s.correction_window_hours) {
+            CORR_WINDOW_HRS = s.correction_window_hours;
+            const lbl = document.getElementById("corrWindowLabel");
+            if (lbl) lbl.textContent = CORR_WINDOW_HRS;
+            const warn = document.getElementById("cr-window-warn");
+            if (warn) warn.innerHTML = `Attendance correction requests can only be submitted within ${CORR_WINDOW_HRS} hours. Please contact HR.`;
+        }
+    } catch(e) { /* keep default 24h */ }
+}
+
+
 function buildSidebar() {
     const m = document.getElementById("sidebarMenu");
     const dash = isAdmin ? "admin-dashboard.html" : "employee-dashboard.html";
@@ -848,7 +861,7 @@ function checkCorrWindow() {
     const d = document.getElementById("cr-date").value;
     const warn = document.getElementById("cr-window-warn");
     if (!d) { warn.style.display="none"; return; }
-    const hrs = (Date.now() - new Date(d).getTime()) / 3600000;
+    const hrs = (Date.now() - new Date(d+"T00:00:00").getTime()) / 3600000;
     warn.style.display = hrs > CORR_WINDOW_HRS ? "block" : "none";
 }
 
@@ -857,8 +870,8 @@ async function submitCorrection() {
     const issue   = document.getElementById("cr-issue").value;
     const reason  = document.getElementById("cr-reason").value.trim();
     if (!attDate||!issue||!reason) { showToast("Please fill all required fields.","error"); return; }
-    const hrs = (Date.now()-new Date(attDate).getTime())/3600000;
-    if (hrs>CORR_WINDOW_HRS) { showToast("Correction window expired. Contact HR.","error"); return; }
+    const hrs = (Date.now()-new Date(attDate+"T00:00:00").getTime())/3600000;
+    if (hrs>CORR_WINDOW_HRS) { showToast(`Correction window (${CORR_WINDOW_HRS}h) expired. Contact HR.`,"error"); return; }
 
     const res = await api("/attendance/corrections", {
         method:"POST",
@@ -949,6 +962,7 @@ function openAddAttendance() {
     document.getElementById("att-edit-id").value="";
     document.getElementById("att-date").value=new Date().toISOString().split("T")[0];
     ["att-empid","att-empname","att-checkin","att-checkout","att-remarks"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("att-dept").value="Engineering";
     document.getElementById("att-status").value="Present";
     document.getElementById("att-late").value="0";
     document.getElementById("att-ot").value="0";
@@ -988,7 +1002,8 @@ async function saveAttendance() {
         status:document.getElementById("att-status").value,
         late_minutes:parseInt(document.getElementById("att-late").value)||0,
         overtime:parseFloat(document.getElementById("att-ot").value)||0,
-        remarks:document.getElementById("att-remarks").value, source:"manual"
+        remarks:document.getElementById("att-remarks").value, source:"manual",
+        created_by: userObj.id || null
     };
     const editId=document.getElementById("att-edit-id").value;
     let res;
@@ -998,7 +1013,14 @@ async function saveAttendance() {
         closeModal("modalAttendance");
         renderAttendanceSummary(); renderAttendanceTable();
         showToast(editId?"Record updated.":"Record added.","success");
-    } else showToast(res?.message||"Error saving record.","error");
+    } else {
+        const msg = res?.message || "Error saving record.";
+        const isDuplicate = msg.toLowerCase().includes("already exists");
+        showToast(isDuplicate
+            ? `Duplicate: A record for ${empId2} on ${d} already exists. Use Edit to change it.`
+            : msg,
+            "error");
+    }
 }
 
 async function deleteAttendance(id) {
@@ -1471,6 +1493,7 @@ function logout() { localStorage.removeItem("userRole"); localStorage.removeItem
 
     populateMonthSelects();
     buildSidebar();
+    fetchCorrWindow(); // Bug 4 fix: load correction window from backend settings
 
     if (isAdmin) showView("attendance");
     else         showView("myattendance");
