@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminders | Panache WMS</title>
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role) { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body { display:flex; background:#f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px; height: 100vh; background: #111827;
+            color: white; position: fixed; padding: 20px;
+            display: flex; flex-direction: column;
+        }
+        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
+        .menu a {
+            display: block; color: white; text-decoration: none;
+            padding: 12px; margin-bottom: 8px; border-radius: 8px; transition: .3s;
+        }
+        .menu a:hover, .menu a.active { background: #2563eb; }
+
+        /* MAIN */
+        .main { margin-left: 260px; width: 100%; padding: 25px; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
+        .header h1 { color:#111827; }
+        .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
+        .logout-btn { background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:#b91c1c; }
+
+        /* CARDS */
+        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:25px; }
+        .card { background:white; padding:20px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
+        .card h2 { color:#2563eb; font-size:30px; margin-bottom:6px; }
+        .card p  { color:#6b7280; font-size:14px; }
+        .card.green h2  { color:#16a34a; }
+        .card.yellow h2 { color:#f59e0b; }
+        .card.red h2    { color:#dc2626; }
+
+        /* SECTION */
+        .section { background:white; padding:22px; border-radius:15px; margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
+        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+        .section-header h2 { color:#111827; }
+
+        /* FILTER BAR */
+        .search-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+        .search-bar input, .search-bar select {
+            padding:9px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;
+        }
+        .search-bar input { flex:1; min-width:180px; }
+        .search-bar select { min-width:140px; }
+        .search-bar input:focus, .search-bar select:focus { outline:none; border-color:#2563eb; }
+
+        /* TABLE */
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
+        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
+        tr:hover td { background:#f9fafb; }
+
+        /* BUTTONS */
+        .btn-primary { background:#2563eb; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+        .btn-primary:hover { background:#1d4ed8; }
+        .btn-danger { background:#dc2626; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; }
+        .btn-danger:hover { background:#b91c1c; }
+        .btn-warning { background:#f59e0b; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; }
+        .btn-warning:hover { background:#d97706; }
+        .btn-green { background:#16a34a; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; }
+        .btn-green:hover { background:#15803d; }
+        .btn-ghost { background:#eef2ff; color:#2563eb; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; }
+        .btn-ghost:hover { background:#e0e7ff; }
+        .action-group { display:flex; gap:6px; flex-wrap:wrap; }
+
+        /* BADGES */
+        .badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; }
+        .badge-green  { background:#dcfce7; color:#15803d; }
+        .badge-blue   { background:#dbeafe; color:#1d4ed8; }
+        .badge-yellow { background:#fef9c3; color:#a16207; }
+        .badge-orange { background:#ffedd5; color:#c2410c; }
+        .badge-red    { background:#fee2e2; color:#b91c1c; }
+        .badge-gray   { background:#f3f4f6; color:#4b5563; }
+
+        /* MODAL */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal { background:white; border-radius:15px; padding:30px; width:520px; max-width:95%; max-height:88vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+        .modal h2 { margin-bottom:20px; color:#111827; }
+        .modal label { display:block; margin-bottom:5px; font-weight:600; color:#374151; font-size:14px; }
+        .modal input, .modal select, .modal textarea {
+            width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:14px; font-size:14px; font-family:inherit;
+        }
+        .modal textarea { resize:vertical; min-height:60px; }
+        .modal input:focus, .modal select:focus, .modal textarea:focus { outline:none; border-color:#2563eb; }
+        .form-row { display:flex; gap:12px; }
+        .form-row > div { flex:1; }
+        .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:5px; }
+        .btn-cancel { background:#e5e7eb; color:#374151; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; }
+        .btn-save { background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+        .btn-save:hover { background:#1d4ed8; }
+
+        /* OFFSET CHIPS */
+        .offset-chip-box { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+        .offset-chip {
+            padding:6px 12px; border-radius:99px; font-size:13px; border:1.5px solid #d1d5db;
+            cursor:pointer; background:white; color:#374151; user-select:none;
+        }
+        .offset-chip.selected { background:#2563eb; color:white; border-color:#2563eb; }
+        .offset-custom-row { display:flex; gap:8px; margin-bottom:10px; }
+        .offset-custom-row input { margin-bottom:0; flex:1; }
+        .offset-custom-row button { white-space:nowrap; }
+        .offset-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+        .offset-tag {
+            background:#eef2ff; color:#2563eb; padding:4px 10px; border-radius:99px; font-size:12px;
+            display:flex; align-items:center; gap:6px;
+        }
+        .offset-tag span.x { cursor:pointer; font-weight:bold; color:#9ca3af; }
+
+        .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
+
+        .toast { position:fixed; bottom:30px; right:30px; background:#111827; color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:9999; }
+        .toast.show { opacity:1; transform:translateY(0); }
+
+        @media(max-width:1000px) {
+            .sidebar { width:200px; }
+            .main { margin-left:200px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">Panache</div>
+    <div class="menu" id="sidebarMenu">
+        <!-- Filled in by script below based on role -->
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="header">
+        <h1>Reminders</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="profile">
+                <b id="profileName">User</b><br>
+                <span id="profileEmail"></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="cards">
+        <div class="card">
+            <h2 id="cardTotal">—</h2>
+            <p>Total Reminders</p>
+        </div>
+        <div class="card red">
+            <h2 id="cardOverdue">—</h2>
+            <p>Overdue</p>
+        </div>
+        <div class="card yellow">
+            <h2 id="cardDueSoon">—</h2>
+            <p>Due in 7 Days</p>
+        </div>
+        <div class="card green">
+            <h2 id="cardCompleted">—</h2>
+            <p>Completed</p>
+        </div>
+    </div>
+
+    <!-- REMINDER TABLE -->
+    <div class="section">
+        <div class="section-header">
+            <h2>All Reminders</h2>
+            <button class="btn-primary" onclick="openAddModal()">+ Add Reminder</button>
+        </div>
+
+        <div class="search-bar">
+            <input id="searchInput" placeholder="Search by title or description..." oninput="renderTable()">
+            <select id="filterCategory" onchange="renderTable()">
+                <option value="">All Categories</option>
+                <option>Payment Collection</option>
+                <option>Client Follow-up</option>
+                <option>HR</option>
+                <option>Employee</option>
+                <option>Payroll</option>
+                <option>Compliance</option>
+                <option>Personal</option>
+                <option>Other</option>
+            </select>
+            <select id="filterPriority" onchange="renderTable()">
+                <option value="">All Priorities</option>
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+                <option>Critical</option>
+            </select>
+            <select id="filterStatus" onchange="renderTable()">
+                <option value="">All Statuses</option>
+                <option>Open</option>
+                <option>Completed</option>
+                <option>Cancelled</option>
+            </select>
+            <select id="filterOverdue" onchange="renderTable()">
+                <option value="">All</option>
+                <option value="overdue">Overdue Only</option>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Due Date</th>
+                    <th>Days Remaining</th>
+                    <th>Priority</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reminderTableBody"></tbody>
+        </table>
+        <div id="noDataMsg" class="no-data" style="display:none;">No reminders found.</div>
+    </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="reminderModal">
+    <div class="modal">
+        <h2 id="modalTitle">Add Reminder</h2>
+
+        <label>Title *</label>
+        <input id="f_title" placeholder="e.g. Collect Payment – ABC Traders">
+
+        <label>Description</label>
+        <textarea id="f_description" placeholder="Optional details..."></textarea>
+
+        <div class="form-row">
+            <div>
+                <label>Category</label>
+                <select id="f_category">
+                    <option>Payment Collection</option>
+                    <option>Client Follow-up</option>
+                    <option>HR</option>
+                    <option>Employee</option>
+                    <option>Payroll</option>
+                    <option>Compliance</option>
+                    <option>Personal</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Priority</label>
+                <select id="f_priority">
+                    <option>Low</option>
+                    <option selected>Medium</option>
+                    <option>High</option>
+                    <option>Critical</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Start Date</label>
+                <input type="date" id="f_start_date">
+            </div>
+            <div>
+                <label>Due Date *</label>
+                <input type="date" id="f_due_date" onchange="recalcOffsetPreview()">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Assign To</label>
+                <select id="f_assigned_to"></select>
+            </div>
+            <div>
+                <label>Amount (optional)</label>
+                <input type="number" id="f_amount" placeholder="e.g. 250000">
+            </div>
+        </div>
+
+        <label>Reminder Schedule</label>
+        <div class="offset-chip-box" id="offsetChipBox">
+            <div class="offset-chip" data-val="30">30 Days Before</div>
+            <div class="offset-chip" data-val="15">15 Days Before</div>
+            <div class="offset-chip selected" data-val="7">7 Days Before</div>
+            <div class="offset-chip selected" data-val="3">3 Days Before</div>
+            <div class="offset-chip selected" data-val="1">1 Day Before</div>
+            <div class="offset-chip selected" data-val="0">On Due Date</div>
+        </div>
+
+        <div class="offset-custom-row">
+            <input type="number" id="customOffsetInput" placeholder="Custom: e.g. 45 (days before)">
+            <button class="btn-ghost" onclick="addCustomOffset()" type="button">+ Add</button>
+        </div>
+        <div class="offset-tags" id="customOffsetTags"></div>
+
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+            <input type="checkbox" id="f_repeat" style="width:auto;margin:0;">
+            Repeat every day after due date until completed
+        </label>
+
+        <label>Status</label>
+        <select id="f_status">
+            <option>Open</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+        </select>
+
+        <label>Remarks</label>
+        <textarea id="f_remarks" placeholder="Optional remarks..."></textarea>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-save" onclick="saveReminder()">Save Reminder</button>
+        </div>
+    </div>
+</div>
+
+<!-- COMPLETE MODAL -->
+<div class="modal-overlay" id="completeModal">
+    <div class="modal" style="width:420px;">
+        <h2>Mark as Complete</h2>
+        <label>Completion Notes</label>
+        <textarea id="c_notes" placeholder="Optional notes about completion..."></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeCompleteModal()">Cancel</button>
+            <button class="btn-save" onclick="confirmComplete()">Confirm Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal" id="viewModalContent" style="width:480px;">
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const BASE = "https://backend-production-53f3.up.railway.app";
+
+    const userId   = localStorage.getItem("userId");
+    const userRole = localStorage.getItem("userRole") || "employee";
+    const userName = localStorage.getItem("userName") || "User";
+
+    document.getElementById("profileName").innerHTML  = userName;
+    document.getElementById("profileEmail").innerHTML = localStorage.getItem("userEmail") || "";
+
+    // ---- Sidebar (role aware, mirrors existing dashboards) ----
+    function buildSidebar() {
+        const menu = document.getElementById("sidebarMenu");
+        let links = "";
+        if (userRole === "admin") {
+            links = `
+                <a href="admin-dashboard.html">Dashboard</a>
+                <a href="sales-dashboard.html">Sales Dashboard</a>
+                <a href="settings.html">Settings</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="employee-hub.html">Employee Hub</a>
+                <a href="letterhead.html">Letter head manager</a>
+                <a href="attendance.html">Attendance manager</a>
+                <a href="reminder.html" class="active">Reminders</a>`;
+        } else if (userRole === "manager") {
+            links = `
+                <a href="manager-dashboard.html">Dashboard</a>
+                <a href="sales-dashboard.html">Sales Dashboard</a>
+                <a href="team-members.html">Team Members</a>
+                <a href="reports.html">Reports</a>
+                <a href="settings.html">Settings</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="employee-hub.html">Employee Hub</a>
+                <a href="letterhead.html">Letter head manager</a>
+                <a href="attendance.html">Attendance manager</a>
+                <a href="reminder.html" class="active">Reminders</a>`;
+        } else {
+            links = `
+                <a href="employee-dashboard.html">Dashboard</a>
+                <a href="sales-dashboard.html">Sales Dashboard</a>
+                <a href="settings.html">Settings</a>
+                <a href="history.html">History</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="employee-hub.html">Employee Hub</a>
+                <a href="letterhead.html">Letter head manager</a>
+                <a href="attendance.html">Attendance manager</a>
+                <a href="reminder.html" class="active">Reminders</a>`;
+        }
+        menu.innerHTML = links;
+    }
+    buildSidebar();
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.innerText = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2500);
+    }
+
+    // ---- State ----
+    let allReminders = [];
+    let allUsers = [];
+    let customOffsets = [];
+    let editingId = null;
+    let completingId = null;
+
+    async function loadUsers() {
+        try {
+            const res = await fetch(`${BASE}/users`);
+            allUsers = await res.json();
+        } catch (e) {
+            allUsers = [];
+        }
+        const sel = document.getElementById("f_assigned_to");
+        sel.innerHTML = "";
+        const meOpt = document.createElement("option");
+        meOpt.value = userId; meOpt.innerText = `${userName} (Me)`;
+        sel.appendChild(meOpt);
+
+        if (userRole === "admin" || userRole === "manager") {
+            (allUsers || []).forEach(u => {
+                if (String(u.id) === String(userId)) return;
+                const opt = document.createElement("option");
+                opt.value = u.id;
+                opt.innerText = u.full_name || u.email;
+                sel.appendChild(opt);
+            });
+        }
+    }
+
+    async function loadReminders() {
+        const params = new URLSearchParams({ user_id: userId, role: userRole });
+        try {
+            const res = await fetch(`${BASE}/reminders?${params.toString()}`);
+            allReminders = await res.json();
+        } catch (e) {
+            allReminders = [];
+        }
+        renderCards();
+        renderTable();
+    }
+
+    function renderCards() {
+        const total = allReminders.length;
+        const overdue = allReminders.filter(r => r.status === "Open" && r.days_remaining < 0).length;
+        const dueSoon = allReminders.filter(r => r.status === "Open" && r.days_remaining >= 0 && r.days_remaining <= 7).length;
+        const completed = allReminders.filter(r => r.status === "Completed").length;
+        document.getElementById("cardTotal").innerText = total;
+        document.getElementById("cardOverdue").innerText = overdue;
+        document.getElementById("cardDueSoon").innerText = dueSoon;
+        document.getElementById("cardCompleted").innerText = completed;
+    }
+
+    function priorityBadge(p) {
+        const map = { Low: "badge-gray", Medium: "badge-blue", High: "badge-orange", Critical: "badge-red" };
+        return `<span class="badge ${map[p] || "badge-gray"}">${p}</span>`;
+    }
+
+    function statusBadge(s, days) {
+        if (s === "Completed") return `<span class="badge badge-green">Completed</span>`;
+        if (s === "Cancelled") return `<span class="badge badge-gray">Cancelled</span>`;
+        if (days < 0) return `<span class="badge badge-red">Overdue</span>`;
+        if (days === 0) return `<span class="badge badge-orange">Due Today</span>`;
+        return `<span class="badge badge-blue">Open</span>`;
+    }
+
+    function renderTable() {
+        const search   = document.getElementById("searchInput").value.toLowerCase();
+        const category = document.getElementById("filterCategory").value;
+        const priority = document.getElementById("filterPriority").value;
+        const status   = document.getElementById("filterStatus").value;
+        const overdueOnly = document.getElementById("filterOverdue").value === "overdue";
+
+        let rows = allReminders.filter(r => {
+            if (search && !(r.title.toLowerCase().includes(search) || (r.description || "").toLowerCase().includes(search))) return false;
+            if (category && r.category !== category) return false;
+            if (priority && r.priority !== priority) return false;
+            if (status && r.status !== status) return false;
+            if (overdueOnly && !(r.status === "Open" && r.days_remaining < 0)) return false;
+            return true;
+        });
+
+        const body = document.getElementById("reminderTableBody");
+        const noData = document.getElementById("noDataMsg");
+        body.innerHTML = "";
+
+        if (rows.length === 0) {
+            noData.style.display = "block";
+            return;
+        }
+        noData.style.display = "none";
+
+        rows.forEach(r => {
+            const tr = document.createElement("tr");
+            const daysLabel = r.status !== "Open"
+                ? "—"
+                : (r.days_remaining < 0 ? `${Math.abs(r.days_remaining)} days overdue` :
+                   r.days_remaining === 0 ? "Due Today" : `${r.days_remaining} days`);
+
+            tr.innerHTML = `
+                <td><b>${r.title}</b></td>
+                <td>${r.category}</td>
+                <td>${r.due_date}</td>
+                <td>${daysLabel}</td>
+                <td>${priorityBadge(r.priority)}</td>
+                <td>${r.assigned_to_name || r.assigned_to}</td>
+                <td>${statusBadge(r.status, r.days_remaining)}</td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-ghost" onclick="viewReminder(${r.id})">View</button>
+                        <button class="btn-warning" onclick="editReminder(${r.id})">Edit</button>
+                        ${r.status === "Open" ? `<button class="btn-green" onclick="openCompleteModal(${r.id})">Complete</button>` : ""}
+                        ${(userRole === "admin" || String(r.created_by) === String(userId)) ? `<button class="btn-danger" onclick="deleteReminder(${r.id})">Delete</button>` : ""}
+                    </div>
+                </td>`;
+            body.appendChild(tr);
+        });
+    }
+
+    // ---- Offset chips ----
+    document.getElementById("offsetChipBox").addEventListener("click", (e) => {
+        if (e.target.classList.contains("offset-chip")) {
+            e.target.classList.toggle("selected");
+        }
+    });
+
+    function addCustomOffset() {
+        const inp = document.getElementById("customOffsetInput");
+        const val = parseInt(inp.value, 10);
+        if (isNaN(val) || val < 0) { showToast("Enter a valid number of days"); return; }
+        if (!customOffsets.includes(val)) customOffsets.push(val);
+        inp.value = "";
+        renderCustomOffsetTags();
+    }
+
+    function renderCustomOffsetTags() {
+        const box = document.getElementById("customOffsetTags");
+        box.innerHTML = "";
+        customOffsets.forEach(v => {
+            const tag = document.createElement("div");
+            tag.className = "offset-tag";
+            tag.innerHTML = `${v} Days Before <span class="x" onclick="removeCustomOffset(${v})">&times;</span>`;
+            box.appendChild(tag);
+        });
+    }
+
+    function removeCustomOffset(v) {
+        customOffsets = customOffsets.filter(x => x !== v);
+        renderCustomOffsetTags();
+    }
+
+    function recalcOffsetPreview() { /* placeholder for future date-preview UI */ }
+
+    function getSelectedOffsets() {
+        const chips = [...document.querySelectorAll(".offset-chip.selected")].map(c => parseInt(c.dataset.val, 10));
+        return [...new Set([...chips, ...customOffsets])].sort((a, b) => b - a);
+    }
+
+    // ---- Modal open/close ----
+    function resetForm() {
+        document.getElementById("f_title").value = "";
+        document.getElementById("f_description").value = "";
+        document.getElementById("f_category").value = "Other";
+        document.getElementById("f_priority").value = "Medium";
+        document.getElementById("f_start_date").value = "";
+        document.getElementById("f_due_date").value = "";
+        document.getElementById("f_amount").value = "";
+        document.getElementById("f_repeat").checked = false;
+        document.getElementById("f_status").value = "Open";
+        document.getElementById("f_remarks").value = "";
+        document.querySelectorAll(".offset-chip").forEach(c => {
+            const v = parseInt(c.dataset.val, 10);
+            c.classList.toggle("selected", [7, 3, 1, 0].includes(v));
+        });
+        customOffsets = [];
+        renderCustomOffsetTags();
+        editingId = null;
+    }
+
+    function openAddModal() {
+        resetForm();
+        document.getElementById("modalTitle").innerText = "Add Reminder";
+        document.getElementById("reminderModal").classList.add("active");
+    }
+
+    function closeModal() {
+        document.getElementById("reminderModal").classList.remove("active");
+    }
+
+    function editReminder(id) {
+        const r = allReminders.find(x => x.id === id);
+        if (!r) return;
+        resetForm();
+        editingId = id;
+        document.getElementById("modalTitle").innerText = "Edit Reminder";
+        document.getElementById("f_title").value = r.title;
+        document.getElementById("f_description").value = r.description || "";
+        document.getElementById("f_category").value = r.category;
+        document.getElementById("f_priority").value = r.priority;
+        document.getElementById("f_start_date").value = r.start_date ? r.start_date.slice(0, 10) : "";
+        document.getElementById("f_due_date").value = r.due_date.slice(0, 10);
+        document.getElementById("f_amount").value = r.amount || "";
+        document.getElementById("f_repeat").checked = !!r.repeat_after_due;
+        document.getElementById("f_status").value = r.status;
+        document.getElementById("f_remarks").value = r.remarks || "";
+        document.getElementById("f_assigned_to").value = r.assigned_to;
+
+        const offsets = r.reminder_offsets || [];
+        const standard = [30, 15, 7, 3, 1, 0];
+        document.querySelectorAll(".offset-chip").forEach(c => {
+            const v = parseInt(c.dataset.val, 10);
+            c.classList.toggle("selected", offsets.includes(v));
+        });
+        customOffsets = offsets.filter(o => !standard.includes(o));
+        renderCustomOffsetTags();
+
+        document.getElementById("reminderModal").classList.add("active");
+    }
+
+    async function saveReminder() {
+        const title = document.getElementById("f_title").value.trim();
+        const due = document.getElementById("f_due_date").value;
+        if (!title) { showToast("Title is required"); return; }
+        if (!due) { showToast("Due date is required"); return; }
+
+        const payload = {
+            title,
+            description: document.getElementById("f_description").value.trim(),
+            category: document.getElementById("f_category").value,
+            priority: document.getElementById("f_priority").value,
+            assigned_to: parseInt(document.getElementById("f_assigned_to").value, 10),
+            start_date: document.getElementById("f_start_date").value || null,
+            due_date: due,
+            reminder_offsets: getSelectedOffsets(),
+            repeat_after_due: document.getElementById("f_repeat").checked,
+            amount: document.getElementById("f_amount").value ? parseFloat(document.getElementById("f_amount").value) : null,
+            remarks: document.getElementById("f_remarks").value.trim(),
+        };
+
+        try {
+            let res;
+            if (editingId) {
+                payload.status = document.getElementById("f_status").value;
+                res = await fetch(`${BASE}/reminders/${editingId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                payload.created_by = parseInt(userId, 10);
+                res = await fetch(`${BASE}/reminders`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            }
+            const data = await res.json();
+            if (data.success) {
+                showToast(editingId ? "Reminder updated" : "Reminder created");
+                closeModal();
+                loadReminders();
+            } else {
+                showToast(data.message || "Something went wrong");
+            }
+        } catch (e) {
+            showToast("Network error — could not save reminder");
+        }
+    }
+
+    async function deleteReminder(id) {
+        if (!confirm("Delete this reminder permanently?")) return;
+        try {
+            const res = await fetch(`${BASE}/reminders/${id}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Reminder deleted");
+                loadReminders();
+            } else {
+                showToast(data.message || "Could not delete");
+            }
+        } catch (e) {
+            showToast("Network error");
+        }
+    }
+
+    function openCompleteModal(id) {
+        completingId = id;
+        document.getElementById("c_notes").value = "";
+        document.getElementById("completeModal").classList.add("active");
+    }
+    function closeCompleteModal() {
+        document.getElementById("completeModal").classList.remove("active");
+    }
+
+    async function confirmComplete() {
+        try {
+            const res = await fetch(`${BASE}/reminders/${completingId}/complete`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    completed_by: parseInt(userId, 10),
+                    completion_notes: document.getElementById("c_notes").value.trim()
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Reminder marked complete");
+                closeCompleteModal();
+                loadReminders();
+            } else {
+                showToast(data.message || "Could not complete");
+            }
+        } catch (e) {
+            showToast("Network error");
+        }
+    }
+
+    function viewReminder(id) {
+        const r = allReminders.find(x => x.id === id);
+        if (!r) return;
+        const content = document.getElementById("viewModalContent");
+        content.innerHTML = `
+            <h2>${r.title}</h2>
+            <p style="margin-bottom:10px;color:#6b7280;">${r.description || "No description provided."}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+                ${priorityBadge(r.priority)} ${statusBadge(r.status, r.days_remaining)}
+                <span class="badge badge-gray">${r.category}</span>
+            </div>
+            <p><b>Due Date:</b> ${r.due_date}</p>
+            <p><b>Assigned To:</b> ${r.assigned_to_name || r.assigned_to}</p>
+            ${r.amount ? `<p><b>Amount:</b> ₹${Number(r.amount).toLocaleString("en-IN")}</p>` : ""}
+            <p><b>Reminder Offsets:</b> ${(r.reminder_offsets || []).join(", ")}</p>
+            ${r.remarks ? `<p><b>Remarks:</b> ${r.remarks}</p>` : ""}
+            ${r.status === "Completed" ? `<p><b>Completed On:</b> ${r.completed_on || "-"}</p><p><b>Completion Notes:</b> ${r.completion_notes || "-"}</p>` : ""}
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeViewModal()">Close</button>
+            </div>`;
+        document.getElementById("viewModal").classList.add("active");
+    }
+    function closeViewModal() {
+        document.getElementById("viewModal").classList.remove("active");
+    }
+
+    // ---- Init ----
+    (async function init() {
+        await loadUsers();
+        await loadReminders();
+    })();
+</script>
+</body>
+</html>
