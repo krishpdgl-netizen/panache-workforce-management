@@ -122,18 +122,6 @@
 
         .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
 
-        /* TASK NOTIFICATIONS */
-        .alert-item { display:flex; align-items:flex-start; gap:10px; padding:12px 10px; border-bottom:1px solid #f3f4f6; }
-        .alert-item:last-child { border-bottom:none; }
-        .alert-item-title { font-weight:600; color:#111827; font-size:14px; }
-        .alert-item-sub { font-size:12px; color:#6b7280; margin-top:2px; }
-        .notif-close {
-            flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: none;
-            background: transparent; color: #9ca3af; font-size: 16px; line-height: 1;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .notif-close:hover { background: #fee2e2; color: #dc2626; }
-
         .toast { position:fixed; bottom:30px; right:30px; background:#111827; color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:9999; }
         .toast.show { opacity:1; transform:translateY(0); }
 
@@ -184,14 +172,6 @@
             <h2 id="cardCompleted">—</h2>
             <p>Completed</p>
         </div>
-    </div>
-
-    <!-- TASK NOTIFICATIONS -->
-    <div class="section" id="taskAlertsSection" style="display:none;">
-        <div class="section-header">
-            <h2>Notifications</h2>
-        </div>
-        <div id="taskAlertsList"></div>
     </div>
 
     <!-- REMINDER TABLE -->
@@ -777,123 +757,10 @@
         document.getElementById("viewModal").classList.remove("active");
     }
 
-    // ---- Task-based notifications (overdue / due soon / pending review / new task) ----
-    const DISMISS_KEY = "dismissedNotifications";
-    let dismissed = new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]"));
-
-    function itemKey(a) {
-        if (a.taskId) return `task:${a.taskId}:${a.category}`;
-        return `sales:${a.title}`;
-    }
-    function dismissItem(key) {
-        dismissed.add(key);
-        localStorage.setItem(DISMISS_KEY, JSON.stringify([...dismissed]));
-    }
-
-    function dashboardUrlForRole() {
-        if (userRole === "admin") return "admin-dashboard.html";
-        if (userRole === "manager") return "manager-dashboard.html";
-        return "employee-dashboard.html";
-    }
-
-    function goToAlert(a) {
-        if (a.taskId) {
-            window.location.href = `${dashboardUrlForRole()}?task=${a.taskId}`;
-        } else {
-            window.location.href = "sales-dashboard.html";
-        }
-    }
-
-    function dotFor(p) {
-        if (p === "Critical" || p === "High") return "🔴";
-        if (p === "Medium") return "🟠";
-        return "🟡";
-    }
-
-    async function loadTaskAlerts() {
-        const section = document.getElementById("taskAlertsSection");
-        const list    = document.getElementById("taskAlertsList");
-        if (!userId) return;
-
-        let tasks = [];
-        try {
-            let url;
-            if (userRole === "admin") url = `${BASE}/all-tasks`;
-            else if (userRole === "manager") url = `${BASE}/manager-tasks?manager_id=${userId}`;
-            else url = `${BASE}/my-tasks?user_id=${userId}`;
-
-            const res = await fetch(url);
-            tasks = await res.json();
-        } catch (e) { tasks = []; }
-
-        if (!Array.isArray(tasks)) tasks = [];
-
-        const now = new Date();
-        let alerts = [];
-
-        tasks.forEach(t => {
-            if (t.due_date) {
-                const daysLeft = Math.ceil((new Date(t.due_date) - now) / (1000 * 60 * 60 * 24));
-                if (daysLeft < 0) alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "Task", line: `Overdue by ${Math.abs(daysLeft)} day(s)` });
-                else if (daysLeft === 0) alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "Task", line: "Due today" });
-                else if (daysLeft === 1) alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "Task", line: "Due tomorrow" });
-                else if (daysLeft <= 3) alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "Task", line: `Due in ${daysLeft} days` });
-            }
-            if (t.status === "Pending Review") {
-                alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "Pending Review", line: "Awaiting manager approval" });
-            }
-            if (t.created_at) {
-                const hoursOld = (now - new Date(t.created_at)) / (1000 * 60 * 60);
-                if (hoursOld >= 0 && hoursOld <= 48) {
-                    alerts.push({ title: t.title, priority: t.priority, taskId: t.id, category: "New Task", line: "Newly assigned" });
-                }
-            }
-        });
-
-        if (userRole === "admin") {
-            try {
-                const sres = await fetch(`${BASE}/sales/reminder-status?viewer_id=${userId}&viewer_role=admin`);
-                const sdata = await sres.json();
-                (sdata.missing || []).forEach(e => {
-                    alerts.push({ title: `${e.name} — sales projection`, priority: "Medium", category: "Sales Upload", line: "Has not submitted this week's projection" });
-                });
-            } catch (e) { /* ignore */ }
-        }
-
-        alerts = alerts.filter(a => !dismissed.has(itemKey(a)));
-
-        if (!alerts.length) { section.style.display = "none"; return; }
-
-        section.style.display = "block";
-        list.innerHTML = alerts.map((a, i) => `
-            <div class="alert-item" data-i="${i}" style="cursor:pointer;justify-content:space-between;">
-                <div style="display:flex;align-items:flex-start;gap:10px;">
-                    <span>${dotFor(a.priority)}</span>
-                    <div>
-                        <div class="alert-item-title">${a.title}</div>
-                        <div class="alert-item-sub">${a.category} • ${a.line}</div>
-                    </div>
-                </div>
-                <button class="notif-close" title="Dismiss">×</button>
-            </div>
-        `).join("");
-
-        list.querySelectorAll(".alert-item").forEach((el, i) => {
-            const a = alerts[i];
-            el.querySelector(".notif-close").addEventListener("click", (e) => {
-                e.stopPropagation();
-                dismissItem(itemKey(a));
-                loadTaskAlerts();
-            });
-            el.addEventListener("click", () => goToAlert(a));
-        });
-    }
-
     // ---- Init ----
     (async function init() {
         await loadUsers();
         await loadReminders();
-        loadTaskAlerts();
     })();
 </script>
 </body>
