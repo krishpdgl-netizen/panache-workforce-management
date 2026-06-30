@@ -570,7 +570,7 @@
                     <button class="filter-tab" onclick="filterMyLeaves('Approved', this)">Approved</button>
                     <button class="filter-tab" onclick="filterMyLeaves('Rejected', this)">Rejected</button>
                 </div>
-                <button class="btn-primary" onclick="openApplyModal()">+ Apply Leave</button>
+                <button class="btn-primary" id="applyLeaveBtn" onclick="openApplyModal()">+ Apply Leave</button>
             </div>
         </div>
         <div style="overflow-x:auto;">
@@ -726,6 +726,9 @@ function logout() {
 const userRole = (localStorage.getItem("userRole") || "").toLowerCase();
 if (userRole === "admin" || userRole === "manager") {
     document.getElementById("approvalSection").style.display = "";
+}
+if (userRole === "admin") {
+    document.getElementById("applyLeaveBtn").style.display = "none";
 }
 
 /* ── Toast ────────────────────────────────────────────────── */
