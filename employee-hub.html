@@ -768,12 +768,10 @@ async function loadLeaveStats() {
         document.getElementById("stat-pending").textContent  = data.pending  ?? 0;
         document.getElementById("stat-approved").textContent = data.approved ?? 0;
         document.getElementById("stat-rejected").textContent = data.rejected ?? 0;
-
-        const badge = document.getElementById("pendingBadge");
-        if (data.pending > 0) {
-            badge.textContent = data.pending + " pending";
-            badge.style.display = "";
-        }
+        // Note: the "pending" badge on the Approval Queue itself is set by
+        // renderApprovalQueue(), based on what's actually visible there —
+        // not this global count, which can include requests routed to
+        // someone else.
     } catch(e) {
         console.error("loadLeaveStats:", e);
     }
@@ -837,12 +835,29 @@ function renderApprovalQueue() {
     const tbody = document.getElementById("approvalBody");
     const empty = document.getElementById("approvalEmpty");
 
-    // Only show requests that were actually routed to ME as the approver,
-    // and never my own leave requests (those go to MY approver instead).
-    let rows = _allLeaves.filter(r =>
-        String(r.approver_id) === String(userId) &&
-        String(r.user_id) !== String(userId)
-    );
+    // Show requests that were actually routed to ME as the approver.
+    // Admins additionally act as a safety net: if a request somehow has
+    // no approver assigned (approver_id is null — e.g. the requester had
+    // no manager on record), an admin should still be able to see and
+    // act on it rather than it getting stuck invisibly.
+    let rows = _allLeaves.filter(r => {
+        if (String(r.user_id) === String(userId)) return false; // never my own
+        if (String(r.approver_id) === String(userId)) return true;
+        if (userRole === "admin" && (r.approver_id === null || r.approver_id === undefined)) return true;
+        return false;
+    });
+
+    // Keep the "pending" badge in sync with what's actually shown here,
+    // rather than a global count that could include requests routed to
+    // someone else.
+    const pendingCount = rows.filter(r => r.status === "Pending").length;
+    const badge = document.getElementById("pendingBadge");
+    if (pendingCount > 0) {
+        badge.textContent = pendingCount + " pending";
+        badge.style.display = "";
+    } else {
+        badge.style.display = "none";
+    }
     if (_apprFilter !== "all") rows = rows.filter(r => r.status === _apprFilter);
 
     tbody.innerHTML = "";
