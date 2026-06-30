@@ -513,14 +513,6 @@
         <div id="teamRequestsList"></div>
     </div>
 
-    <!-- NOTIFICATIONS -->
-    <div class="section">
-        <h2>Notifications</h2>
-        <div id="notificationsBox">
-            <div class="notification">Loading notifications...</div>
-        </div>
-    </div>
-
 </div>
 
 <!-- TOAST -->
@@ -613,7 +605,8 @@
 
             document.getElementById("taskTable").innerHTML = html;
             updateAI(tasks);
-            updateNotifications(tasks);
+            window.__myTasks = tasks;
+            if (window.refreshBellWithTasks) window.refreshBellWithTasks();
 
         } catch (e) {
             console.error("loadTasks error:", e);
@@ -697,41 +690,6 @@
         document.getElementById("aiStatus").textContent = overdue > 0
             ? `⚠️ You have ${overdue} overdue task${overdue > 1 ? "s" : ""}. Prioritise these first.`
             : "You are on track to complete all deadlines.";
-    }
-
-    // ── NOTIFICATIONS (built from real task data) ─────────────
-    function updateNotifications(tasks) {
-        const notes = [];
-
-        tasks.forEach(t => {
-            if (!t.due_date) return;
-            const daysLeft = Math.ceil(
-                (new Date(t.due_date) - new Date()) / (1000 * 60 * 60 * 24)
-            );
-            if (daysLeft < 0) {
-                notes.push(`⚠️ "${t.title}" is overdue.`);
-            } else if (daysLeft === 0) {
-                notes.push(`🔴 "${t.title}" is due today.`);
-            } else if (daysLeft === 1) {
-                notes.push(`🟡 "${t.title}" is due tomorrow.`);
-            } else if (daysLeft <= 3) {
-                notes.push(`🔔 "${t.title}" is due in ${daysLeft} days.`);
-            }
-        });
-
-        const pendingReview = tasks.filter(t => t.status === "Pending Review");
-        pendingReview.forEach(t => {
-            notes.push(`⏳ "${t.title}" is awaiting manager approval.`);
-        });
-
-        const box = document.getElementById("notificationsBox");
-        if (!notes.length) {
-            box.innerHTML = `<div class="notification">No new notifications.</div>`;
-        } else {
-            box.innerHTML = notes
-                .map(n => `<div class="notification">${n}</div>`)
-                .join("");
-        }
     }
 
     // ── INIT ──────────────────────────────────────────────────
@@ -991,6 +949,55 @@ loadTeamRequests();
         return `Due in ${days} Days`;
     }
 
+    // Build task-based alerts (overdue / due soon / pending review / new task)
+    // from whatever tasks the dashboard has already loaded, so they ride
+    // along in the same bell + widget instead of a separate panel.
+    function buildTaskAlerts() {
+        const tasks = window.__myTasks || [];
+        const alerts = [];
+        const now = new Date();
+
+        tasks.forEach(t => {
+            if (t.due_date) {
+                const daysLeft = Math.ceil((new Date(t.due_date) - now) / (1000 * 60 * 60 * 24));
+                if (daysLeft <= 3) {
+                    alerts.push({
+                        title: t.title,
+                        category: "Task",
+                        priority: t.priority || "Medium",
+                        days_remaining: daysLeft,
+                        amount: null
+                    });
+                }
+            }
+            if (t.status === "Pending Review") {
+                alerts.push({
+                    title: t.title,
+                    category: "Pending Review",
+                    priority: t.priority || "Medium",
+                    days_remaining: null,
+                    customLine: "Awaiting manager approval",
+                    amount: null
+                });
+            }
+            if (t.created_at) {
+                const hoursOld = (now - new Date(t.created_at)) / (1000 * 60 * 60);
+                if (hoursOld >= 0 && hoursOld <= 48) {
+                    alerts.push({
+                        title: t.title,
+                        category: "New Task",
+                        priority: t.priority || "Medium",
+                        days_remaining: null,
+                        customLine: "Newly assigned to you",
+                        amount: null
+                    });
+                }
+            }
+        });
+
+        return alerts;
+    }
+
     async function loadWidgetAndBell() {
         let items = [];
         try {
@@ -998,8 +1005,23 @@ loadTeamRequests();
             items = await res.json();
         } catch (e) { items = []; }
 
-        renderWidget(items);
-        renderBell(items);
+        const merged = items.concat(buildTaskAlerts());
+        merged.sort((a, b) => {
+            const da = (a.days_remaining === null || a.days_remaining === undefined) ? 99 : a.days_remaining;
+            const db = (b.days_remaining === null || b.days_remaining === undefined) ? 99 : b.days_remaining;
+            return da - db;
+        });
+
+        renderWidget(merged);
+        renderBell(merged);
+    }
+
+    // Allow the dashboard's task loader to push fresh tasks into the bell
+    // without waiting for the next reminders poll.
+    window.refreshBellWithTasks = loadWidgetAndBell;
+
+    function lineForItem(r) {
+        return r.customLine || lineFor(r.days_remaining);
     }
 
     function renderWidget(items) {
@@ -1014,7 +1036,7 @@ loadTeamRequests();
                 <span class="reminder-dot">${dot(r.priority)}</span>
                 <div class="reminder-item-body">
                     <div class="reminder-item-title">${r.title}</div>
-                    <div class="reminder-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
+                    <div class="reminder-item-sub">${r.category} • ${lineForItem(r)}</div>
                 </div>
                 ${r.amount ? `<div class="reminder-item-amt">₹${Number(r.amount).toLocaleString("en-IN")}</div>` : ""}
             </div>
@@ -1038,7 +1060,7 @@ loadTeamRequests();
             items.map(r => `
                 <div class="bell-item" onclick="window.location.href='reminder.html'">
                     <div class="bell-item-title">${dot(r.priority)} ${r.title}</div>
-                    <div class="bell-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
+                    <div class="bell-item-sub">${r.category} • ${lineForItem(r)}</div>
                 </div>
             `).join("");
     }
