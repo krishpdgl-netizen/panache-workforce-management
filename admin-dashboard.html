@@ -249,21 +249,6 @@
         .bell-item-sub { font-size: 12px; color: #6b7280; margin-top:2px; }
         .bell-empty { text-align:center; padding: 30px 10px; color: #9ca3af; font-size: 13px; }
 
-        .reminder-item { position: relative; }
-        .bell-item { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; cursor: pointer; }
-        .bell-item-main { flex: 1; min-width: 0; }
-        .notif-close {
-            flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; border: none;
-            background: transparent; color: #9ca3af; font-size: 15px; line-height: 1;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .notif-close:hover { background: #fee2e2; color: #dc2626; }
-        @keyframes rowFlash {
-            0% { background-color: #fef9c3; }
-            100% { background-color: transparent; }
-        }
-        .row-flash { animation: rowFlash 1.8s ease-out; }
-
     </style>
 </head>
 
@@ -505,6 +490,14 @@
     </div>
 
 
+    <!-- SYSTEM ALERTS -->
+    <div class="section">
+        <h2 style="margin-bottom:18px;">System Alerts</h2>
+        <div id="alertsBox">
+            <div class="alert">Analyzing system...</div>
+        </div>
+    </div>
+
 </div><!-- end .main -->
 
 <!-- ADD USER MODAL -->
@@ -738,7 +731,7 @@ function renderManagers(list) {
             }
 
             document.getElementById("taskTable").innerHTML = tasks.map(t => `
-                <tr id="task-row-${t.id}">
+                <tr>
                     <td>${t.id}</td>
                     <td><b>${t.title}</b></td>
                     <td>${t.assigned_to}</td>
@@ -748,9 +741,8 @@ function renderManagers(list) {
                     <td><button class="btn-danger" onclick="deleteTask(${t.id})">Delete</button></td>
                 </tr>`).join("");
 
-            // Stash tasks so the bell/widget can build alerts from them
-            window.__allTasks = tasks;
-            if (window.refreshBellWithTasks) window.refreshBellWithTasks();
+            // Build system alerts from task data
+            buildAlerts(tasks);
 
         } catch(e) { console.error("loadTasks:", e); }
     }
@@ -855,14 +847,46 @@ function renderManagers(list) {
     
 
     // ── SYSTEM ALERTS (derived from task data) ────────────────
+    function buildAlerts(tasks) {
+        const alerts  = [];
+        const today   = new Date();
+
+        const overdue = tasks.filter(t =>
+            t.status !== "Completed" && new Date(t.due_date) < today
+        );
+        if (overdue.length) {
+            alerts.push({ msg: `⚠️ ${overdue.length} task${overdue.length>1?"s are":" is"} overdue.`, cls: "alert alert-red" });
+        }
+
+        const pendingReview = tasks.filter(t => t.status === "Pending Review");
+        if (pendingReview.length) {
+            alerts.push({ msg: `🕐 ${pendingReview.length} task${pendingReview.length>1?"s are":" is"} awaiting manager review.`, cls: "alert" });
+        }
+
+        const dueSoon = tasks.filter(t => {
+            if (t.status === "Completed") return false;
+            const days = Math.ceil((new Date(t.due_date) - today) / 86400000);
+            return days >= 0 && days <= 2;
+        });
+        if (dueSoon.length) {
+            alerts.push({ msg: `🔔 ${dueSoon.length} task${dueSoon.length>1?"s are":" is"} due within 2 days.`, cls: "alert" });
+        }
+
+        if (!alerts.length) {
+            alerts.push({ msg: "✅ All systems normal. No urgent alerts.", cls: "alert" });
+        }
+
+        document.getElementById("alertsBox").innerHTML =
+            alerts.map(a => `<div class="${a.cls}">${a.msg}</div>`).join("");
+    }
+
+
     async function loadSalesReminder() {
         try {
             const adminId = localStorage.getItem("userId");
             const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${adminId}&viewer_role=admin`);
             const data = await res.json();
-            if (!data.missing || data.missing.length === 0) { window.__salesMissing = []; return; }
-            window.__salesMissing = data.missing;
-            if (window.refreshBellWithTasks) window.refreshBellWithTasks();
+            if (!data.missing || data.missing.length === 0) return;
             document.getElementById("reminderWeekNum").textContent = data.week;
             const names = data.missing.map(e => `<b>${e.name}</b>`).join(", ");
             document.getElementById("reminderMissingNames").innerHTML =
@@ -910,140 +934,16 @@ function renderManagers(list) {
         return `Due in ${days} Days`;
     }
 
-    // ── DISMISS SUPPORT ─────────────────────────────────────
-    const DISMISS_KEY = "dismissedNotifications";
-    let dismissed = new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]"));
-
-    function itemKey(r) {
-        if (r.type === "task") return `task:${r.taskId}:${r.category}`;
-        if (r.type === "sales") return `sales:${r.title}`;
-        return `reminder:${r.id}`;
-    }
-    function dismissItem(key) {
-        dismissed.add(key);
-        localStorage.setItem(DISMISS_KEY, JSON.stringify([...dismissed]));
-    }
-
-    // ── CLICK-THROUGH: jump to the actual task row when it's a task alert ──
-    function goToAlert(r) {
-        if (r.type === "task" && r.taskId) {
-            const row = document.getElementById("task-row-" + r.taskId);
-            if (row) {
-                document.getElementById("bellDropdown").classList.remove("active");
-                row.scrollIntoView({ behavior: "smooth", block: "center" });
-                row.classList.remove("row-flash");
-                void row.offsetWidth;
-                row.classList.add("row-flash");
-                return;
-            }
-        }
-        if (r.type === "sales") {
-            window.location.href = "sales-dashboard.html";
-            return;
-        }
-        window.location.href = "reminder.html";
-    }
-
-    // Build org-wide alerts (overdue / due soon / pending review / new task /
-    // missing sales projections) from data the dashboard already loaded.
-    function buildTaskAlerts() {
-        const tasks = window.__allTasks || [];
-        const alerts = [];
-        const now = new Date();
-
-        tasks.forEach(t => {
-            if (t.due_date && t.status !== "Completed") {
-                const daysLeft = Math.ceil((new Date(t.due_date) - now) / (1000 * 60 * 60 * 24));
-                if (daysLeft <= 3) {
-                    alerts.push({
-                        type: "task",
-                        taskId: t.id,
-                        title: t.title,
-                        category: "Task",
-                        priority: t.priority || "Medium",
-                        days_remaining: daysLeft,
-                        amount: null
-                    });
-                }
-            }
-            if (t.status === "Pending Review") {
-                alerts.push({
-                    type: "task",
-                    taskId: t.id,
-                    title: t.title,
-                    category: "Pending Review",
-                    priority: t.priority || "Medium",
-                    days_remaining: null,
-                    customLine: "Awaiting manager approval",
-                    amount: null
-                });
-            }
-            if (t.created_at) {
-                const hoursOld = (now - new Date(t.created_at)) / (1000 * 60 * 60);
-                if (hoursOld >= 0 && hoursOld <= 48) {
-                    alerts.push({
-                        type: "task",
-                        taskId: t.id,
-                        title: t.title,
-                        category: "New Task",
-                        priority: t.priority || "Medium",
-                        days_remaining: null,
-                        customLine: "Newly created",
-                        amount: null
-                    });
-                }
-            }
-        });
-
-        (window.__salesMissing || []).forEach(e => {
-            alerts.push({
-                type: "sales",
-                title: `${e.name} — sales projection`,
-                category: "Sales Upload",
-                priority: "Medium",
-                days_remaining: null,
-                customLine: "Has not submitted this week's projection",
-                amount: null
-            });
-        });
-
-        return alerts;
-    }
-
-    function lineForItem(r) {
-        return r.customLine || lineFor(r.days_remaining);
-    }
-
     async function loadWidgetAndBell() {
         let items = [];
         try {
             const res = await fetch(`${RBASE}/reminders/today?user_id=${ruid}&role=${rrole}`);
-            items = (await res.json()).map(r => ({ ...r, type: "reminder" }));
+            items = await res.json();
         } catch (e) { items = []; }
 
-        let merged = items.concat(buildTaskAlerts());
-        merged = merged.filter(r => !dismissed.has(itemKey(r)));
-        merged.sort((a, b) => {
-            const da = (a.days_remaining === null || a.days_remaining === undefined) ? 99 : a.days_remaining;
-            const db = (b.days_remaining === null || b.days_remaining === undefined) ? 99 : b.days_remaining;
-            return da - db;
-        });
-
-        renderWidget(merged);
-        renderBell(merged);
-
-        const params = new URLSearchParams(window.location.search);
-        const wantTask = params.get("task");
-        if (wantTask) {
-            const row = document.getElementById("task-row-" + wantTask);
-            if (row) {
-                row.scrollIntoView({ behavior: "smooth", block: "center" });
-                row.classList.add("row-flash");
-            }
-        }
+        renderWidget(items);
+        renderBell(items);
     }
-
-    window.refreshBellWithTasks = loadWidgetAndBell;
 
     function renderWidget(items) {
         const list = document.getElementById("reminderWidgetList");
@@ -1057,23 +957,11 @@ function renderManagers(list) {
                 <span class="reminder-dot">${dot(r.priority)}</span>
                 <div class="reminder-item-body">
                     <div class="reminder-item-title">${r.title}</div>
-                    <div class="reminder-item-sub">${r.category} • ${lineForItem(r)}</div>
+                    <div class="reminder-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
                 </div>
                 ${r.amount ? `<div class="reminder-item-amt">₹${Number(r.amount).toLocaleString("en-IN")}</div>` : ""}
-                <button class="notif-close" title="Dismiss">×</button>
             </div>
         `).join("");
-
-        list.querySelectorAll(".reminder-item").forEach((el, i) => {
-            const r = items[i];
-            el.querySelector(".notif-close").addEventListener("click", (e) => {
-                e.stopPropagation();
-                dismissItem(itemKey(r));
-                loadWidgetAndBell();
-            });
-            el.addEventListener("click", () => goToAlert(r));
-            el.style.cursor = "pointer";
-        });
     }
 
     function renderBell(items) {
@@ -1091,24 +979,11 @@ function renderManagers(list) {
 
         dropEl.innerHTML = `<div class="bell-dropdown-header">Reminders & Notifications</div>` +
             items.map(r => `
-                <div class="bell-item">
-                    <div class="bell-item-main">
-                        <div class="bell-item-title">${dot(r.priority)} ${r.title}</div>
-                        <div class="bell-item-sub">${r.category} • ${lineForItem(r)}</div>
-                    </div>
-                    <button class="notif-close" title="Dismiss">×</button>
+                <div class="bell-item" onclick="window.location.href='reminder.html'">
+                    <div class="bell-item-title">${dot(r.priority)} ${r.title}</div>
+                    <div class="bell-item-sub">${r.category} • ${lineFor(r.days_remaining)}</div>
                 </div>
             `).join("");
-
-        dropEl.querySelectorAll(".bell-item").forEach((el, i) => {
-            const r = items[i];
-            el.querySelector(".notif-close").addEventListener("click", (e) => {
-                e.stopPropagation();
-                dismissItem(itemKey(r));
-                loadWidgetAndBell();
-            });
-            el.addEventListener("click", () => goToAlert(r));
-        });
     }
 
     window.toggleBellDropdown = function() {
