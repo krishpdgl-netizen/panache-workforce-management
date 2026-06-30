@@ -657,7 +657,9 @@
 
     <div class="section">
     <div class="section-header">
-        <h2>Tasks Pending Review</h2>
+        <h2>Tasks Pending Review
+            <span id="reviewBadge" style="display:none;background:#dc2626;color:white;font-size:12px;padding:2px 9px;border-radius:99px;margin-left:8px;font-weight:700;vertical-align:middle;"></span>
+        </h2>
     </div>
 
     <table>
@@ -927,13 +929,15 @@ localStorage.getItem("userId");
             const res   = await fetch(`${BASE}/review-tasks?manager_id=${managerId}`);
             const tasks = await res.json();
 
-            // Update sidebar badge
+            // Update sidebar badge (guarded — won't break table render if missing)
             const badge = document.getElementById("reviewBadge");
-            if (tasks.length > 0) {
-                badge.textContent = tasks.length;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
+            if (badge) {
+                if (tasks.length > 0) {
+                    badge.textContent = tasks.length;
+                    badge.style.display = "inline-block";
+                } else {
+                    badge.style.display = "none";
+                }
             }
 
             if (!tasks.length) {
