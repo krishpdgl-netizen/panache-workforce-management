@@ -693,6 +693,16 @@ function showToast(msg, type="") {
 
 function closeModal(id) { document.getElementById(id).classList.remove("active"); }
 
+function formatLate(mins) {
+    mins = mins || 0;
+    if (mins <= 0) return "0 min";
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+}
+
 async function api(path, opts={}) {
     try {
         const r = await fetch(API+path, { headers:{"Content-Type":"application/json"}, ...opts });
@@ -838,7 +848,7 @@ async function loadPunchState() {
         btnOut.style.display = "none";
     } else if (rec.check_in && !rec.check_out) {
         // Checked in, not out yet — show Punch Out
-        statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:#f59e0b;font-size:13px;">⚠️ ${rec.late_minutes} min late</span>`:""}`;
+        statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:#f59e0b;font-size:13px;">⚠️ ${formatLate(rec.late_minutes)} late</span>`:""}`;
         btnIn.style.display  = "none";
         btnOut.style.display = "inline-block";
     } else {
@@ -868,25 +878,6 @@ async function doPunch(type) {
 
     const endpoint = type === "in" ? "/attendance/checkin" : "/attendance/checkout";
     let res = await api(`${endpoint}?emp_id=${EMP_ID}`, {method:"POST"});
-
-    // If already checked in, use PUT to overwrite the existing record cleanly
-    if (res && !res.success && res.already_checked_in && res.record_id && type === "in") {
-        const now = new Date();
-        const ist = new Date(now.toLocaleString("en-US", {timeZone:"Asia/Kolkata"}));
-        const ci  = String(ist.getHours()).padStart(2,"0") + ":" + String(ist.getMinutes()).padStart(2,"0");
-        res = await api(`/attendance/${res.record_id}`, {
-            method: "PUT",
-            body: JSON.stringify({
-                check_in: ci,
-                check_out: null,
-                working_hours: null,
-                overtime: 0,
-                status: "Present",
-                source: "self"
-            })
-        });
-        if (res?.success) res.message = `Punched in at ${ci}`;
-    }
 
     btnIn.disabled = btnOut.disabled = false;
 
@@ -931,7 +922,7 @@ async function renderMyAttendance() {
             <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Check-In</div><div style="font-size:22px;font-weight:700;color:#2563eb;margin-top:4px;">${rec.check_in||"—"}</div></div>
             <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Check-Out</div><div style="font-size:22px;font-weight:700;color:#16a34a;margin-top:4px;">${rec.check_out||"—"}</div></div>
             <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Hours</div><div style="font-size:22px;font-weight:700;color:#111827;margin-top:4px;">${rec.working_hours||"—"}</div></div>
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Late</div><div style="font-size:22px;font-weight:700;color:${(rec.late_minutes||0)>0?"#f59e0b":"#16a34a"};margin-top:4px;">${rec.late_minutes||0} min</div></div>
+            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Late</div><div style="font-size:22px;font-weight:700;color:${(rec.late_minutes||0)>0?"#f59e0b":"#16a34a"};margin-top:4px;">${formatLate(rec.late_minutes)}</div></div>
         </div>`;
     } else {
         tbox.innerHTML = `<div class="no-data">No attendance record for today. Contact HR if you believe this is incorrect.</div>`;
@@ -1076,7 +1067,7 @@ async function renderAttendanceTable() {
         <td style="font-weight:600;">${r.emp_name}</td><td>${r.department}</td>
         <td>${fmt(r.att_date)}</td><td>${r.check_in||"—"}</td><td>${r.check_out||"—"}</td>
         <td>${r.working_hours||"—"}</td><td>${statusBadge(r.status)}</td>
-        <td>${r.late_minutes||0} min</td><td>${r.overtime||0}h</td>
+        <td>${formatLate(r.late_minutes)}</td><td>${r.overtime||0}h</td>
         <td style="font-size:13px;">${r.remarks||"—"}</td>
         <td style="white-space:nowrap;">
             <button class="btn-warning" onclick="editAttendance(${r.id})" style="margin-right:4px;">Edit</button>
@@ -1544,7 +1535,7 @@ async function renderLateReport() {
     const rows=await api(`/reports/attendance/late?month=${m}`)||[];
     const body=document.getElementById("rep-late-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="5" class="no-data">No late records.</td></tr>`; return; }
-    body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.late_days}</td><td>${r.total_late_minutes} min</td><td>${r.avg_late_minutes} min</td></tr>`).join("");
+    body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.late_days}</td><td>${formatLate(r.total_late_minutes)}</td><td>${formatLate(r.avg_late_minutes)}</td></tr>`).join("");
 }
 
 async function renderAbsentReport() {
