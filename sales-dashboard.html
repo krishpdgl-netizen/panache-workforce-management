@@ -700,7 +700,11 @@ function buildWeekCalendar() {
     const grid  = document.getElementById("weekGrid");
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    const startOffset  = weekPageOffset * WEEKS_PER_PAGE;
+    // Show a couple of past weeks alongside the current week by default,
+    // instead of only current + upcoming weeks.
+    const INITIAL_BACK = 2;
+
+    const startOffset  = weekPageOffset * WEEKS_PER_PAGE - INITIAL_BACK;
     const visibleWeeks = [];
     for (let i = 0; i < WEEKS_PER_PAGE; i++) {
         visibleWeeks.push(currentWeekNum + startOffset + i);
