@@ -616,7 +616,7 @@
             </div>
         </div>
         <p style="font-size:13px;color:#6b7280;margin-bottom:16px;margin-top:-8px;">
-            Review and act on pending leave requests from your team.
+            Review and act on leave requests routed to you for approval.
         </p>
         <div style="overflow-x:auto;">
             <table>
@@ -836,7 +836,13 @@ function renderApprovalQueue() {
 
     const tbody = document.getElementById("approvalBody");
     const empty = document.getElementById("approvalEmpty");
-    let rows = [..._allLeaves];
+
+    // Only show requests that were actually routed to ME as the approver,
+    // and never my own leave requests (those go to MY approver instead).
+    let rows = _allLeaves.filter(r =>
+        String(r.approver_id) === String(userId) &&
+        String(r.user_id) !== String(userId)
+    );
     if (_apprFilter !== "all") rows = rows.filter(r => r.status === _apprFilter);
 
     tbody.innerHTML = "";
@@ -865,9 +871,12 @@ function renderApprovalQueue() {
             <td>${statusBadge(r.status)}</td>
             <td>
                 ${isPending
-                    ? `<div style="display:flex;gap:6px;">
+                    ? `<div style="display:flex;gap:6px;flex-wrap:wrap;">
                            <button class="action-btn btn-approve" id="btn-a-${r.id}" onclick="approveLeave(${r.id})">✓ Approve</button>
                            <button class="action-btn btn-reject"  id="btn-r-${r.id}" onclick="rejectLeave(${r.id})">✕ Reject</button>
+                           ${userRole === "manager"
+                               ? `<button class="action-btn" id="btn-e-${r.id}" onclick="escalateLeave(${r.id})" title="Forward this request to admin">↗ To Admin</button>`
+                               : ""}
                        </div>`
                     : `<span class="btn-disabled">—</span>`}
             </td>`;
@@ -921,6 +930,27 @@ async function rejectLeave(id) {
     } catch(e) {
         showToast("Network error. Please try again.");
         if (btn) { btn.disabled = false; btn.textContent = "✕ Reject"; }
+    }
+}
+
+/* ── escalateLeave (manager forwards request to admin) ───────── */
+async function escalateLeave(id) {
+    const btn = document.getElementById(`btn-e-${id}`);
+    if (btn) { btn.disabled = true; btn.textContent = "…"; }
+    try {
+        const res  = await fetch(`${BASE}/leave-requests/${id}/escalate`, { method:"POST" });
+        const data = await res.json();
+        if (data.success) {
+            showToast("Request forwarded to admin.");
+            await loadLeaveStats();
+            await loadLeaveRequests();
+        } else {
+            showToast(data.error || "Failed to escalate. Try again.");
+            if (btn) { btn.disabled = false; btn.textContent = "↗ To Admin"; }
+        }
+    } catch(e) {
+        showToast("Network error. Please try again.");
+        if (btn) { btn.disabled = false; btn.textContent = "↗ To Admin"; }
     }
 }
 
