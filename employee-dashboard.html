@@ -787,13 +787,26 @@
         </label>
         <input type="file" id="submitFile"
                style="width:100%;padding:8px;border:1.5px dashed #e5e7eb;border-radius:8px;
-                      font-size:13px;cursor:pointer;margin-bottom:18px;" />
+                      font-size:13px;cursor:pointer;margin-bottom:10px;" />
+
+        <!-- UPLOAD PROGRESS -->
+        <div id="uploadProgressWrap" style="display:none;margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span id="uploadProgressLabel" style="font-size:12px;color:#6b7280;">Uploading…</span>
+                <span id="uploadProgressPercent" style="font-size:12px;font-weight:600;color:#2563eb;">0%</span>
+            </div>
+            <div style="width:100%;height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;">
+                <div id="uploadProgressBar"
+                     style="width:0%;height:100%;background:#2563eb;border-radius:99px;
+                            transition:width 0.15s ease;"></div>
+            </div>
+        </div>
 
         <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button onclick="closeSubmitModal()"
+            <button id="submitCancelBtn" onclick="closeSubmitModal()"
                     style="background:#e5e7eb;color:#374151;border:none;padding:10px 20px;
                            border-radius:8px;cursor:pointer;font-size:14px;">Cancel</button>
-            <button onclick="submitForReview()"
+            <button id="submitConfirmBtn" onclick="submitForReview()"
                     style="background:#2563eb;color:white;border:none;padding:10px 20px;
                            border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
                     Submit for Review
@@ -852,39 +865,109 @@ function closeDetailsModal() {
 function openSubmitModal(taskId) {
     document.getElementById("submitTaskId").value = taskId;
     document.getElementById("submitFile").value   = "";
+    resetUploadProgress();
     document.getElementById("submitModal").style.display = "flex";
 }
 
 function closeSubmitModal() {
+    // don't allow closing mid-upload
+    if (window.__uploadInProgress) return;
     document.getElementById("submitModal").style.display = "none";
 }
 
-async function submitForReview() {
+function resetUploadProgress() {
+    document.getElementById("uploadProgressWrap").style.display = "none";
+    document.getElementById("uploadProgressBar").style.width = "0%";
+    document.getElementById("uploadProgressPercent").textContent = "0%";
+    document.getElementById("uploadProgressLabel").textContent = "Uploading…";
+    document.getElementById("submitConfirmBtn").disabled = false;
+    document.getElementById("submitConfirmBtn").style.opacity = "1";
+    document.getElementById("submitConfirmBtn").textContent = "Submit for Review";
+    document.getElementById("submitCancelBtn").disabled = false;
+    window.__uploadInProgress = false;
+}
+
+function submitForReview() {
     const taskId = document.getElementById("submitTaskId").value;
     const file   = document.getElementById("submitFile").files[0];
 
     const formData = new FormData();
     if (file) formData.append("file", file);
 
-    try {
-        const res  = await fetch(
-            `${BASE}/submit-task-with-file?task_id=${taskId}`,
-            { method: "POST", body: formData }
-        );
-        const data = await res.json();
+    const progressWrap    = document.getElementById("uploadProgressWrap");
+    const progressBar     = document.getElementById("uploadProgressBar");
+    const progressPercent = document.getElementById("uploadProgressPercent");
+    const progressLabel   = document.getElementById("uploadProgressLabel");
+    const confirmBtn      = document.getElementById("submitConfirmBtn");
+    const cancelBtn       = document.getElementById("submitCancelBtn");
 
-        if (data.success) {
-            closeSubmitModal();
-            showToast(file ? "Task submitted with attachment." : "Task submitted for review.");
-            loadTasks();
-            loadProductivity();
-        } else {
-            showToast("Submission failed. Please try again.");
-        }
-    } catch(e) {
-        console.error("submitForReview error:", e);
-        showToast("Network error. Please try again.");
+    // Lock the modal while uploading
+    window.__uploadInProgress = true;
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = "0.6";
+    cancelBtn.disabled = true;
+    confirmBtn.textContent = "Uploading…";
+
+    if (file) {
+        progressWrap.style.display = "block";
+        progressLabel.textContent = `Uploading ${file.name}…`;
     }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${BASE}/submit-task-with-file?task_id=${taskId}`);
+
+    // Real upload progress, driven by actual bytes sent
+    xhr.upload.onprogress = function(e) {
+        if (!e.lengthComputable) return;
+        const pct = Math.round((e.loaded / e.total) * 100);
+        progressBar.style.width = pct + "%";
+        progressPercent.textContent = pct + "%";
+    };
+
+    xhr.upload.onload = function() {
+        // Upload bytes fully sent, now waiting on the server to process/respond
+        progressLabel.textContent = "Processing…";
+        progressPercent.textContent = "100%";
+        progressBar.style.width = "100%";
+    };
+
+    xhr.onload = function() {
+        window.__uploadInProgress = false;
+        try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && data.success) {
+                closeSubmitModal();
+                resetUploadProgress();
+                showToast(file ? "Task submitted with attachment." : "Task submitted for review.");
+                loadTasks();
+                loadProductivity();
+            } else {
+                resetUploadProgress();
+                showToast("Submission failed. Please try again.");
+            }
+        } catch (e) {
+            console.error("submitForReview parse error:", e);
+            resetUploadProgress();
+            showToast("Unexpected server response. Please try again.");
+        }
+    };
+
+    xhr.onerror = function() {
+        console.error("submitForReview network error");
+        window.__uploadInProgress = false;
+        resetUploadProgress();
+        showToast("Network error. Please try again.");
+    };
+
+    xhr.ontimeout = function() {
+        window.__uploadInProgress = false;
+        resetUploadProgress();
+        showToast("Upload timed out. Please check your connection and try again.");
+    };
+
+    xhr.timeout = 120000; // 2 minutes — plenty for file attachments, avoids indefinite hangs
+
+    xhr.send(formData);
 }
 
 // close submit modal on outside click
