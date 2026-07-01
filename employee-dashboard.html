@@ -470,11 +470,12 @@
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Due Date</th>
+                    <th>Details</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody id="taskTable">
-                <tr><td colspan="6" class="no-data">Loading tasks...</td></tr>
+                <tr><td colspan="7" class="no-data">Loading tasks...</td></tr>
             </tbody>
         </table>
     </div>
@@ -532,6 +533,7 @@
 <script>
     const BASE   = "https://backend-production-53f3.up.railway.app";
     const userId = localStorage.getItem("userId");
+    let currentTasks = []; // keep last loaded tasks so we can look up descriptions
 
     // ── PROFILE ──────────────────────────────────────────────
     document.getElementById("profileName").innerHTML  = localStorage.getItem("userName");
@@ -593,10 +595,12 @@
 
             if (!tasks.length) {
                 document.getElementById("taskTable").innerHTML =
-                    `<tr><td colspan="6" class="no-data">No tasks assigned yet.</td></tr>`;
+                    `<tr><td colspan="7" class="no-data">No tasks assigned yet.</td></tr>`;
                 updateAI([]);
                 return;
             }
+
+            currentTasks = tasks; // store for the details modal
 
             let html = "";
             tasks.forEach(task => {
@@ -607,6 +611,13 @@
                         <td>${task.priority}</td>
                         <td>${statusBadge(task.status)}</td>
                         <td>${task.due_date ? task.due_date.split("T")[0] : "—"}</td>
+                        <td>
+                            <button class="action-btn"
+                                    style="background:#eef4ff;color:#2563eb;"
+                                    onclick="openDetailsModal(${task.id})">
+                                View
+                            </button>
+                        </td>
                         <td>${actionButton(task)}</td>
                     </tr>`;
             });
@@ -740,6 +751,30 @@
 </script>
 
 
+<!-- ── TASK DETAILS MODAL ───────────────────────────────────── -->
+<div id="detailsModal" style="display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:14px;padding:28px;width:480px;max-width:95vw;">
+        <h2 id="detailsTitle" style="font-size:17px;margin-bottom:6px;color:#111827;">Task Details</h2>
+        <p id="detailsMeta" style="font-size:12px;color:#6b7280;margin-bottom:18px;"></p>
+
+        <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">
+            Description
+        </label>
+        <p id="detailsDescription"
+           style="font-size:14px;color:#374151;line-height:1.5;white-space:pre-wrap;
+                  background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;
+                  margin-bottom:20px;max-height:260px;overflow-y:auto;">
+        </p>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeDetailsModal()"
+                    style="background:#e5e7eb;color:#374151;border:none;padding:10px 20px;
+                           border-radius:8px;cursor:pointer;font-size:14px;">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- ── SUBMIT FOR REVIEW MODAL ──────────────────────────────── -->
 <div id="submitModal" style="display:none;position:fixed;inset:0;
     background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
@@ -791,6 +826,27 @@
         </div>`;
     main.appendChild(panel);
 })();
+
+// ── TASK DETAILS MODAL ──────────────────────────────────────────
+function openDetailsModal(taskId) {
+    const task = currentTasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    document.getElementById("detailsTitle").textContent = task.title;
+    document.getElementById("detailsMeta").textContent =
+        `Priority: ${task.priority} · Status: ${task.status} · Due: `
+        + (task.due_date ? task.due_date.split("T")[0] : "—");
+    document.getElementById("detailsDescription").textContent =
+        task.description && task.description.trim()
+            ? task.description
+            : "No description was provided for this task.";
+
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+function closeDetailsModal() {
+    document.getElementById("detailsModal").style.display = "none";
+}
 
 // ── SUBMIT MODAL ──────────────────────────────────────────────
 function openSubmitModal(taskId) {
