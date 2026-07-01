@@ -1279,6 +1279,69 @@ loadTeamRequests();
 
     qpLoadState();
 })();
+
+
+/* ================= AUTO REFRESH (Every 20 Seconds) ================= */
+
+let autoRefreshInterval;
+
+async function autoRefresh() {
+    try {
+
+        // Manager Dashboard
+        if (typeof refreshAll === "function") {
+            await refreshAll();
+            return;
+        }
+
+        // Employee Dashboard
+        if (typeof loadTasks === "function") await loadTasks();
+        if (typeof loadNotifications === "function") await loadNotifications();
+        if (typeof loadStats === "function") await loadStats();
+        if (typeof loadReminders === "function") await loadReminders();
+        if (typeof loadCalendar === "function") await loadCalendar();
+
+        // Team Pages
+        if (typeof loadTeam === "function") await loadTeam();
+        if (typeof loadEmployees === "function") await loadEmployees();
+
+        // Admin Dashboard
+        if (typeof loadManagers === "function") await loadManagers();
+        if (typeof loadUsers === "function") await loadUsers();
+        if (typeof loadProjects === "function") await loadProjects();
+
+        // Sales
+        if (typeof loadWeekData === "function") await loadWeekData();
+        if (typeof loadHistory === "function") await loadHistory();
+
+    } catch (err) {
+        console.error("Auto Refresh Error:", err);
+    }
+}
+
+function startAutoRefresh() {
+    autoRefresh(); // Refresh immediately
+    autoRefreshInterval = setInterval(autoRefresh, 20000);
+}
+
+function stopAutoRefresh() {
+    clearInterval(autoRefreshInterval);
+}
+
+// Pause when tab is hidden
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        stopAutoRefresh();
+    } else {
+        startAutoRefresh();
+    }
+});
+
+// Start polling
+startAutoRefresh();
+
+/* ================================================================ */
+    
 </script>
 
 <!-- PWA: installable app support -->
