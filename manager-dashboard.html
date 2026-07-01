@@ -246,6 +246,20 @@
             background: #f3f4f6;
         }
 
+        /* ASSIGNED TASKS — show ~7 rows, rest scrollable */
+        .task-table-scroll {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .task-table-scroll table {
+            width: 100%;
+        }
+        .task-table-scroll thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
         /* MODAL */
         .modal-overlay {
             display: none;
@@ -653,6 +667,7 @@
             <button class="filter-btn" onclick="filterTasks('Pending Review')">Pending Review</button>
             <button class="filter-btn" onclick="filterTasks('Completed')">Completed</button>
         </div>
+        <div class="task-table-scroll">
         <table>
             <thead>
                 <tr>
@@ -668,6 +683,7 @@
             </thead>
             <tbody id="taskTable"></tbody>
         </table>
+        </div>
     </div>
 
     <div class="section">
@@ -1078,6 +1094,12 @@ localStorage.getItem("userId");
 
     // ── REFRESH ALL ──────────────────────────────────────────
     function refreshAll() {
+        // Skip a background refresh while the user has a modal open,
+        // so we don't wipe out an in-progress edit or correction.
+        const editModalOpen   = document.querySelector(".modal-overlay.active");
+        const remarkModalOpen = document.getElementById("remarkModal")?.style.display === "flex";
+        if (editModalOpen || remarkModalOpen) return;
+
         loadStats();
         loadTasks();
         loadEmployees();
@@ -1372,6 +1394,8 @@ document.getElementById("remarkModal").addEventListener("click", function(e) {
         });
     }
 
+    window.loadWidgetAndBell = loadWidgetAndBell;
+
     window.toggleBellDropdown = function() {
         document.getElementById("bellDropdown").classList.toggle("active");
     };
@@ -1391,15 +1415,25 @@ let autoRefreshInterval;
 
 async function autoRefresh() {
     try {
+        // Skip a background refresh while any modal is open, so we don't
+        // wipe out an in-progress form, review, or details view.
+        const modalOpen =
+            document.querySelector(".modal-overlay.active") ||
+            [...document.querySelectorAll('[id$="Modal"]')].some(
+                el => getComputedStyle(el).display === "flex"
+            );
+        if (modalOpen) return;
 
         // Manager Dashboard
         if (typeof refreshAll === "function") {
             await refreshAll();
+            if (typeof loadWidgetAndBell === "function") await loadWidgetAndBell();
             return;
         }
 
         // Employee Dashboard
         if (typeof loadTasks === "function") await loadTasks();
+        if (typeof loadProductivity === "function") await loadProductivity();
         if (typeof loadNotifications === "function") await loadNotifications();
         if (typeof loadStats === "function") await loadStats();
         if (typeof loadReminders === "function") await loadReminders();
@@ -1413,10 +1447,15 @@ async function autoRefresh() {
         if (typeof loadManagers === "function") await loadManagers();
         if (typeof loadUsers === "function") await loadUsers();
         if (typeof loadProjects === "function") await loadProjects();
+        if (typeof loadPerformance === "function") await loadPerformance();
 
         // Sales
         if (typeof loadWeekData === "function") await loadWeekData();
         if (typeof loadHistory === "function") await loadHistory();
+        if (typeof loadSalesReminder === "function") await loadSalesReminder();
+
+        // Notification bell / reminders widget (shared across dashboards)
+        if (typeof loadWidgetAndBell === "function") await loadWidgetAndBell();
 
     } catch (err) {
         console.error("Auto Refresh Error:", err);
