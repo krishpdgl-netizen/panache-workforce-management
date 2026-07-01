@@ -407,6 +407,19 @@
             Only a Super Admin can unlock it.
             <button class="btn-danger" style="margin-left:16px;padding:5px 12px;" onclick="unlockPayroll()">Unlock</button>
         </div>
+
+        <!-- SALARY STRUCTURES: must be set per employee BEFORE payroll can be generated -->
+        <div class="section" id="salaryStructSection">
+            <div class="section-header">
+                <h2>Employee Salary Structures</h2>
+                <span style="font-size:13px;color:#6b7280;">Set a salary structure for each employee — payroll can only be generated for employees who have one.</span>
+            </div>
+            <table>
+                <thead><tr><th>Emp ID</th><th>Name</th><th>Email</th><th>Basic Salary</th><th>Gross (est.)</th><th></th></tr></thead>
+                <tbody id="salaryStructBody"><tr><td colspan="6" class="no-data">Loading employees...</td></tr></tbody>
+            </table>
+        </div>
+
         <div class="section">
             <div class="section-header">
                 <h2>Payroll Processing</h2>
@@ -794,7 +807,7 @@ function showView(name) {
     if (name==="correction")   { renderMyRequests(); }
     if (name==="attendance")   { renderAttendanceSummary(); renderAttendanceTable(); }
     if (name==="requests")     { renderRequestsSummary(); renderRequestsTable(); }
-    if (name==="payroll")      { renderPayrollTable(); }
+    if (name==="payroll")      { renderSalaryStructures(); renderPayrollTable(); }
     if (name==="myslips")      { renderMySlips(); }
     if (name==="audit")        { renderAuditLog(); }
 
@@ -1358,6 +1371,44 @@ async function unlockPayroll() {
 }
 
 // ── SALARY STRUCTURE ─────────────────────────────────────────
+async function renderSalaryStructures() {
+    const body = document.getElementById("salaryStructBody");
+    const [employees, structs] = await Promise.all([
+        api("/employees") || [],
+        api("/salary-structure") || []
+    ]);
+
+    if (!employees?.length) {
+        body.innerHTML = `<tr><td colspan="6" class="no-data">No employees found.</td></tr>`;
+        return;
+    }
+
+    const structMap = {};
+    (structs || []).forEach(s => structMap[String(s.emp_id)] = s);
+
+    body.innerHTML = employees.map(e => {
+        const s = structMap[String(e.id)];
+        const hasStruct = !!s;
+        const basic = hasStruct ? fmtMoney(s.basic_salary) : "—";
+        const gross = hasStruct
+            ? fmtMoney((+s.basic_salary||0)+(+s.hra||0)+(+s.special_allowance||0)+(+s.travel_allowance||0)+(+s.medical_allowance||0)+(+s.bonus||0)+(+s.incentives||0))
+            : "—";
+        return `<tr>
+            <td style="color:#9ca3af;font-size:13px;">${e.id}</td>
+            <td style="font-weight:600;">${e.full_name}</td>
+            <td style="color:#6b7280;font-size:13px;">${e.email||"—"}</td>
+            <td>${basic}</td>
+            <td>${gross}</td>
+            <td>
+                ${hasStruct ? `<span class="badge badge-blue">Set</span>` : `<span class="badge badge-red">Not Set</span>`}
+                <button class="btn-warning" style="margin-left:6px;" onclick="openSalaryStruct('${e.id}','${e.full_name.replace(/'/g,"\\'")}')">
+                    ${hasStruct ? "Edit" : "Set Up"}
+                </button>
+            </td>
+        </tr>`;
+    }).join("");
+}
+
 async function openSalaryStruct(eid, ename) {
     document.getElementById("ss-emp-id").value=eid;
     document.getElementById("ss-emp-name").textContent=ename;
@@ -1390,7 +1441,7 @@ async function saveSalaryStruct() {
         income_tax:+document.getElementById("ss-it").value||0,
         other_deductions:+document.getElementById("ss-other").value||0,
     })});
-    if (res?.success) { closeModal("modalSalaryStruct"); showToast("Salary structure saved.","success"); }
+    if (res?.success) { closeModal("modalSalaryStruct"); showToast("Salary structure saved.","success"); renderSalaryStructures(); }
     else showToast(res?.message||"Error","error");
 }
 
