@@ -2,21 +2,31 @@
 <html lang="en">
 <head>
         <link rel="icon" type="image/png" href="static/favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111827">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Dashboard | Panache</title>
+    <title>Task History | Panache</title>
     <script>
         const role = localStorage.getItem("userRole");
         if (!role) { window.location.href = "index.html"; }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-        body { display: flex; background: #f4f6f9; }
+        body {
+            display: flex;
+            background: #f4f6f9;
+        }
 
-        /* ── SIDEBAR ─────────────────────────────────────── */
+        /* SIDEBAR */
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -24,1248 +34,428 @@
             color: white;
             padding: 20px;
             position: fixed;
-            left: 0; top: 0;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
+            left: 0;
+            top: 0;
         }
-        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
         .menu a {
-            display: block; color: white; text-decoration: none;
-            padding: 12px; margin-bottom: 8px; border-radius: 8px; transition: 0.2s;
-        }
-        .menu a:hover, .menu a.active { background: #2563eb; }
-
-        /* personal to-do at bottom of sidebar */
-        .sidebar-todo {
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 0.5px solid rgba(255,255,255,0.12);
-        }
-        .todo-label {
-            font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4);
-            letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 10px;
-        }
-        #sidebarTodos { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; }
-        .todo-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,0.8); }
-        .todo-circle {
-            width: 16px; height: 16px; border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.3); flex-shrink: 0; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .todo-circle.done { background: #22c55e; border-color: #22c55e; }
-        .todo-input-row { display: flex; gap: 6px; margin-top: 10px; }
-        .todo-input {
-            flex: 1; background: rgba(255,255,255,0.08);
-            border: 0.5px solid rgba(255,255,255,0.15); border-radius: 6px;
-            padding: 6px 8px; font-size: 12px; color: #fff; outline: none;
-        }
-        .todo-input::placeholder { color: rgba(255,255,255,0.3); }
-        .todo-add-btn {
-            width: 28px; height: 28px; border-radius: 6px; background: #2563eb;
-            border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1;
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: 0.3s;
         }
 
-        /* ── MAIN ────────────────────────────────────────── */
-        .main { margin-left: 250px; padding: 25px; width: calc(100% - 250px); }
+        .menu a:hover { background: #2563eb; }
+        .menu a.active { background: #2563eb; }
 
-        .page-header {
-            display: flex; justify-content: space-between; align-items: center;
+        /* MAIN */
+        .main {
+            margin-left: 250px;
+            padding: 25px;
+            width: calc(100% - 250px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 25px;
         }
-        .page-header h1 { color: #111827; font-size: 22px; }
+
+        .header h1 { color: #111827; }
+
         .profile {
-            background: white; padding: 10px 20px; border-radius: 10px; font-weight: bold;
-            font-size: 13px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
         }
+
         .logout-btn {
-            background: #dc2626; padding: 10px 18px; border: none;
-            color: white; border-radius: 8px; cursor: pointer;
+            background: #dc2626;
+            padding: 10px 18px;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
         }
+
         .logout-btn:hover { background: #b91c1c; }
 
-        /* ── WEEK CALENDAR ───────────────────────────────── */
-        .week-bar {
-            background: white; padding: 18px 20px; border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.07); margin-bottom: 22px;
-        }
-        .week-bar-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 14px;
-        }
-        .week-bar-header label { font-size: 14px; color: #111827; font-weight: 700; }
-        .week-nav-btns { display: flex; gap: 6px; }
-        .week-nav-btn {
-            width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #e5e7eb;
-            background: white; color: #374151; font-size: 16px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s;
-        }
-        .week-nav-btn:hover { border-color: #2563eb; color: #2563eb; }
-        .week-nav-btn:disabled { opacity: 0.35; cursor: default; }
-
-        .week-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-        }
-        @media (max-width: 900px) { .week-grid { grid-template-columns: repeat(2, 1fr); } }
-
-        .week-card {
-            border: 2px solid #e5e7eb; border-radius: 10px; padding: 10px 12px;
-            cursor: pointer; transition: 0.2s; position: relative; background: white;
-        }
-        .week-card:hover { border-color: #2563eb; background: #eff6ff; }
-        .week-card.active { border-color: #2563eb; background: #eff6ff; }
-        .week-card.past { opacity: 0.6; background: #f9fafb; }
-        .week-card.past:hover { border-color: #9ca3af; background: #f3f4f6; }
-
-        .week-card-top {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 4px;
-        }
-        .week-card-num { font-size: 13px; font-weight: 700; color: #111827; }
-        .wk-badge {
-            font-size: 10px; font-weight: 700; padding: 2px 7px;
-            border-radius: 99px; white-space: nowrap;
-        }
-        .wk-badge.current  { background: #dcfce7; color: #15803d; }
-        .wk-badge.upcoming { background: #dbeafe; color: #1d4ed8; }
-        .wk-badge.past     { background: #f3f4f6; color: #6b7280; }
-
-        .week-card-dates { font-size: 11px; color: #6b7280; }
-        .week-card-days {
-            display: flex; gap: 3px; margin-top: 8px; flex-wrap: wrap;
-        }
-        .day-chip {
-            font-size: 10px; padding: 2px 6px; border-radius: 4px;
-            background: #f3f4f6; color: #374151; font-weight: 500;
-        }
-        .day-chip.today { background: #2563eb; color: white; }
-
-        /* ── TWO-COLUMN LAYOUT ───────────────────────────── */
-        .dashboard-grid {
+        /* CARDS */
+        .cards {
             display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 22px;
-            align-items: start;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
-        /* ── SECTION CARD ────────────────────────────────── */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        }
+
+        .card h2 {
+            color: #2563eb;
+            margin-bottom: 6px;
+            font-size: 28px;
+        }
+
+        .card p { color: #6b7280; font-size: 14px; }
+
+        /* SECTION */
         .section {
-            background: white; border-radius: 14px; padding: 22px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 22px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
         }
-        .section h2 { font-size: 16px; color: #111827; margin-bottom: 16px; }
-        .section h3 { font-size: 14px; color: #374151; margin-bottom: 12px; }
 
-        /* ── FORM ────────────────────────────────────────── */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-        .form-group input {
-            padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px;
-            font-size: 14px; color: #111827; outline: none; transition: 0.2s;
+        .section h2 { margin-bottom: 20px; color: #111827; }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .form-group input:focus { border-color: #2563eb; }
-        .form-group input:disabled { background: #f3f4f6; color: #9ca3af; }
-        .form-full { grid-column: 1 / -1; }
-        .btn-primary {
-            background: #2563eb; color: white; border: none;
-            padding: 11px 24px; border-radius: 8px; font-size: 14px;
-            font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%;
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
         }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-primary:disabled { background: #93c5fd; cursor: default; }
 
-        /* ── PROJECTIONS TABLE ───────────────────────────── */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 11px 12px; border-bottom: 1px solid #f3f4f6; font-size: 13px; text-align: left; }
-        th { background: #f9fafb; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
-        tr:hover td { background: #fafafa; }
-        td.lock-icon { color: #9ca3af; font-size: 11px; }
-
-        .achieved-input {
-            width: 80px; padding: 5px 8px; border: 1.5px solid #e5e7eb;
-            border-radius: 6px; font-size: 13px; text-align: center;
-            outline: none; transition: 0.2s;
+        th {
+            background: #f3f4f6;
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
-        .achieved-input:focus { border-color: #2563eb; }
-        .achieved-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 
-        .save-achieved-btn {
-            background: #059669; color: white; border: none;
-            padding: 5px 12px; border-radius: 6px; font-size: 12px;
-            font-weight: 600; cursor: pointer; margin-left: 6px; transition: 0.2s;
+        tr:hover td { background: #f9fafb; }
+
+        /* BADGE */
+        .badge-completed {
+            display: inline-block;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
         }
-        .save-achieved-btn:hover { background: #047857; }
 
-        .cr-btn {
-            background: #f59e0b; color: white; border: none;
-            padding: 5px 10px; border-radius: 6px; font-size: 11px;
-            font-weight: 600; cursor: pointer; transition: 0.2s;
-        }
-        .cr-btn:hover { background: #d97706; }
-
-        /* ── RIGHT SIDEBAR (sticky) ──────────────────────── */
-        .right-panel { position: sticky; top: 25px; }
-
-        .stat-card {
-            background: white; border-radius: 14px; padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 16px;
-        }
-        .stat-card h3 { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
-        .stat-value { font-size: 28px; font-weight: 700; color: #2563eb; }
-        .stat-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-
-        .chart-card {
-            background: white; border-radius: 14px; padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 16px;
+        .no-data {
             text-align: center;
-        }
-        .chart-card h3 { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
-        .chart-wrap { position: relative; width: 200px; height: 200px; margin: 0 auto; }
-        .chart-center-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 26px; font-weight: 700; color: #111827;
+            padding: 30px;
+            color: #9ca3af;
+            font-size: 14px;
         }
 
-        .summary-card {
-            background: white; border-radius: 14px; padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.07);
-        }
-        .summary-card h3 { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
-        .summary-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;
-        }
-        .summary-row:last-child { border-bottom: none; }
-        .summary-label { color: #6b7280; }
-        .summary-value { font-weight: 600; color: #111827; }
-
-        /* ── CHANGE REQUEST MODAL ────────────────────────── */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 1000;
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: white; border-radius: 14px; padding: 28px;
-            width: 480px; max-width: 95vw;
-        }
-        .modal h2 { font-size: 17px; margin-bottom: 18px; color: #111827; }
-        .modal label { font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 5px; margin-top: 12px; }
-        .modal input, .modal textarea {
-            width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb;
-            border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .modal input:focus, .modal textarea:focus { border-color: #2563eb; }
-        .modal input:disabled { background: #f3f4f6; color: #6b7280; }
-        .modal textarea { resize: vertical; min-height: 80px; }
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-        .btn-cancel {
-            background: #e5e7eb; color: #374151; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
-        }
-        .btn-submit {
-            background: #f59e0b; color: white; border: none;
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
-        }
-        .btn-submit:hover { background: #d97706; }
-
-        /* ── CHANGE REQUESTS TABLE ───────────────────────── */
-        .status-pill {
-            display: inline-block; padding: 3px 10px; border-radius: 99px;
-            font-size: 11px; font-weight: 700;
-        }
-        .pill-pending  { background: #fef3c7; color: #92400e; }
-        .pill-approved { background: #dcfce7; color: #15803d; }
-        .pill-rejected { background: #fee2e2; color: #991b1b; }
-
-        .resolve-btn {
-            border: none; padding: 5px 12px; border-radius: 6px;
-            font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
-        }
-        .btn-approve { background: #059669; color: white; }
-        .btn-approve:hover { background: #047857; }
-        .btn-reject  { background: #dc2626; color: white; margin-left: 4px; }
-        .btn-reject:hover  { background: #b91c1c; }
-
-        /* ── TOAST ────────────────────────────────────────── */
+        /* TOAST */
         .toast {
-            position: fixed; bottom: 30px; right: 30px;
-            background: #111827; color: white; padding: 14px 22px;
-            border-radius: 10px; font-size: 14px; opacity: 0;
-            transform: translateY(10px); transition: all 0.3s; z-index: 9999;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #111827;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 9999;
         }
+
         .toast.show { opacity: 1; transform: translateY(0); }
 
-        /* ── NO DATA ──────────────────────────────────────── */
-        .no-data { text-align: center; padding: 30px; color: #9ca3af; font-size: 14px; }
-
-        @media (max-width: 1100px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .right-panel { position: static; }
-        }
         @media (max-width: 900px) {
             .sidebar { width: 200px; }
             .main { margin-left: 200px; width: calc(100% - 200px); }
         }
     </style>
 </head>
+
 <body>
 
-<!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
+<!-- SIDEBAR -->
 <div class="sidebar">
     <div class="logo">Panache WMS</div>
-    <div class="menu" id="sidebarMenu">
-        <!-- links injected by JS based on role -->
+    <div class="menu">
+        <a href="employee-dashboard.html">Dashboard</a>
+        <a href="settings.html">Settings</a>
+        <a href="history.html" class="active">History</a>
     </div>
+<!-- ── PERSONAL TO-DO ─────────────────────────────── -->
+<div style="margin-top:auto;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.12);">
+    <p style="font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px;">My notes</p>
 
-    <!-- personal to-do -->
-    <div class="sidebar-todo">
-        <p class="todo-label">My notes</p>
-        <div id="sidebarTodos"></div>
-        <div class="todo-input-row">
-            <input class="todo-input" id="todoInput" placeholder="Add a task..."
-                   onkeydown="if(event.key==='Enter') addTodo()" />
-            <button class="todo-add-btn" onclick="addTodo()">+</button>
-        </div>
+    <div id="sidebarTodos" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+
+    <div style="display:flex;gap:6px;margin-top:10px;">
+        <input id="sidebarTodoInput"
+               placeholder="Add a task..."
+               style="flex:1;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
+               onkeydown="if(event.key==='Enter')addSidebarTodo()" />
+        <button onclick="addSidebarTodo()"
+                style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
     </div>
 </div>
+</div>
+<script>
+(function() {
+    const KEY = "panache_todos";
 
-<!-- ── MAIN ───────────────────────────────────────────────────── -->
+    function load() {
+        try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+        catch { return []; }
+    }
+
+    function save(todos) {
+        localStorage.setItem(KEY, JSON.stringify(todos));
+    }
+
+    function render() {
+        const todos = load();
+        const box   = document.getElementById("sidebarTodos");
+        box.innerHTML = "";
+
+        todos.forEach((text, i) => {
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.4;";
+            row.innerHTML = `
+                <div onclick="completeSidebarTodo(${i})"
+                     title="Mark complete — will be removed"
+                     style="width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div>
+                <span>${text}</span>`;
+            box.appendChild(row);
+        });
+    }
+
+    window.addSidebarTodo = function() {
+        const inp  = document.getElementById("sidebarTodoInput");
+        const text = inp.value.trim();
+        if (!text) return;
+        const todos = load();
+        todos.push(text);
+        save(todos);
+        inp.value = "";
+        render();
+    };
+
+    window.completeSidebarTodo = function(i) {
+        const circle = document.getElementById("sidebarTodos")
+                               .children[i]
+                               .querySelector("div");
+        circle.style.background    = "#22c55e";
+        circle.style.borderColor   = "#22c55e";
+        circle.innerHTML           = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        setTimeout(() => {
+            const todos = load();
+            todos.splice(i, 1);
+            save(todos);
+            render();
+        }, 500);
+    };
+
+    render();
+})();
+</script>
+<!-- MAIN -->
 <div class="main">
 
-    <!-- header -->
-    <div class="page-header">
-        <h1>Sales Dashboard</h1>
-        <div style="display:flex;align-items:center;gap:14px;">
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Task History</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
             <div class="profile">
-                <b id="profileName">—</b><br>
-                <span id="profileRole" style="font-weight:400;font-size:12px;color:#6b7280;"></span>
+                <b id="profileName">Loading...</b><br>
+                <span id="profileEmail"></span><br>
+                <span id="profileId"></span>
             </div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
-    <!-- week calendar -->
-    <div class="week-bar">
-        <div class="week-bar-header">
-            <label id="weekRangeLabel">Select Week</label>
-            <div class="week-nav-btns">
-                <button class="week-nav-btn" id="weekNavPrev" onclick="shiftWeekPage(-1)" title="Previous weeks">&#8249;</button>
-                <button class="week-nav-btn" id="weekNavNext" onclick="shiftWeekPage(1)"  title="Next weeks">&#8250;</button>
-            </div>
+    <!-- SUMMARY CARDS -->
+    <div class="cards">
+        <div class="card">
+            <h2 id="cardTotal">—</h2>
+            <p>Tasks Completed</p>
         </div>
-        <div class="week-grid" id="weekGrid"></div>
-    </div>
-
-    <!-- ── EMPLOYEE VIEW ─────────────────────────────────────────── -->
-    <div id="employeeView">
-        <div class="dashboard-grid">
-
-            <!-- LEFT: form + projections table -->
-            <div>
-                <!-- entry form (hidden when viewing past weeks) -->
-                <div class="section" id="entryFormSection">
-                    <h2>Add Projection — Week <span id="formWeekLabel"></span></h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Customer Name</label>
-                            <input type="text" id="fCustomer" placeholder="e.g. ABC Industries" />
-                        </div>
-                        <div class="form-group">
-                            <label>Product Name</label>
-                            <input type="text" id="fProduct" placeholder="e.g. Router" />
-                        </div>
-                        <div class="form-group">
-                            <label>Projected Quantity</label>
-                            <input type="number" id="fQty" placeholder="e.g. 5" min="1" />
-                        </div>
-                        <div class="form-group">
-                            <label>Price Per Unit (₹)</label>
-                            <input type="number" id="fPrice" placeholder="e.g. 1200" min="0" />
-                        </div>
-                        <div class="form-full">
-                            <button class="btn-primary" onclick="submitProjection()">
-                                + Add Projection
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- projections table -->
-                <div class="section">
-                    <h2>Projections — Week <span id="tableWeekLabel"></span></h2>
-                    <div id="projTableWrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Customer</th>
-                                    <th>Product</th>
-                                    <th>Proj. Qty</th>
-                                    <th>Price/Unit</th>
-                                    <th>Achieved Qty</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="projTableBody">
-                                <tr><td colspan="6" class="no-data">Loading…</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- change requests raised by this employee -->
-                <div class="section" id="myRequestsSection">
-                    <h2>My Change Requests</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Week</th><th>Customer</th><th>Product</th>
-                                <th>Old Qty</th><th>New Qty</th><th>Reason</th><th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="myRequestsBody">
-                            <tr><td colspan="7" class="no-data">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- RIGHT: chart + stats -->
-            <div class="right-panel">
-                <!-- donut chart -->
-                <div class="chart-card">
-                    <h3>Quantity Achievement</h3>
-                    <div class="chart-wrap">
-                        <canvas id="donutChart"></canvas>
-                        <div class="chart-center-text" id="chartPct">—</div>
-                    </div>
-                </div>
-
-                <!-- stat cards -->
-                <div class="stat-card">
-                    <h3>Projected Quantity</h3>
-                    <div class="stat-value" id="statProjected">—</div>
-                    <div class="stat-sub">units this week</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Achieved Quantity</h3>
-                    <div class="stat-value" id="statAchieved" style="color:#059669;">—</div>
-                    <div class="stat-sub">units this week</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Achievement %</h3>
-                    <div class="stat-value" id="statPct" style="color:#f59e0b;">—</div>
-                </div>
-
-                <!-- weekly summary -->
-                <div class="summary-card">
-                    <h3>Weekly Summary</h3>
-                    <div class="summary-row">
-                        <span class="summary-label">Customers</span>
-                        <span class="summary-value" id="sumCustomers">—</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Products</span>
-                        <span class="summary-value" id="sumProducts">—</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Projected Revenue</span>
-                        <span class="summary-value" id="sumProjRev">—</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="summary-label">Achieved Revenue</span>
-                        <span class="summary-value" id="sumAchRev">—</span>
-                    </div>
-                </div>
-            </div>
-
-        </div><!-- /dashboard-grid -->
-    </div><!-- /employeeView -->
-
-    <!-- ── MANAGER / ADMIN VIEW ──────────────────────────────────── -->
-   
-    
-    <div id="managerView" style="display:none;">
-
-        <!-- ── MANAGER: ADD PROJECTION FOR TEAM MEMBER ──────────── -->
-        <div class="section" id="mgrEntryFormSection">
-            <h2>Add Projection for Team Member — Week <span id="mgr_weekLabel2"></span></h2>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;align-items:flex-end;">
-                <div>
-                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Employee</label>
-                    <select id="mgrEmpSelect" style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;min-width:160px;">
-                        <option value="">Select employee…</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Customer</label>
-                    <input id="mgrFCustomer" type="text" placeholder="Customer name"
-                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:160px;" />
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Product</label>
-                    <input id="mgrFProduct" type="text" placeholder="Product name"
-                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:140px;" />
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Proj Qty</label>
-                    <input id="mgrFQty" type="number" min="1" placeholder="Qty"
-                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:90px;" />
-                </div>
-                <div>
-                    <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Price / Unit (₹)</label>
-                    <input id="mgrFPrice" type="number" min="0" step="0.01" placeholder="Price"
-                           style="padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;width:110px;" />
-                </div>
-                <button onclick="mgrSubmitProjection()"
-                        style="background:#2563eb;color:white;border:none;padding:10px 22px;
-                               border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;height:40px;">
-                    + Add Projection
-                </button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Team Sales Overview — Week <span id="mgr_weekLabel"></span></h2>
-            <div id="teamSalesWrap">
-                <p class="no-data">Loading…</p>
-            </div>
-        </div>
-
-        <!-- change requests for team -->
-        <div class="section">
-            <h2>Projection Change Requests</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Employee</th><th>Week</th><th>Customer</th><th>Product</th>
-                        <th>Old→New Qty</th><th>Reason</th><th>Status</th><th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="crTableBody">
-                    <tr><td colspan="8" class="no-data">Loading…</td></tr>
-                </tbody>
-            </table>
+        <div class="card">
+            <h2 id="cardLatest">—</h2>
+            <p>Most Recent</p>
         </div>
     </div>
 
-</div><!-- /main -->
-
-<!-- ── CHANGE REQUEST MODAL ────────────────────────────────────── -->
-<div class="modal-overlay" id="crModal">
-    <div class="modal">
-        <h2>Raise Change Request</h2>
-        <input type="hidden" id="crCustomer" />
-        <input type="hidden" id="crProduct" />
-        <input type="hidden" id="crOldQty" />
-
-        <label>Customer</label>
-        <input type="text" id="crCustomerDisplay" disabled />
-
-        <label>Product</label>
-        <input type="text" id="crProductDisplay" disabled />
-
-        <label>Current Projected Qty</label>
-        <input type="number" id="crOldDisplay" disabled />
-
-        <label>Requested New Qty</label>
-        <input type="number" id="crNewQty" placeholder="Enter new quantity" min="1" />
-
-        <label>Reason for Change</label>
-        <textarea id="crReason" placeholder="e.g. Customer increased requirement from 5 to 8 units."></textarea>
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeCRModal()">Cancel</button>
-            <button class="btn-submit" onclick="submitCR()">Submit Request</button>
-        </div>
+    <!-- HISTORY TABLE -->
+    <div class="section">
+        <h2>Completed Tasks Log</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>History ID</th>
+                    <th>Task ID</th>
+                    <th>Task Title</th>
+                    <th>Completed At</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="historyTable">
+                <tr><td colspan="5" class="no-data">Loading history...</td></tr>
+            </tbody>
+        </table>
     </div>
+
 </div>
 
-<!-- ── TOAST ──────────────────────────────────────────────────── -->
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ── GLOBALS ────────────────────────────────────────────────────
-const BASE          = "https://backend-production-53f3.up.railway.app";
-const userId        = parseInt(localStorage.getItem("userId"));
-const userRole      = localStorage.getItem("userRole");
-const userName      = localStorage.getItem("userName");
-const TODO_KEY      = "panache_todos";
-const WEEKS_PER_PAGE = 4;
-const FUTURE_WEEKS   = 8;
+    const BASE   = "https://backend-production-53f3.up.railway.app";
+    const userId = localStorage.getItem("userId");
 
-let currentWeekNum = 0;
-let selectedWeek   = 0;
-let allWeeks       = [];
-let weekRows       = [];
-let donutChart     = null;
-let weekPageOffset = 0;
+    // ── PROFILE ──────────────────────────────────────────────
+    document.getElementById("profileName").innerHTML  = localStorage.getItem("userName");
+    document.getElementById("profileEmail").innerHTML = localStorage.getItem("userEmail");
+    document.getElementById("profileId").innerHTML    = "Employee ID: " + userId;
 
-// ── INIT ───────────────────────────────────────────────────────
-document.getElementById("profileName").textContent = userName || "—";
-document.getElementById("profileRole").textContent = userRole
-    ? (userRole.charAt(0).toUpperCase() + userRole.slice(1)) : "";
-
-buildSidebar();
-renderTodos();
-initPage();
-
-async function initPage() {
-    try {
-        const cw = await fetch(`${BASE}/sales/current-week`).then(r => r.json());
-        currentWeekNum = cw.week;
-        selectedWeek   = currentWeekNum;
-
-        document.getElementById("employeeView").style.display = "block";
-
-        await loadWeeks();
-
-        if (userRole === "manager" || userRole === "admin") {
-            document.getElementById("managerView").style.display = "block";
-            document.getElementById("mgr_weekLabel").textContent = selectedWeek;
-            const lbl2 = document.getElementById("mgr_weekLabel2");
-            if (lbl2) lbl2.textContent = selectedWeek;
-            await loadManagerView();
-            await loadCRTable();
-            await loadMgrTeamDropdown();
-        } else {
-            document.getElementById("managerView").style.display = "none";
-        }
-    } catch(e) {
-        console.error("initPage error:", e);
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
     }
-}
 
-// ── SIDEBAR LINKS ──────────────────────────────────────────────
-function buildSidebar() {
-    const menu = document.getElementById("sidebarMenu");
-    const links = {
-        employee: [
-            ["employee-dashboard.html", "Dashboard"],
-            ["history.html",            "History"],
-            ["sales-dashboard.html",    "Sales Dashboard"],
-            ["settings.html",           "Settings"],
-        ],
-        manager: [
-            ["manager-dashboard.html",  "Dashboard"],
-            ["sales-dashboard.html",    "Sales Dashboard"],
-            ["settings.html",           "Settings"],
-        ],
-        admin: [
-            ["admin-dashboard.html",    "Dashboard"],
-            ["sales-dashboard.html",    "Sales Dashboard"],
-            ["settings.html",           "Settings"],
-        ],
-    };
-    (links[userRole] || []).forEach(([href, label]) => {
-        const a = document.createElement("a");
-        a.href = href;
-        a.textContent = label;
-        if (href === "sales-dashboard.html") a.classList.add("active");
-        menu.appendChild(a);
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+function formatDate(raw) {
+    if (!raw) return "—";
+    const d = new Date(raw);
+    if (isNaN(d)) return raw;
+    return d.toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
     });
 }
 
-// ── TOAST ──────────────────────────────────────────────────────
-function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 3000);
-}
+    // ── LOAD HISTORY ─────────────────────────────────────────
+    async function loadHistory() {
+        try {
+            const res     = await fetch(`${BASE}/history?user_id=${userId}`);
+            const history = await res.json();
 
-function logout() { localStorage.clear(); window.location.href = "index.html"; }
+            if (!history.length) {
+                document.getElementById("historyTable").innerHTML =
+                    `<tr><td colspan="5" class="no-data">No completed tasks yet.</td></tr>`;
+                document.getElementById("cardTotal").innerHTML  = "0";
+                document.getElementById("cardLatest").innerHTML = "—";
+                return;
+            }
 
-// ── WEEK CALENDAR ──────────────────────────────────────────────
-function getWeekStartDate(weekNum) {
-    const today = new Date();
-    const dow = today.getDay() === 0 ? 7 : today.getDay();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - (dow - 1));
-    monday.setHours(0, 0, 0, 0);
-    const diff = weekNum - currentWeekNum;
-    const d = new Date(monday);
-    d.setDate(d.getDate() + diff * 7);
-    return d;
-}
+            // Summary cards
+            document.getElementById("cardTotal").innerHTML = history.length;
+            document.getElementById("cardLatest").innerHTML =
+                history[0].task_title
+                    ? history[0].task_title.length > 16
+                        ? history[0].task_title.slice(0, 14) + "…"
+                        : history[0].task_title
+                    : "—";
 
-function fmtDate(d) {
-    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
-
-function buildWeekCalendar() {
-    const grid  = document.getElementById("weekGrid");
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-
-    // Show a couple of past weeks alongside the current week by default,
-    // instead of only current + upcoming weeks.
-    const INITIAL_BACK = 2;
-
-    const startOffset  = weekPageOffset * WEEKS_PER_PAGE - INITIAL_BACK;
-    const visibleWeeks = [];
-    for (let i = 0; i < WEEKS_PER_PAGE; i++) {
-        visibleWeeks.push(currentWeekNum + startOffset + i);
-    }
-
-    const minWeek = allWeeks.length ? Math.min(...allWeeks, currentWeekNum) : currentWeekNum;
-    document.getElementById("weekNavPrev").disabled =
-        (currentWeekNum + startOffset - WEEKS_PER_PAGE) < minWeek;
-    document.getElementById("weekNavNext").disabled =
-        (currentWeekNum + startOffset + WEEKS_PER_PAGE) > currentWeekNum + FUTURE_WEEKS;
-
-    const firstDate = getWeekStartDate(visibleWeeks[0]);
-    const lastStart = getWeekStartDate(visibleWeeks[WEEKS_PER_PAGE - 1]);
-    const lastEnd   = new Date(lastStart); lastEnd.setDate(lastEnd.getDate() + 6);
-    document.getElementById("weekRangeLabel").textContent =
-        `${fmtDate(firstDate)} — ${fmtDate(lastEnd)}`;
-
-    const DAY_NAMES = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-    grid.innerHTML = "";
-    visibleWeeks.forEach(w => {
-        const weekStart = getWeekStartDate(w);
-        const weekEnd   = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
-
-        const isPast     = w < currentWeekNum;
-        const isCurrent  = w === currentWeekNum;
-        const isUpcoming = w > currentWeekNum;
-        const isActive   = w === selectedWeek;
-
-        let cardClass = "week-card";
-        if (isActive) cardClass += " active";
-        if (isPast)   cardClass += " past";
-
-        let badgeClass = "wk-badge";
-        let badgeText  = "";
-        if (isCurrent)  { badgeClass += " current";  badgeText = "Current";  }
-        if (isUpcoming) { badgeClass += " upcoming"; badgeText = "Upcoming"; }
-        if (isPast)     { badgeClass += " past";     badgeText = "Past";     }
-
-        const dayChips = DAY_NAMES.map((name, idx) => {
-            const d = new Date(weekStart); d.setDate(weekStart.getDate() + idx);
-            const isToday = d.getTime() === today.getTime();
-            return `<span class="day-chip${isToday ? " today" : ""}">${name} ${d.getDate()}</span>`;
-        }).join("");
-
-        const card = document.createElement("div");
-        card.className = cardClass;
-        card.innerHTML = `
-            <div class="week-card-top">
-                <span class="week-card-num">Week ${w}</span>
-                <span class="${badgeClass}">${badgeText}</span>
-            </div>
-            <div class="week-card-dates">${fmtDate(weekStart)} – ${fmtDate(weekEnd)}</div>
-            <div class="week-card-days">${dayChips}</div>`;
-        card.onclick = () => selectWeek(w);
-        grid.appendChild(card);
-    });
-}
-
-function shiftWeekPage(dir) {
-    weekPageOffset += dir;
-    buildWeekCalendar();
-}
-
-async function loadWeeks() {
-    try {
-        const res = await fetch(
-            `${BASE}/sales/weeks?user_id=${userId}&viewer_id=${userId}&viewer_role=${userRole}`
-        ).then(r => r.json());
-        allWeeks = res.weeks || [];
-    } catch(e) {
-        allWeeks = [];
-    }
-    if (!allWeeks.includes(currentWeekNum)) allWeeks.push(currentWeekNum);
-    allWeeks.sort((a, b) => a - b);
-    selectedWeek = currentWeekNum;
-    buildWeekCalendar();
-    await loadWeekData();
-}
-
-async function selectWeek(w) {
-    selectedWeek = w;
-    buildWeekCalendar();
-    await loadWeekData();
-    if (userRole === "manager" || userRole === "admin") {
-        document.getElementById("mgr_weekLabel").textContent = w;
-        const lbl2 = document.getElementById("mgr_weekLabel2");
-        if (lbl2) lbl2.textContent = w;
-        await loadManagerView();
-        await loadCRTable();
-        await loadMgrTeamDropdown();
-    }
-}
-
-// ── LOAD WEEK DATA ─────────────────────────────────────────────
-async function loadWeekData() {
-    const isFutureWeek  = selectedWeek > currentWeekNum;
-    const isPastWeek    = selectedWeek < currentWeekNum;
-    const canEdit       = !isPastWeek;   // current + future are editable
-
-    document.getElementById("formWeekLabel").textContent  = selectedWeek;
-    document.getElementById("tableWeekLabel").textContent = selectedWeek;
-    document.getElementById("entryFormSection").style.display = canEdit ? "block" : "none";
-
-    try {
-        const res = await fetch(
-            `${BASE}/sales/rows?user_id=${userId}&week=${selectedWeek}&viewer_id=${userId}&viewer_role=${userRole}`
-        ).then(r => r.json());
-        weekRows = res.rows || [];
-    } catch(e) {
-        weekRows = [];
-    }
-
-    renderProjectionTable();
-    updateChartAndStats();
-    await loadMyRequests();
-}
-
-// ── RENDER PROJECTION TABLE ────────────────────────────────────
-function renderProjectionTable() {
-    const tbody    = document.getElementById("projTableBody");
-    const isFuture = selectedWeek > currentWeekNum;
-    const isPast   = selectedWeek < currentWeekNum;
-    const canEdit  = !isPast;
-
-    if (!weekRows.length) {
-        const msg = canEdit ? "No projections yet. Add one above." : "No data for this week.";
-        tbody.innerHTML = `<tr><td colspan="6" class="no-data">${msg}</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = weekRows.map((row, idx) => {
-        const lockIcon = `<span style="color:#d1d5db;font-size:14px;" title="Locked">🔒</span>`;
-
-        let achievedCell;
-        if (isPast) {
-            achievedCell = `<span style="font-weight:600;">${row.achieved || 0}</span>`;
-        } else if (isFuture) {
-            achievedCell = `<span style="color:#9ca3af;font-size:12px;">Not yet</span>`;
-        } else {
-            achievedCell = `<input class="achieved-input" type="number" min="0"
-                id="ach_${idx}" value="${row.achieved || 0}"
-                onkeydown="if(event.key==='Enter') saveAchieved(${idx})" />
-                <button class="save-achieved-btn" onclick="saveAchieved(${idx})">Save</button>`;
-        }
-
-        const crBtn = (!isFuture && !isPast)
-            ? `<button class="cr-btn" onclick="openCRModal('${esc(row.customer)}','${esc(row.product)}',${row.projected})"
-                title="Request change to projected quantity">✏ Change</button>`
-            : "";
-
-        return `<tr>
-            <td><b>${row.customer}</b></td>
-            <td>${row.product}</td>
-            <td>${row.projected} ${isPast ? lockIcon : ""}</td>
-            <td>₹${Number(row.price).toLocaleString("en-IN")}</td>
-            <td>${achievedCell}</td>
-            <td>${crBtn}</td>
-        </tr>`;
-    }).join("");
-}
-
-function esc(s) { return String(s).replace(/'/g, "\\'"); }
-
-// ── SAVE ACHIEVED ──────────────────────────────────────────────
-async function saveAchieved(idx) {
-    const row = weekRows[idx];
-    const val = parseInt(document.getElementById(`ach_${idx}`).value) || 0;
-    try {
-        const res = await fetch(
-            `${BASE}/sales/achieved?user_id=${userId}&week=${selectedWeek}` +
-            `&customer=${encodeURIComponent(row.customer)}&product=${encodeURIComponent(row.product)}&achieved=${val}`,
-            { method: "PUT" }
-        ).then(r => r.json());
-        if (res.success) {
-            weekRows[idx].achieved = val;
-            showToast("Achieved quantity saved.");
-            updateChartAndStats();
-        } else {
-            showToast(res.message || "Save failed.");
-        }
-    } catch(e) {
-        showToast("Network error saving achieved.");
-    }
-}
-
-// ── SUBMIT PROJECTION ──────────────────────────────────────────
-async function submitProjection() {
-    const customer = document.getElementById("fCustomer").value.trim();
-    const product  = document.getElementById("fProduct").value.trim();
-    const qty      = parseInt(document.getElementById("fQty").value);
-    const price    = parseFloat(document.getElementById("fPrice").value);
-
-    if (!customer || !product || !qty || !price) {
-        showToast("Please fill in all fields."); return;
-    }
-
-    try {
-        const res = await fetch(
-            `${BASE}/sales/projection?user_id=${userId}&week=${selectedWeek}` +
-            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-            `&projected=${qty}&price=${price}`,
-            { method: "POST" }
-        ).then(r => r.json());
-
-        if (res.success) {
-            showToast("Projection added.");
-            ["fCustomer","fProduct","fQty","fPrice"].forEach(id => document.getElementById(id).value = "");
-            await loadWeekData();
-        } else {
-            showToast(res.message || "Failed to add projection.");
-        }
-    } catch(e) {
-        showToast("Network error submitting projection.");
-    }
-}
-
-// ── CHART + STATS ──────────────────────────────────────────────
-function updateChartAndStats() {
-    const totalProj = weekRows.reduce((s, r) => s + Number(r.projected || 0), 0);
-    const totalAch  = weekRows.reduce((s, r) => s + Number(r.achieved  || 0), 0);
-    const pct       = totalProj > 0 ? Math.round((totalAch / totalProj) * 100) : 0;
-
-    document.getElementById("statProjected").textContent = totalProj;
-    document.getElementById("statAchieved").textContent  = totalAch;
-    document.getElementById("statPct").textContent       = pct + "%";
-
-    const customers = [...new Set(weekRows.map(r => r.customer))].length;
-    const products  = [...new Set(weekRows.map(r => r.product))].length;
-    const projRev   = weekRows.reduce((s, r) => s + (Number(r.projected) * Number(r.price)), 0);
-    const achRev    = weekRows.reduce((s, r) => s + (Number(r.achieved)  * Number(r.price)), 0);
-
-    document.getElementById("sumCustomers").textContent = customers;
-    document.getElementById("sumProducts").textContent  = products;
-    document.getElementById("sumProjRev").textContent   = "₹" + projRev.toLocaleString("en-IN");
-    document.getElementById("sumAchRev").textContent    = "₹" + achRev.toLocaleString("en-IN");
-
-    const chartPctEl = document.getElementById("chartPct");
-    const ctx = document.getElementById("donutChart").getContext("2d");
-    if (donutChart) { donutChart.destroy(); donutChart = null; }
-
-    if (totalProj === 0) {
-        chartPctEl.textContent = "—";
-        return;
-    }
-
-    chartPctEl.textContent = pct + "%";
-    const remaining = Math.max(totalProj - totalAch, 0);
-    donutChart = new Chart(ctx, {
-        type: "doughnut",
-        data: {
-            datasets: [{
-                data: [totalAch, remaining],
-                backgroundColor: ["#2563eb", "#e5e7eb"],
-                borderWidth: 0,
-                hoverOffset: 4,
-            }]
-        },
-        options: {
-            cutout: "72%",
-            plugins: { legend: { display: false }, tooltip: { enabled: false } },
-            animation: { duration: 600 }
-        }
-    });
-}
-
-// ── CHANGE REQUEST MODAL ───────────────────────────────────────
-function openCRModal(customer, product, oldQty) {
-    document.getElementById("crCustomer").value        = customer;
-    document.getElementById("crProduct").value         = product;
-    document.getElementById("crOldQty").value          = oldQty;
-    document.getElementById("crCustomerDisplay").value = customer;
-    document.getElementById("crProductDisplay").value  = product;
-    document.getElementById("crOldDisplay").value      = oldQty;
-    document.getElementById("crNewQty").value          = "";
-    document.getElementById("crReason").value          = "";
-    document.getElementById("crModal").classList.add("active");
-}
-
-function closeCRModal() {
-    document.getElementById("crModal").classList.remove("active");
-}
-
-async function submitCR() {
-    const customer = document.getElementById("crCustomer").value;
-    const product  = document.getElementById("crProduct").value;
-    const oldQty   = document.getElementById("crOldQty").value;
-    const newQty   = parseInt(document.getElementById("crNewQty").value);
-    const reason   = document.getElementById("crReason").value.trim();
-
-    if (!newQty || !reason) { showToast("Please fill in all fields."); return; }
-    if (newQty === parseInt(oldQty)) { showToast("New quantity is the same as current."); return; }
-
-    try {
-        const res = await fetch(
-            `${BASE}/sales/change-request?employee_id=${userId}&week=${selectedWeek}` +
-            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-            `&old_qty=${oldQty}&new_qty=${newQty}&reason=${encodeURIComponent(reason)}`,
-            { method: "POST" }
-        ).then(r => r.json());
-
-        if (res.success) {
-            showToast("Change request submitted.");
-            closeCRModal();
-            await loadMyRequests();
-        } else {
-            showToast(res.message || "Failed.");
-        }
-    } catch(e) {
-        showToast("Network error submitting request.");
-    }
-}
-
-// ── MY CHANGE REQUESTS ─────────────────────────────────────────
-async function loadMyRequests() {
-    try {
-        const res = await fetch(
-            `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
-        ).then(r => r.json());
-
-        const requests = res.requests || [];
-        const tbody = document.getElementById("myRequestsBody");
-
-        if (!requests.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="no-data">No change requests raised.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = requests.map(r => `
-            <tr>
-                <td>Week ${r.week}</td>
-                <td>${r.customer}</td>
-                <td>${r.product}</td>
-                <td>${r.old_qty}</td>
-                <td>${r.new_qty}</td>
-                <td style="max-width:180px;font-size:12px;color:#6b7280;">${r.reason}</td>
-                <td>${pillBadge(r.status)}</td>
-            </tr>`).join("");
-    } catch(e) {
-        console.error("loadMyRequests error:", e);
-    }
-}
-
-// ── MANAGER VIEW ───────────────────────────────────────────────
-async function loadManagerView() {
-    try {
-        const res = await fetch(
-            `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
-        ).then(r => r.json());
-
-        const wrap = document.getElementById("teamSalesWrap");
-        if (!res.employees || !res.employees.length) {
-            wrap.innerHTML = `<p class="no-data">No team data found.</p>`;
-            return;
-        }
-
-        wrap.innerHTML = res.employees.map(emp => {
-            const rows = emp.rows || [];
-            const proj = rows.reduce((s, r) => s + Number(r.projected || 0), 0);
-            const ach  = rows.reduce((s, r) => s + Number(r.achieved  || 0), 0);
-            const pct  = proj > 0 ? Math.round(ach / proj * 100) : 0;
-
-            const rowsHtml = rows.length
-                ? rows.map(r => `
+            // Table rows
+            let html = "";
+            history.forEach(item => {
+                html += `
                     <tr>
-                        <td>${r.customer}</td><td>${r.product}</td>
-                        <td>${r.projected}</td><td>₹${Number(r.price).toLocaleString("en-IN")}</td>
-                        <td><b>${r.achieved || 0}</b></td>
-                    </tr>`).join("")
-                : `<tr><td colspan="5" class="no-data">No projections this week.</td></tr>`;
+                        <td>${item.id}</td>
+                        <td>${item.task_id}</td>
+                        <td><b>${item.task_title || "—"}</b></td>
+                        <td>${formatDate(item.submitted_at || item.completed_at)}</td>
+                        <td><span class="badge-completed">Completed</span></td>
+                    </tr>`;
+            });
 
-            return `
-            <div style="margin-bottom:20px;border:1px solid #f3f4f6;border-radius:10px;overflow:hidden;">
-                <div style="background:#f9fafb;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <b style="font-size:14px;">${emp.name}</b>
-                        <span style="font-size:12px;color:#6b7280;margin-left:8px;">ID ${emp.id}</span>
-                    </div>
-                    <div style="display:flex;gap:16px;font-size:13px;">
-                        <span>Proj: <b>${proj}</b></span>
-                        <span>Ach: <b style="color:#059669;">${ach}</b></span>
-                        <span>Achievement: <b style="color:${pct >= 75 ? '#059669' : pct >= 40 ? '#f59e0b' : '#dc2626'}">${pct}%</b></span>
-                    </div>
-                </div>
-                <table>
-                    <thead><tr>
-                        <th>Customer</th><th>Product</th><th>Proj Qty</th>
-                        <th>Price/Unit</th><th>Achieved Qty</th>
-                    </tr></thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table>
-            </div>`;
-        }).join("");
-    } catch(e) {
-        console.error("loadManagerView error:", e);
-    }
-}
+            document.getElementById("historyTable").innerHTML = html;
 
-// ── CR TABLE (manager / admin) ─────────────────────────────────
-async function loadCRTable() {
-    try {
-        const res = await fetch(
-            `${BASE}/sales/change-requests?viewer_id=${userId}&viewer_role=${userRole}`
-        ).then(r => r.json());
-
-        const requests = res.requests || [];
-        const tbody = document.getElementById("crTableBody");
-
-        if (!requests.length) {
-            tbody.innerHTML = `<tr><td colspan="8" class="no-data">No change requests.</td></tr>`;
-            return;
+        } catch (e) {
+            console.error("loadHistory error:", e);
+            document.getElementById("historyTable").innerHTML =
+                `<tr><td colspan="5" class="no-data" style="color:#dc2626;">
+                    Failed to load history. Please refresh.
+                </td></tr>`;
+            showToast("Could not load task history.");
         }
-
-        tbody.innerHTML = requests.map(r => {
-            const actions = r.status === "pending"
-                ? `<button class="resolve-btn btn-approve" onclick="resolveRequest('${r.request_id}','approved')">Approve</button>
-                   <button class="resolve-btn btn-reject"  onclick="resolveRequest('${r.request_id}','rejected')">Reject</button>`
-                : `<span style="font-size:12px;color:#9ca3af;">${r.manager_note || "—"}</span>`;
-            return `<tr>
-                <td>Emp ${r.employee_id}</td>
-                <td>Week ${r.week}</td>
-                <td>${r.customer}</td>
-                <td>${r.product}</td>
-                <td>${r.old_qty} → ${r.new_qty}</td>
-                <td style="max-width:160px;font-size:12px;color:#6b7280;">${r.reason}</td>
-                <td>${pillBadge(r.status)}</td>
-                <td>${actions}</td>
-            </tr>`;
-        }).join("");
-    } catch(e) {
-        console.error("loadCRTable error:", e);
-    }
-}
-
-async function resolveRequest(requestId, action) {
-    const note = action === "rejected" ? (prompt("Reason for rejection (optional):") || "") : "";
-    try {
-        const res = await fetch(
-            `${BASE}/sales/change-request/resolve?request_id=${encodeURIComponent(requestId)}` +
-            `&action=${action}&manager_note=${encodeURIComponent(note)}&viewer_role=${userRole}`,
-            { method: "POST" }
-        ).then(r => r.json());
-        if (res.success) {
-            showToast(`Request ${action}.`);
-            await Promise.all([loadCRTable(), loadManagerView()]);
-        } else {
-            showToast(res.message || "Failed.");
-        }
-    } catch(e) {
-        showToast("Network error resolving request.");
-    }
-}
-
-function pillBadge(status) {
-    const map = { pending: "pill-pending", approved: "pill-approved", rejected: "pill-rejected" };
-    return `<span class="status-pill ${map[status] || ''}">${status}</span>`;
-}
-
-// ── PERSONAL TO-DO ─────────────────────────────────────────────
-function getTodos() {
-    try { return JSON.parse(localStorage.getItem(TODO_KEY)) || []; }
-    catch { return []; }
-}
-function saveTodos(t) { localStorage.setItem(TODO_KEY, JSON.stringify(t)); }
-
-function renderTodos() {
-    const list  = document.getElementById("sidebarTodos");
-    const todos = getTodos();
-    list.innerHTML = "";
-    todos.forEach((text, i) => {
-        const row = document.createElement("div");
-        row.className = "todo-item";
-        row.innerHTML = `
-            <div class="todo-circle" onclick="completeTodo(${i})" title="Mark complete"></div>
-            <span>${text}</span>`;
-        list.appendChild(row);
-    });
-}
-
-function addTodo() {
-    const inp  = document.getElementById("todoInput");
-    const text = inp.value.trim();
-    if (!text) return;
-    const todos = getTodos();
-    todos.push(text);
-    saveTodos(todos);
-    inp.value = "";
-    renderTodos();
-}
-
-function completeTodo(i) {
-    const circle = document.getElementById("sidebarTodos").children[i].querySelector(".todo-circle");
-    circle.classList.add("done");
-    circle.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-    setTimeout(() => {
-        const todos = getTodos();
-        todos.splice(i, 1);
-        saveTodos(todos);
-        renderTodos();
-    }, 500);
-}
-
-document.getElementById("crModal").addEventListener("click", function(e) {
-    if (e.target === this) closeCRModal();
-});
-
-// ── MANAGER: EMPLOYEE DROPDOWN ────────────────────────────────
-async function loadMgrTeamDropdown() {
-    if (userRole === "employee") return;
-    try {
-        const res = await fetch(
-            `${BASE}/sales/team?manager_id=${userId}&week=${selectedWeek}&viewer_role=${userRole}`
-        ).then(r => r.json());
-        const sel = document.getElementById("mgrEmpSelect");
-        if (!sel) return;
-        sel.innerHTML = `<option value="">Select employee…</option>`;
-        (res.employees || []).forEach(emp => {
-            const opt = document.createElement("option");
-            opt.value       = emp.id;
-            opt.textContent = emp.name + " (ID " + emp.id + ")";
-            sel.appendChild(opt);
-        });
-        const lbl2 = document.getElementById("mgr_weekLabel2");
-        if (lbl2) lbl2.textContent = selectedWeek;
-    } catch(e) {
-        console.error("loadMgrTeamDropdown error:", e);
-    }
-}
-
-// ── MANAGER: SUBMIT PROJECTION FOR EMPLOYEE ───────────────────
-async function mgrSubmitProjection() {
-    const empId    = document.getElementById("mgrEmpSelect").value;
-    const customer = document.getElementById("mgrFCustomer").value.trim();
-    const product  = document.getElementById("mgrFProduct").value.trim();
-    const qty      = parseInt(document.getElementById("mgrFQty").value);
-    const price    = parseFloat(document.getElementById("mgrFPrice").value);
-
-    if (!empId || !customer || !product || !qty || !price) {
-        showToast("Please fill in all fields including selecting an employee."); return;
     }
 
-    try {
-        const res = await fetch(
-            `${BASE}/sales/projection?user_id=${empId}&week=${selectedWeek}` +
-            `&customer=${encodeURIComponent(customer)}&product=${encodeURIComponent(product)}` +
-            `&projected=${qty}&price=${price}`,
-            { method: "POST" }
-        ).then(r => r.json());
-
-        if (res.success) {
-            showToast("Projection added for employee.");
-            ["mgrFCustomer","mgrFProduct","mgrFQty","mgrFPrice"].forEach(id => document.getElementById(id).value = "");
-            document.getElementById("mgrEmpSelect").value = "";
-            await loadManagerView();
-        } else {
-            showToast(res.message || "Failed to add projection.");
-        }
-    } catch(e) {
-        showToast("Network error adding projection.");
-    }
-}
+    loadHistory();
 </script>
+
+
+<!-- PWA: installable app support -->
+<button id="pwaInstallBtn" onclick="pwaInstallApp()"
+        style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
+               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
+               box-shadow:0 4px 14px rgba(0,0,0,.2);">
+    ⬇ Install App
+</button>
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js").catch(err =>
+                console.warn("Service worker registration failed:", err)
+            );
+        });
+    }
+
+    let pwaDeferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        pwaDeferredPrompt = e;
+        const btn = document.getElementById("pwaInstallBtn");
+        if (btn) btn.style.display = "block";
+    });
+
+    function pwaInstallApp() {
+        const btn = document.getElementById("pwaInstallBtn");
+        if (!pwaDeferredPrompt) return;
+        pwaDeferredPrompt.prompt();
+        pwaDeferredPrompt.userChoice.finally(() => {
+            pwaDeferredPrompt = null;
+            if (btn) btn.style.display = "none";
+        });
+    }
+
+    window.addEventListener("appinstalled", () => {
+        const btn = document.getElementById("pwaInstallBtn");
+        if (btn) btn.style.display = "none";
+    });
+</script>
+
 </body>
 </html>
