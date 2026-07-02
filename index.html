@@ -287,7 +287,7 @@
     // If already logged in, redirect straight to their dashboard
     const existingRole = localStorage.getItem("userRole");
     if (existingRole) {
-        const redirectMap = { admin: "admin-dashboard.html", manager: "manager-dashboard.html", employee: "employee-dashboard.html" };
+        const redirectMap = { admin: "admin-dashboard.html", manager: "manager-dashboard.html", employee: "employee-dashboard.html", intern: "intern-dashboard.html" };
         if (redirectMap[existingRole]) window.location.href = redirectMap[existingRole];
     }
 
@@ -338,7 +338,8 @@
                 const redirectMap = {
                     admin:    "admin-dashboard.html",
                     manager:  "manager-dashboard.html",
-                    employee: "employee-dashboard.html"
+                    employee: "employee-dashboard.html",
+                    intern:   "intern-dashboard.html"
                 };
 
                 window.location.href = redirectMap[data.role.toLowerCase()] || "employee-dashboard.html";
