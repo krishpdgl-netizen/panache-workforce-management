@@ -671,19 +671,30 @@ function setupSidebar() {
         admin:    [
             { href: "admin-dashboard.html",   label: "Dashboard" },
             { href: "settings.html",           label: "Settings"  },
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
         ],
         manager:  [
             { href: "manager-dashboard.html",  label: "Dashboard" },
             { href: "settings.html",           label: "Settings"  },
-            
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
         ],
         employee: [
             { href: "employee-dashboard.html", label: "Dashboard" },
             { href: "settings.html",           label: "Settings"  },
-            
+            { href: "history.html",            label: "History"   },
+            { href: "sales-dashboard.html",    label: "Sales"     },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
+        ],
+        intern: [
+            { href: "intern-dashboard.html",   label: "Dashboard" },
+            { href: "history.html",            label: "History"   },
+            { href: "reminder.html",           label: "Reminders" },
+            { href: "calendar.html",           label: "📅 Calendar", active: true },
+            { href: "settings.html",           label: "Settings"  },
         ],
     };
     const items = links[userRole] || links.employee;
