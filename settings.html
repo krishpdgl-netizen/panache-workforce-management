@@ -433,6 +433,11 @@
             <a href="employee-dashboard.html">Dashboard</a>
             <a href="history.html">History</a>
             <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="#" onclick="logout()">Logout</a>`,
+        intern: `
+            <a href="intern-dashboard.html">Dashboard</a>
+            <a href="history.html">History</a>
+            <a href="settings.html" style="background:#2563eb;">Settings</a>
             <a href="#" onclick="logout()">Logout</a>`
     };
     document.getElementById("appNav").innerHTML = navLinks[userRole] || navLinks.employee;
