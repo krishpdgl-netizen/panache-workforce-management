@@ -388,6 +388,13 @@
                 <a href="letterhead.html">Letter head manager</a>
                 <a href="attendance.html">Attendance manager</a>
                 <a href="reminder.html" class="active">Reminders</a>`;
+        } else if (userRole === "intern") {
+            links = `
+                <a href="intern-dashboard.html">Dashboard</a>
+                <a href="history.html">History</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="reminder.html" class="active">Reminders</a>
+                <a href="settings.html">Settings</a>`;
         } else {
             links = `
                 <a href="employee-dashboard.html">Dashboard</a>
