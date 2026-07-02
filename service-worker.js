@@ -4,13 +4,14 @@
 // It deliberately does NOT cache API responses — those always come fresh
 // from the network so your data is never stale.
 
-const CACHE_NAME = "panache-wms-shell-v2";
+const CACHE_NAME = "panache-wms-shell-v3";
 
 const SHELL_FILES = [
   "index.html",
   "register.html",
   "manager-dashboard.html",
   "employee-dashboard.html",
+  "intern-dashboard.html",
   "admin-dashboard.html",
   "attendance.html",
   "create-task.html",
