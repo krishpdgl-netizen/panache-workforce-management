@@ -282,6 +282,15 @@
         window.location.href = "index.html";
     }
 
+    // ── shared handler: a 401 here always means the session token is
+    //     missing/expired — send the user back to log in instead of
+    //     leaving them looking at a raw network error ──────────────
+    function handleSessionExpired() {
+        showToast("Your session has expired. Please log in again.", "error");
+        localStorage.clear();
+        setTimeout(() => { window.location.href = "index.html"; }, 1800);
+    }
+
     function showToast(msg, type = "success") {
         const t = document.getElementById("toast");
         t.textContent = msg;
@@ -405,9 +414,10 @@
                 headers: authHeaders({ "Content-Type": "application/json" }),
                 body: JSON.stringify({ document_title: title, printed_for: printedFor, given_to: givenTo })
             });
+            if (res.status === 401) { handleSessionExpired(); return; }
             const data = await res.json();
             if (!res.ok || !data.success) {
-                showToast("Failed to log print: " + (data.message || res.status), "error");
+                showToast("Failed to log print: " + (data.message || data.detail || res.status), "error");
                 return;
             }
 
@@ -647,6 +657,7 @@
     async function loadMyPrintLogs() {
         try {
             const res = await fetch(`${BASE}/print-logs/mine`, { headers: authHeaders() });
+            if (res.status === 401) { handleSessionExpired(); return; }
             myLogs = await res.json();
             renderMyLogTable();
         } catch (e) {
@@ -686,6 +697,7 @@
                 fetch(`${BASE}/print-logs`, { headers: authHeaders() }),
                 fetch(`${BASE}/print-logs/stats/summary`, { headers: authHeaders() })
             ]);
+            if (logsRes.status === 401 || statsRes.status === 401) { handleSessionExpired(); return; }
             allLogs = await logsRes.json();
             const stats = await statsRes.json();
             document.getElementById("statTotal").textContent = stats.total ?? "0";
