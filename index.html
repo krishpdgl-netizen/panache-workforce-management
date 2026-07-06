@@ -330,6 +330,7 @@
             const data = await res.json();
 
             if (data.success) {
+                localStorage.setItem("authToken", data.token);
                 localStorage.setItem("userId",    data.id);
                 localStorage.setItem("userName",  data.name);
                 localStorage.setItem("userEmail", data.email);
