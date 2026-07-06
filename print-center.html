@@ -412,18 +412,23 @@
             }
 
             const dt = new Date(data.printed_at);
-            const dateStr = dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-            const timeStr = dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            // Always render in IST, regardless of the viewing device's own timezone.
+            const dateStr = dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
+            const timeStr = dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" });
             const displayUserId = String(userId || "");
             const displayName   = data.user_name || userName;
 
+            // This is exactly what a phone camera / QR reader will show as plain
+            // JSON text when the code is scanned — a self-contained "print record card".
             const qrPayload = JSON.stringify({
                 log_id: data.id,
+                document_title: title,
+                printed_by: displayName,
                 user_id: Number(userId) || 0,
-                timestamp: data.printed_at,
-                used_for: printedFor,
-                given_to: givenTo
-            });
+                printed_for: printedFor,
+                given_to: givenTo,
+                timestamp_ist: data.printed_at
+            }, null, 2);
 
             let blob;
             if (source === "upload" && file.type === "application/pdf") {
@@ -467,14 +472,50 @@
         }
     }
 
+    // ── draws the QR + print-record footer inside the reserved bottom
+    //     margin band of a given page (vector text/image, not a screenshot,
+    //     so it always sits in the true page footer, never mid-flow) ──────
+    function drawPdfFooter(pdf, pageNum, { qrDataUrl, userId, dateStr, timeStr }) {
+        pdf.setPage(pageNum);
+        const pageWidth  = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const footerTop  = pageHeight - FOOTER_BAND_MM; // reserved blank band starts here
+        const qrSize     = 24;
+
+        pdf.setDrawColor(17, 24, 39);
+        pdf.setLineWidth(0.4);
+        pdf.line(14, footerTop, pageWidth - 14, footerTop);
+
+        pdf.addImage(qrDataUrl, "PNG", 14, footerTop + 4, qrSize, qrSize);
+
+        const textX = 14 + qrSize + 8;
+        pdf.setTextColor(17, 24, 39);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9.5);
+        pdf.text("User ID:", textX, footerTop + 10);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(String(userId), textX + 20, footerTop + 10);
+
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Timestamp (IST):", textX, footerTop + 16);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`${dateStr}, ${timeStr}`, textX + 32, footerTop + 16);
+
+        pdf.setTextColor(156, 163, 175);
+        pdf.setFontSize(7.5);
+        pdf.text("This document was generated and logged through the Panache Print Center.", textX, footerTop + 22);
+    }
+
+    const FOOTER_BAND_MM = 36; // bottom margin reserved on every page for the footer
+
     // ── builds a fresh PDF from typed content / an uploaded image ──
     async function renderHtmlToPdf({ title, userName, userId, dateStr, timeStr, qrPayload, bodyHtml }) {
-        const qrDataUrl = await generateQrDataUrl(qrPayload, 90);
+        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
 
         const stage = document.createElement("div");
-        stage.style.cssText = "position:absolute;left:-9999px;top:0;width:190mm;padding:14mm;font-family:Arial,sans-serif;background:#fff;";
+        stage.style.cssText = "position:absolute;left:-9999px;top:0;width:190mm;padding:0 14mm;font-family:Arial,sans-serif;background:#fff;";
         stage.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111827;padding-bottom:10px;margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111827;padding-bottom:10px;margin:14mm 0 18px;">
                 <div style="font-size:17px;font-weight:800;color:#111827;max-width:70%;">${escapeHtml(title)}</div>
                 <div style="font-size:10.5px;color:#6b7280;text-align:right;line-height:1.7;">
                     <b style="color:#374151;">Printed by:</b> ${escapeHtml(userName)}<br>
@@ -482,32 +523,37 @@
                 </div>
             </div>
             <div>${bodyHtml}</div>
-            <div style="margin-top:40px;border-top:2px solid #111827;padding-top:14px;display:flex;align-items:center;gap:16px;">
-                <img src="${qrDataUrl}" style="width:78px;height:78px;">
-                <div style="font-size:10px;color:#374151;line-height:1.9;">
-                    <b style="color:#111827;">User ID:</b> ${escapeHtml(userId)}<br>
-                    <b style="color:#111827;">Timestamp:</b> ${dateStr}, ${timeStr}
-                    <div style="font-size:8.5px;color:#9ca3af;margin-top:4px;">This document was generated and logged through the Panache Print Center.</div>
-                </div>
-            </div>
         `;
         document.body.appendChild(stage);
 
         try {
             const opt = {
-                margin: 0,
+                // Reserve FOOTER_BAND_MM of blank space at the bottom of every page —
+                // page content can never flow into it, so the footer we draw
+                // afterwards always lands in the true page footer, not wherever
+                // the text happens to end.
+                margin: [0, 14, FOOTER_BAND_MM, 14],
                 image: { type: "jpeg", quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
             };
-            const blob = await html2pdf().set(opt).from(stage).outputPdf("blob");
-            return blob;
+            const pdf = await html2pdf().set(opt).from(stage).toPdf().get("pdf");
+            const totalPages = pdf.internal.getNumberOfPages();
+
+            drawPdfFooter(pdf, 1, { qrDataUrl, userId, dateStr, timeStr });
+            if (totalPages > 1) {
+                drawPdfFooter(pdf, totalPages, { qrDataUrl, userId, dateStr, timeStr });
+            }
+
+            return pdf.output("blob");
         } finally {
             document.body.removeChild(stage);
         }
     }
 
-    // ── appends a "Print Record" page to an uploaded PDF ────────
+    // ── stamps the QR + print-record footer onto the footer band of the
+    //     FIRST and LAST page of the uploaded document itself (no extra
+    //     page appended) ──────────────────────────────────────────────
     async function stampUploadedPdf(file, { title, userName, userId, printedFor, givenTo, dateStr, timeStr, qrPayload }) {
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
         const bytes = await readFileAsArrayBuffer(file);
@@ -516,33 +562,50 @@
         const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         const font     = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        const qrDataUrl = await generateQrDataUrl(qrPayload, 200);
+        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
         const qrBytes   = await (await fetch(qrDataUrl)).arrayBuffer();
         const qrImage   = await pdfDoc.embedPng(qrBytes);
 
-        const page = pdfDoc.addPage([595.28, 841.89]); // A4 in points
-        const { width, height } = page.getSize();
-        let y = height - 80;
+        const stampFooterOn = (page) => {
+            const { width } = page.getSize();
+            const bandHeight = 90; // points reserved at the bottom of the page
+            const qrSize = 65;
+            const margin = 36;
 
-        page.drawText("Print Record", { x: 50, y, size: 20, font: fontBold, color: rgb(0.07, 0.09, 0.15) });
-        y -= 40;
-        const line = (label, value) => {
-            page.drawText(label, { x: 50, y, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.29) });
-            page.drawText(value, { x: 160, y, size: 11, font, color: rgb(0.1, 0.1, 0.1) });
-            y -= 22;
+            // White backing so the footer stays legible even over existing
+            // page content — it always sits in the footer band, not wherever
+            // the source document's own content happens to end.
+            page.drawRectangle({
+                x: 0, y: 0, width, height: bandHeight,
+                color: rgb(1, 1, 1), opacity: 0.92,
+            });
+            page.drawLine({
+                start: { x: margin, y: bandHeight - 6 },
+                end:   { x: width - margin, y: bandHeight - 6 },
+                thickness: 0.8, color: rgb(0.07, 0.09, 0.15),
+            });
+
+            page.drawImage(qrImage, { x: margin, y: bandHeight - 6 - qrSize - 6, width: qrSize, height: qrSize });
+
+            const textX = margin + qrSize + 14;
+            let ty = bandHeight - 22;
+            const line = (label, value, size = 9) => {
+                page.drawText(label, { x: textX, y: ty, size, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+                page.drawText(value, { x: textX + 78, y: ty, size, font, color: rgb(0.1, 0.1, 0.1) });
+                ty -= 13;
+            };
+            line("Printed by:", `${userName} (ID: ${userId})`);
+            line("Printed For / Given To:", `${printedFor} / ${givenTo}`);
+            line("Timestamp (IST):", `${dateStr}, ${timeStr}`);
+            page.drawText("Generated and logged through the Panache Print Center.",
+                { x: textX, y: 8, size: 6.5, font, color: rgb(0.55, 0.55, 0.55) });
         };
-        line("Document:", title);
-        line("Printed by:", `${userName} (User ID: ${userId})`);
-        line("Printed For:", printedFor);
-        line("Given To:", givenTo);
-        line("Timestamp:", `${dateStr}, ${timeStr}`);
 
-        y -= 20;
-        page.drawImage(qrImage, { x: 50, y: y - 150, width: 150, height: 150 });
-        page.drawText(`User ID: ${userId}`, { x: 220, y: y - 60, size: 11, font });
-        page.drawText(`Timestamp: ${dateStr}, ${timeStr}`, { x: 220, y: y - 78, size: 11, font });
-        page.drawText("This page was generated and logged through the Panache Print Center.",
-            { x: 50, y: 40, size: 8, font, color: rgb(0.6, 0.6, 0.6) });
+        const pages = pdfDoc.getPages();
+        stampFooterOn(pages[0]);
+        if (pages.length > 1) {
+            stampFooterOn(pages[pages.length - 1]);
+        }
 
         const outBytes = await pdfDoc.save();
         return new Blob([outBytes], { type: "application/pdf" });
