@@ -657,7 +657,11 @@
     async function loadMyPrintLogs() {
         try {
             const res = await fetch(`${BASE}/print-logs/mine`, { headers: authHeaders() });
-            if (res.status === 401) { handleSessionExpired(); return; }
+            if (res.status === 401) {
+                document.getElementById("myLogTableBody").innerHTML =
+                    '<tr class="empty-row"><td colspan="5">Could not verify your session for this section. Try refreshing, or log out and back in if it persists.</td></tr>';
+                return;
+            }
             myLogs = await res.json();
             renderMyLogTable();
         } catch (e) {
@@ -697,7 +701,11 @@
                 fetch(`${BASE}/print-logs`, { headers: authHeaders() }),
                 fetch(`${BASE}/print-logs/stats/summary`, { headers: authHeaders() })
             ]);
-            if (logsRes.status === 401 || statsRes.status === 401) { handleSessionExpired(); return; }
+            if (logsRes.status === 401 || statsRes.status === 401) {
+                document.getElementById("logTableBody").innerHTML =
+                    '<tr class="empty-row"><td colspan="6">Could not verify your session for this section. Try refreshing, or log out and back in if it persists.</td></tr>';
+                return;
+            }
             allLogs = await logsRes.json();
             const stats = await statsRes.json();
             document.getElementById("statTotal").textContent = stats.total ?? "0";
