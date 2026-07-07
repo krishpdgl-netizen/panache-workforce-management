@@ -520,10 +520,7 @@
         pdf.setFont("helvetica", "bold");
         pdf.text("Timestamp (IST):", textX, footerTop + 16);
         pdf.setFont("helvetica", "normal");
-        pdf.text(`${dateStr}, ${timeStr}`, textX + 32, footerTop + 16);
-
-        pdf.setTextColor(156, 163, 175);
-        pdf.setFontSize(7.5);
+        pdf.text(`${dateStr}, ${timeStr}`, textX + 40, footerTop + 16);
     }
 
     const FOOTER_BAND_MM = 36; // bottom margin reserved on every page for the footer
@@ -646,9 +643,9 @@
             page.drawText("User ID:", { x: textX, y: footerHeight - 22, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
             page.drawText(String(userId), { x: textX + 44, y: footerHeight - 22, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
 
-            page.drawText("Timestamp: ", { x: textX, y: footerHeight - 34, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-            page.drawText(`${dateStr}, ${timeStr}`, { x: textX + 50, y: footerHeight - 34, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
-
+            page.drawText("Timestamp:", { x: textX, y: footerHeight - 34, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText(`${dateStr}, ${timeStr}`, { x: textX + 58, y: footerHeight - 34, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
+        };
 
         // Shrinks a page's existing content into the top portion of the
         // SAME page size, leaving [0, footerHeight] genuinely blank below it.
