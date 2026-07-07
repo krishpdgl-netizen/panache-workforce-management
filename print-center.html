@@ -139,6 +139,24 @@
         #toast.error { background:#dc2626; }
 
         .hint { font-size:12.5px; color:#9ca3af; margin-top:-10px; margin-bottom:16px; }
+
+        /* GROUPED LOG ROWS */
+        .group-row { cursor:pointer; }
+        .group-row:hover td { background:#f3f4f6 !important; }
+        .toggle-arrow {
+            display:inline-block; width:16px; transition:transform .15s ease;
+            color:#2563eb; font-size:11px;
+        }
+        .toggle-arrow.open { transform:rotate(90deg); }
+        .version-badge {
+            display:inline-block; background:#eff6ff; color:#2563eb;
+            font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:8px;
+        }
+        .child-row td { background:#fafbfc; font-size:13px; }
+        .child-row .v-label {
+            color:#2563eb; font-weight:700; font-size:12px; padding-left:24px;
+        }
+        .child-row td:first-child { border-left:3px solid #dbeafe; }
     </style>
 </head>
 <body>
@@ -694,8 +712,28 @@
         setSource("type");
     }
 
+    // ── shared grouping helper: collates rows that share the same
+    //     (normalized) document title, oldest → newest so v1 is the
+    //     first print and vN is the most recent. ─────────────────────
+    function groupLogsByTitle(rows, keyFn) {
+        const map = new Map();
+        rows.forEach(r => {
+            const key = keyFn(r);
+            if (!map.has(key)) map.set(key, []);
+            map.get(key).push(r);
+        });
+        const groups = Array.from(map.values()).map(items => {
+            items.sort((a, b) => new Date(a.printed_at) - new Date(b.printed_at));
+            return items;
+        });
+        // most recently-active group first
+        groups.sort((a, b) => new Date(b[b.length - 1].printed_at) - new Date(a[a.length - 1].printed_at));
+        return groups;
+    }
+
     // ── MY PRINT LOG (every role) ─────────────────────────────────
     let myLogs = [];
+    let myExpanded = new Set();
     async function loadMyPrintLogs() {
         try {
             const res = await fetch(`${BASE}/print-logs/mine`, { headers: authHeaders() });
@@ -711,6 +749,10 @@
                 '<tr class="empty-row"><td colspan="5">Failed to load your print log.</td></tr>';
         }
     }
+    function toggleMyGroup(key) {
+        if (myExpanded.has(key)) myExpanded.delete(key); else myExpanded.add(key);
+        renderMyLogTable();
+    }
     function renderMyLogTable() {
         const q = (document.getElementById("mySearch").value || "").toLowerCase();
         const rows = myLogs.filter(r =>
@@ -723,19 +765,52 @@
             body.innerHTML = '<tr class="empty-row"><td colspan="5">You haven\'t printed anything yet.</td></tr>';
             return;
         }
-        body.innerHTML = rows.map(r => `
-            <tr>
-                <td>#${r.id}</td>
-                <td>${escapeHtml(r.document_title || "—")}</td>
-                <td>${escapeHtml(r.printed_for)}</td>
-                <td>${escapeHtml(r.given_to)}</td>
-                <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
-            </tr>
-        `).join("");
+
+        const groups = groupLogsByTitle(rows, r => (r.document_title || "Untitled").trim().toLowerCase());
+
+        body.innerHTML = groups.map(items => {
+            const latest = items[items.length - 1];
+            const titleDisplay = escapeHtml(latest.document_title || "Untitled");
+
+            if (items.length === 1) {
+                const r = items[0];
+                return `
+                    <tr>
+                        <td>#${r.id}</td>
+                        <td>${titleDisplay}</td>
+                        <td>${escapeHtml(r.printed_for)}</td>
+                        <td>${escapeHtml(r.given_to)}</td>
+                        <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
+                    </tr>`;
+            }
+
+            const key = titleDisplay.toLowerCase();
+            const isOpen = myExpanded.has(key);
+            const parentRow = `
+                <tr class="group-row" onclick="toggleMyGroup('${key.replace(/'/g, "\\'")}')">
+                    <td><span class="toggle-arrow ${isOpen ? "open" : ""}">▶</span></td>
+                    <td>${titleDisplay}<span class="version-badge">${items.length} versions</span></td>
+                    <td>${escapeHtml(latest.printed_for)}</td>
+                    <td>${escapeHtml(latest.given_to)}</td>
+                    <td>Last: ${new Date(latest.printed_at).toLocaleString("en-IN")}</td>
+                </tr>`;
+
+            const childRows = isOpen ? items.map((r, i) => `
+                <tr class="child-row">
+                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(#${r.id})</span></td>
+                    <td></td>
+                    <td>${escapeHtml(r.printed_for)}</td>
+                    <td>${escapeHtml(r.given_to)}</td>
+                    <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
+                </tr>`).join("") : "";
+
+            return parentRow + childRows;
+        }).join("");
     }
 
     // ── ADMIN: organization-wide print log ──────────────────────
     let allLogs = [];
+    let orgExpanded = new Set();
     async function loadPrintLogs() {
         if (!isAdmin) return;
         try {
@@ -759,6 +834,10 @@
                 '<tr class="empty-row"><td colspan="6">Failed to load print log.</td></tr>';
         }
     }
+    function toggleOrgGroup(key) {
+        if (orgExpanded.has(key)) orgExpanded.delete(key); else orgExpanded.add(key);
+        renderLogTable();
+    }
     function renderLogTable() {
         const q = (document.getElementById("logSearch").value || "").toLowerCase();
         const rows = allLogs.filter(r =>
@@ -772,16 +851,56 @@
             body.innerHTML = '<tr class="empty-row"><td colspan="6">No prints found.</td></tr>';
             return;
         }
-        body.innerHTML = rows.map(r => `
-            <tr>
-                <td>#${r.id}</td>
-                <td>${escapeHtml(r.user_name)} <span style="color:#9ca3af;">(ID ${r.user_id})</span></td>
-                <td>${escapeHtml(r.document_title || "—")}</td>
-                <td>${escapeHtml(r.printed_for)}</td>
-                <td>${escapeHtml(r.given_to)}</td>
-                <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
-            </tr>
-        `).join("");
+
+        // Grouped per user + title — the same title printed by two different
+        // people is a coincidence, not the same document lineage, so it
+        // shouldn't be collapsed into one v1/v2/v3 sequence.
+        const groups = groupLogsByTitle(rows, r =>
+            `${r.user_id}::${(r.document_title || "Untitled").trim().toLowerCase()}`
+        );
+
+        body.innerHTML = groups.map(items => {
+            const latest = items[items.length - 1];
+            const titleDisplay = escapeHtml(latest.document_title || "Untitled");
+            const userDisplay = `${escapeHtml(latest.user_name)} <span style="color:#9ca3af;">(ID ${latest.user_id})</span>`;
+
+            if (items.length === 1) {
+                const r = items[0];
+                return `
+                    <tr>
+                        <td>#${r.id}</td>
+                        <td>${userDisplay}</td>
+                        <td>${titleDisplay}</td>
+                        <td>${escapeHtml(r.printed_for)}</td>
+                        <td>${escapeHtml(r.given_to)}</td>
+                        <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
+                    </tr>`;
+            }
+
+            const key = `${latest.user_id}::${titleDisplay.toLowerCase()}`;
+            const isOpen = orgExpanded.has(key);
+            const parentRow = `
+                <tr class="group-row" onclick="toggleOrgGroup('${key.replace(/'/g, "\\'")}')">
+                    <td><span class="toggle-arrow ${isOpen ? "open" : ""}">▶</span></td>
+                    <td>${userDisplay}</td>
+                    <td>${titleDisplay}<span class="version-badge">${items.length} versions</span></td>
+                    <td>${escapeHtml(latest.printed_for)}</td>
+                    <td>${escapeHtml(latest.given_to)}</td>
+                    <td>Last: ${new Date(latest.printed_at).toLocaleString("en-IN")}</td>
+                </tr>`;
+
+            const childRows = isOpen ? items.map((r, i) => `
+                <tr class="child-row">
+                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(#${r.id})</span></td>
+                    <td></td>
+                    <td></td>
+                    <td>${escapeHtml(r.printed_for)}</td>
+                    <td>${escapeHtml(r.given_to)}</td>
+                    <td>${new Date(r.printed_at).toLocaleString("en-IN")}</td>
+                </tr>`).join("") : "";
+
+            return parentRow + childRows;
+        }).join("");
     }
 
     async function exportLogs() {
