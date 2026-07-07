@@ -20,7 +20,7 @@
     </script>
     <!-- Libraries used to build a real PDF client-side -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
@@ -313,28 +313,17 @@
         document.getElementById("uploadBlock").style.display = mode === "upload" ? "block" : "none";
     }
 
-    // ── formats plain text into headings / bullets / paragraphs ──
-    function formatContent(text) {
-        let out = ""; let inList = false;
+    // ── parses plain text into structured blocks (heading/bullet/para) ──
+    function parseContentBlocks(text) {
+        const blocks = [];
         text.split("\n").forEach(line => {
             const t = line.trim();
-            if (!t) {
-                if (inList) { out += "</ul>"; inList = false; }
-                out += '<div style="height:8px;"></div>'; return;
-            }
-            if (/^\d+\./.test(t)) {
-                if (inList) { out += "</ul>"; inList = false; }
-                out += '<p style="font-weight:700;font-size:13px;margin:14px 0 5px 0;color:#111827;">' + escapeHtml(t) + '</p>';
-            } else if (/^[•\-\*]/.test(t)) {
-                if (!inList) { out += '<ul style="margin:4px 0 8px 26px;padding:0;">'; inList = true; }
-                out += '<li style="margin-bottom:5px;line-height:1.7;font-size:13px;">' + escapeHtml(t.replace(/^[•\-\*]\s*/, "")) + '</li>';
-            } else {
-                if (inList) { out += "</ul>"; inList = false; }
-                out += '<p style="font-size:13px;line-height:1.8;margin-bottom:9px;color:#222;">' + escapeHtml(t) + '</p>';
-            }
+            if (!t) { blocks.push({ type: "blank" }); return; }
+            if (/^\d+\./.test(t)) blocks.push({ type: "heading", text: t });
+            else if (/^[•\-\*]/.test(t)) blocks.push({ type: "bullet", text: t.replace(/^[•\-\*]\s*/, "") });
+            else blocks.push({ type: "para", text: t });
         });
-        if (inList) out += "</ul>";
-        return out;
+        return blocks;
     }
 
     // ── generate a QR code as a PNG data URL (canvas-based) ──────
@@ -453,18 +442,16 @@
                     printedFor, givenTo, dateStr, timeStr, qrPayload
                 });
             } else if (source === "upload") {
-                // image upload — render like typed content, with the image as the body
+                // image upload — render on its own page, with the QR footer
                 const imgData = await readFileAsDataURL(file);
-                blob = await renderHtmlToPdf({
+                blob = await buildTextBasedPdf({
                     title, userName: displayName, userId: displayUserId,
-                    dateStr, timeStr, qrPayload,
-                    bodyHtml: `<img src="${imgData}" style="max-width:100%;display:block;margin:0 auto;">`
+                    dateStr, timeStr, qrPayload, imageDataUrl: imgData
                 });
             } else {
-                blob = await renderHtmlToPdf({
+                blob = await buildTextBasedPdf({
                     title, userName: displayName, userId: displayUserId,
-                    dateStr, timeStr, qrPayload,
-                    bodyHtml: formatContent(content)
+                    dateStr, timeStr, qrPayload, blocks: parseContentBlocks(content)
                 });
             }
 
@@ -525,46 +512,84 @@
     const FOOTER_BAND_MM = 36; // bottom margin reserved on every page for the footer
 
     // ── builds a fresh PDF from typed content / an uploaded image ──
-    async function renderHtmlToPdf({ title, userName, userId, dateStr, timeStr, qrPayload, bodyHtml }) {
-        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
+    // Pure jsPDF vector drawing — no html2canvas screenshot step, so there's
+    // nothing that can silently render blank from an off-screen element.
+    async function buildTextBasedPdf({ title, userName, userId, dateStr, timeStr, qrPayload, blocks, imageDataUrl }) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+        const pageWidth  = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const marginX = 16;
+        const contentWidth = pageWidth - marginX * 2;
+        const footerLimit = pageHeight - FOOTER_BAND_MM;
+        let y = 20;
 
-        const stage = document.createElement("div");
-        stage.style.cssText = "position:absolute;left:-9999px;top:0;width:182mm;padding:0;font-family:Arial,sans-serif;background:#fff;";
-        stage.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111827;padding-bottom:10px;margin:14mm 0 18px;">
-                <div style="font-size:17px;font-weight:800;color:#111827;max-width:70%;">${escapeHtml(title)}</div>
-                <div style="font-size:10.5px;color:#6b7280;text-align:right;line-height:1.7;">
-                    <b style="color:#374151;">Printed by:</b> ${escapeHtml(userName)}<br>
-                    <b style="color:#374151;">Date:</b> ${dateStr}
-                </div>
-            </div>
-            <div>${bodyHtml}</div>
-        `;
-        document.body.appendChild(stage);
+        // header: title (left) + printed by / date (right)
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(17, 24, 39);
+        const titleLines = doc.splitTextToSize(title, contentWidth * 0.62);
+        titleLines.forEach(line => { doc.text(line, marginX, y); y += 6.5; });
 
-        try {
-            const opt = {
-                // Reserve FOOTER_BAND_MM of blank space at the bottom of every page —
-                // page content can never flow into it, so the footer we draw
-                // afterwards always lands in the true page footer, not wherever
-                // the text happens to end.
-                margin: [0, 14, FOOTER_BAND_MM, 14],
-                image: { type: "jpeg", quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-            };
-            const pdf = await html2pdf().set(opt).from(stage).toPdf().get("pdf");
-            const totalPages = pdf.internal.getNumberOfPages();
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(107, 114, 128);
+        doc.text(`Printed by: ${userName}`, pageWidth - marginX, 15, { align: "right" });
+        doc.text(`Date: ${dateStr}`, pageWidth - marginX, 20, { align: "right" });
 
-            drawPdfFooter(pdf, 1, { qrDataUrl, userId, dateStr, timeStr });
-            if (totalPages > 1) {
-                drawPdfFooter(pdf, totalPages, { qrDataUrl, userId, dateStr, timeStr });
-            }
+        y = Math.max(y, 22) + 2;
+        doc.setDrawColor(17, 24, 39);
+        doc.setLineWidth(0.5);
+        doc.line(marginX, y, pageWidth - marginX, y);
+        y += 10;
 
-            return pdf.output("blob");
-        } finally {
-            document.body.removeChild(stage);
+        const ensureRoom = (needed) => {
+            if (y + needed > footerLimit) { doc.addPage(); y = 20; }
+        };
+
+        if (imageDataUrl) {
+            const props = doc.getImageProperties(imageDataUrl);
+            const w = contentWidth;
+            const h = Math.min((props.height / props.width) * w, footerLimit - y - 5);
+            ensureRoom(h);
+            const fmt = /png/i.test(props.fileType || "") ? "PNG" : "JPEG";
+            doc.addImage(imageDataUrl, fmt, marginX, y, w, h);
+            y += h + 8;
+        } else {
+            (blocks || []).forEach(b => {
+                if (b.type === "blank") { y += 4; return; }
+                if (b.type === "heading") {
+                    doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); doc.setTextColor(17, 24, 39);
+                    doc.splitTextToSize(b.text, contentWidth).forEach(line => {
+                        ensureRoom(6); doc.text(line, marginX, y); y += 6;
+                    });
+                    y += 2;
+                } else if (b.type === "bullet") {
+                    doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(30, 30, 30);
+                    const lines = doc.splitTextToSize(b.text, contentWidth - 6);
+                    lines.forEach((line, i) => {
+                        ensureRoom(6);
+                        if (i === 0) doc.text("•", marginX, y);
+                        doc.text(line, marginX + 5, y);
+                        y += 6;
+                    });
+                    y += 1;
+                } else {
+                    doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(30, 30, 30);
+                    doc.splitTextToSize(b.text, contentWidth).forEach(line => {
+                        ensureRoom(6.5); doc.text(line, marginX, y); y += 6.5;
+                    });
+                    y += 2;
+                }
+            });
         }
+
+        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
+        const totalPages = doc.internal.getNumberOfPages();
+        drawPdfFooter(doc, 1, { qrDataUrl, userId, dateStr, timeStr });
+        if (totalPages > 1) drawPdfFooter(doc, totalPages, { qrDataUrl, userId, dateStr, timeStr });
+
+        return doc.output("blob");
     }
 
     // ── stamps the QR + print-record footer onto the footer band of the
