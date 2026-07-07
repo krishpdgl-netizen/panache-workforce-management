@@ -197,7 +197,7 @@
         <div id="uploadBlock" style="display:none;">
             <label for="docFile">Upload a PDF or image to print</label>
             <input type="file" id="docFile" accept="application/pdf,image/*">
-            <div class="hint">A QR code with your user ID and timestamp will be stamped into the footer of the first and last page — no extra page is added.</div>
+            <div class="hint">A "Print Record" page with the QR code, your user ID, and the timestamp will be added as a new final page — your uploaded document itself is never altered.</div>
         </div>
 
         <button class="btn-primary" id="generateBtn" onclick="generateDocument()">Generate PDF</button>
@@ -592,9 +592,12 @@
         return doc.output("blob");
     }
 
-    // ── stamps the QR + print-record footer onto the footer band of the
-    //     FIRST and LAST page of the uploaded document itself (no extra
-    //     page appended) ──────────────────────────────────────────────
+    // ── appends a dedicated "Print Record" page at the end of the uploaded
+    //     document with the QR + details. We never draw on top of the
+    //     document's own pages — pdf-lib has no way to know what's already
+    //     on them or how much blank space is really there, so overlaying
+    //     risks covering real content. A fresh page guarantees nothing in
+    //     the original document is ever touched or cut. ─────────────────
     async function stampUploadedPdf(file, { title, userName, userId, printedFor, givenTo, dateStr, timeStr, qrPayload }) {
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
         const bytes = await readFileAsArrayBuffer(file);
@@ -607,46 +610,44 @@
         const qrBytes   = await (await fetch(qrDataUrl)).arrayBuffer();
         const qrImage   = await pdfDoc.embedPng(qrBytes);
 
-        const stampFooterOn = (page) => {
-            const { width } = page.getSize();
-            const bandHeight = 90; // points reserved at the bottom of the page
-            const qrSize = 65;
-            const margin = 36;
+        // Match the new page's size to the original document's last page,
+        // so it doesn't look like a jarring size change if the source was
+        // Letter-size, landscape, etc.
+        const existingPages = pdfDoc.getPages();
+        const { width, height } = existingPages.length
+            ? existingPages[existingPages.length - 1].getSize()
+            : { width: 595.28, height: 841.89 }; // fall back to A4
 
-            // White backing so the footer stays legible even over existing
-            // page content — it always sits in the footer band, not wherever
-            // the source document's own content happens to end.
-            page.drawRectangle({
-                x: 0, y: 0, width, height: bandHeight,
-                color: rgb(1, 1, 1), opacity: 0.92,
-            });
-            page.drawLine({
-                start: { x: margin, y: bandHeight - 6 },
-                end:   { x: width - margin, y: bandHeight - 6 },
-                thickness: 0.8, color: rgb(0.07, 0.09, 0.15),
-            });
+        const page = pdfDoc.addPage([width, height]);
+        const margin = 50;
+        let y = height - 90;
 
-            page.drawImage(qrImage, { x: margin, y: bandHeight - 6 - qrSize - 6, width: qrSize, height: qrSize });
+        page.drawText("Print Record", { x: margin, y, size: 20, font: fontBold, color: rgb(0.07, 0.09, 0.15) });
+        y -= 14;
+        page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 1, color: rgb(0.85, 0.85, 0.85) });
+        y -= 34;
 
-            const textX = margin + qrSize + 14;
-            let ty = bandHeight - 22;
-            const line = (label, value, size = 9) => {
-                page.drawText(label, { x: textX, y: ty, size, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-                page.drawText(value, { x: textX + 78, y: ty, size, font, color: rgb(0.1, 0.1, 0.1) });
-                ty -= 13;
-            };
-            line("Printed by:", `${userName} (ID: ${userId})`);
-            line("Printed For / Given To:", `${printedFor} / ${givenTo}`);
-            line("Timestamp (IST):", `${dateStr}, ${timeStr}`);
-            page.drawText("Generated and logged through the Panache Print Center.",
-                { x: textX, y: 8, size: 6.5, font, color: rgb(0.55, 0.55, 0.55) });
+        const line = (label, value, size = 11) => {
+            page.drawText(label, { x: margin, y, size, font: fontBold, color: rgb(0.2, 0.24, 0.29) });
+            page.drawText(value, { x: margin + 130, y, size, font, color: rgb(0.1, 0.1, 0.1) });
+            y -= 22;
         };
+        line("Document:", title);
+        line("Printed by:", `${userName} (User ID: ${userId})`);
+        line("Printed For:", printedFor);
+        line("Given To:", givenTo);
+        line("Timestamp (IST):", `${dateStr}, ${timeStr}`);
 
-        const pages = pdfDoc.getPages();
-        stampFooterOn(pages[0]);
-        if (pages.length > 1) {
-            stampFooterOn(pages[pages.length - 1]);
-        }
+        y -= 24;
+        const qrSize = 150;
+        page.drawImage(qrImage, { x: margin, y: y - qrSize, width: qrSize, height: qrSize });
+        page.drawText(`User ID: ${userId}`, { x: margin + qrSize + 24, y: y - 55, size: 11, font });
+        page.drawText(`Timestamp: ${dateStr}, ${timeStr}`, { x: margin + qrSize + 24, y: y - 73, size: 11, font });
+        page.drawText("Scan the QR code to verify this print record.",
+            { x: margin + qrSize + 24, y: y - 91, size: 9, font, color: rgb(0.45, 0.45, 0.45) });
+
+        page.drawText("This page was generated and logged through the Panache Print Center.",
+            { x: margin, y: 40, size: 8, font, color: rgb(0.6, 0.6, 0.6) });
 
         const outBytes = await pdfDoc.save();
         return new Blob([outBytes], { type: "application/pdf" });
