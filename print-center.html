@@ -507,7 +507,7 @@
         const pageWidth  = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const footerTop  = pageHeight - FOOTER_BAND_MM; // reserved blank band starts here
-        const qrSize     = 20;
+        const qrSize     = 28;
 
         pdf.setDrawColor(17, 24, 39);
         pdf.setLineWidth(0.4);
@@ -634,9 +634,9 @@
         const qrBytes   = await (await fetch(qrDataUrl)).arrayBuffer();
         const qrImage   = await pdfDoc.embedPng(qrBytes);
 
-        const footerHeight = 70; // points of guaranteed-blank space reserved at the bottom
+        const footerHeight = 100; // points of guaranteed-blank space reserved at the bottom
         const margin = 36;
-        const qrSize = 20;
+        const qrSize = 79.4; // 28mm converted to points, to match the typed/image PDF's QR size
 
         // Same footer content as the typed-content PDFs: QR code plus Serial
         // No, User ID, and Timestamp printed beside it. Printed For / Given
