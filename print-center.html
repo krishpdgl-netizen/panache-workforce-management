@@ -240,7 +240,7 @@
         </div>
         <table>
             <thead>
-                <tr><th>ID</th><th>Document</th><th>Purpose</th><th>Given To</th><th>Timestamp</th></tr>
+                <tr><th>Serial No</th><th>Document</th><th>Purpose</th><th>Given To</th><th>Timestamp</th></tr>
             </thead>
             <tbody id="myLogTableBody">
                 <tr class="empty-row"><td colspan="5">Loading...</td></tr>
@@ -268,7 +268,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th><th>User</th><th>Document</th>
+                    <th>Serial No</th><th>User</th><th>Document</th>
                     <th>Purpose</th><th>Given To</th><th>Timestamp</th>
                 </tr>
             </thead>
@@ -342,6 +342,11 @@
             else blocks.push({ type: "para", text: t });
         });
         return blocks;
+    }
+
+    // ── formats a log's numeric ID as a serial number, e.g. 7 -> "P00007" ──
+    function serialOf(id) {
+        return "P" + String(id).padStart(5, "0");
     }
 
     // ── generate a QR code as a PNG data URL (canvas-based) ──────
@@ -440,13 +445,14 @@
             const timeStr = dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" });
             const displayUserId = String(userId || "");
             const displayName   = data.user_name || userName;
+            const serialNumber  = serialOf(data.id);
 
             // This is exactly what a phone camera / QR reader will show as plain
             // JSON text when the code is scanned — a self-contained "print record card".
             const qrPayload = JSON.stringify({
+                serial_number: serialNumber,
                 log_id: data.id,
                 document_title: title,
-                printed_by: displayName,
                 user_id: Number(userId) || 0,
                 printed_for: printedFor,
                 given_to: givenTo,
@@ -456,19 +462,19 @@
             let blob;
             if (source === "upload" && file.type === "application/pdf") {
                 blob = await stampUploadedPdf(file, {
-                    title, userName: displayName, userId: displayUserId,
+                    title, userName: displayName, userId: displayUserId, serialNumber,
                     printedFor, givenTo, dateStr, timeStr, qrPayload
                 });
             } else if (source === "upload") {
                 // image upload — render on its own page, with the QR footer
                 const imgData = await readFileAsDataURL(file);
                 blob = await buildTextBasedPdf({
-                    title, userName: displayName, userId: displayUserId,
+                    title, userName: displayName, userId: displayUserId, serialNumber,
                     dateStr, timeStr, qrPayload, imageDataUrl: imgData
                 });
             } else {
                 blob = await buildTextBasedPdf({
-                    title, userName: displayName, userId: displayUserId,
+                    title, userName: displayName, userId: displayUserId, serialNumber,
                     dateStr, timeStr, qrPayload, blocks: parseContentBlocks(content)
                 });
             }
@@ -496,12 +502,12 @@
     // ── draws the QR + print-record footer inside the reserved bottom
     //     margin band of a given page (vector text/image, not a screenshot,
     //     so it always sits in the true page footer, never mid-flow) ──────
-    function drawPdfFooter(pdf, pageNum, { qrDataUrl, userId, dateStr, timeStr }) {
+    function drawPdfFooter(pdf, pageNum, { qrDataUrl, userId, dateStr, timeStr, serialNumber }) {
         pdf.setPage(pageNum);
         const pageWidth  = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const footerTop  = pageHeight - FOOTER_BAND_MM; // reserved blank band starts here
-        const qrSize     = 24;
+        const qrSize     = 20;
 
         pdf.setDrawColor(17, 24, 39);
         pdf.setLineWidth(0.4);
@@ -513,14 +519,19 @@
         pdf.setTextColor(17, 24, 39);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(9.5);
-        pdf.text("User ID:", textX, footerTop + 10);
+        pdf.text("Serial No:", textX, footerTop + 8);
         pdf.setFont("helvetica", "normal");
-        pdf.text(String(userId), textX + 20, footerTop + 10);
+        pdf.text(String(serialNumber), textX + 22, footerTop + 8);
 
         pdf.setFont("helvetica", "bold");
-        pdf.text("Timestamp (IST):", textX, footerTop + 16);
+        pdf.text("User ID:", textX, footerTop + 14);
         pdf.setFont("helvetica", "normal");
-        pdf.text(`${dateStr}, ${timeStr}`, textX + 40, footerTop + 16);
+        pdf.text(String(userId), textX + 22, footerTop + 14);
+
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Timestamp (IST):", textX, footerTop + 20);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`${dateStr}, ${timeStr}`, textX + 40, footerTop + 20);
     }
 
     const FOOTER_BAND_MM = 36; // bottom margin reserved on every page for the footer
@@ -528,7 +539,7 @@
     // ── builds a fresh PDF from typed content / an uploaded image ──
     // Pure jsPDF vector drawing — no html2canvas screenshot step, so there's
     // nothing that can silently render blank from an off-screen element.
-    async function buildTextBasedPdf({ title, userName, userId, dateStr, timeStr, qrPayload, blocks, imageDataUrl }) {
+    async function buildTextBasedPdf({ title, userId, serialNumber, dateStr, timeStr, qrPayload, blocks, imageDataUrl }) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
         const pageWidth  = doc.internal.pageSize.getWidth();
@@ -538,7 +549,7 @@
         const footerLimit = pageHeight - FOOTER_BAND_MM;
         let y = 20;
 
-        // header: title (left) + printed by / date (right)
+        // header: title (left) + serial no / date (right)
         doc.setFont("helvetica", "bold");
         doc.setFontSize(15);
         doc.setTextColor(17, 24, 39);
@@ -548,7 +559,7 @@
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(107, 114, 128);
-        doc.text(`Printed by: ${userName}`, pageWidth - marginX, 15, { align: "right" });
+        doc.text(`Serial No: ${serialNumber}`, pageWidth - marginX, 15, { align: "right" });
         doc.text(`Date: ${dateStr}`, pageWidth - marginX, 20, { align: "right" });
 
         y = Math.max(y, 22) + 2;
@@ -600,8 +611,8 @@
 
         const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
         const totalPages = doc.internal.getNumberOfPages();
-        drawPdfFooter(doc, 1, { qrDataUrl, userId, dateStr, timeStr });
-        if (totalPages > 1) drawPdfFooter(doc, totalPages, { qrDataUrl, userId, dateStr, timeStr });
+        drawPdfFooter(doc, 1, { qrDataUrl, userId, dateStr, timeStr, serialNumber });
+        if (totalPages > 1) drawPdfFooter(doc, totalPages, { qrDataUrl, userId, dateStr, timeStr, serialNumber });
 
         return doc.output("blob");
     }
@@ -611,7 +622,7 @@
     //     blank strip at the bottom, then stamps the footer only in that
     //     strip. The page's own size never changes, so it still matches
     //     whatever paper size the original document was meant for. ───────
-    async function stampUploadedPdf(file, { title, userName, userId, printedFor, givenTo, dateStr, timeStr, qrPayload }) {
+    async function stampUploadedPdf(file, { title, userId, serialNumber, printedFor, givenTo, dateStr, timeStr, qrPayload }) {
         const { PDFDocument, StandardFonts, rgb } = PDFLib;
         const bytes = await readFileAsArrayBuffer(file);
         const pdfDoc = await PDFDocument.load(bytes);
@@ -625,12 +636,12 @@
 
         const footerHeight = 70; // points of guaranteed-blank space reserved at the bottom
         const margin = 36;
-        const qrSize = 56;
+        const qrSize = 20;
 
-        // Same footer content as the typed-content PDFs: just the QR code
-        // plus User ID and Timestamp printed beside it. Printed For / Given
-        // To / Printed By still travel inside the QR payload itself — they're
-        // just not printed as visible text here, matching the typed flow.
+        // Same footer content as the typed-content PDFs: QR code plus Serial
+        // No, User ID, and Timestamp printed beside it. Printed For / Given
+        // To still travel inside the QR payload itself — they're just not
+        // printed as visible text here, matching the typed flow.
         const drawFooter = (page, width) => {
             const textX = margin + qrSize + 14;
             page.drawLine({
@@ -640,11 +651,14 @@
             });
             page.drawImage(qrImage, { x: margin, y: footerHeight - 8 - qrSize - 4, width: qrSize, height: qrSize });
 
-            page.drawText("User ID:", { x: textX, y: footerHeight - 22, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-            page.drawText(String(userId), { x: textX + 44, y: footerHeight - 22, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText("Serial No:", { x: textX, y: footerHeight - 20, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText(String(serialNumber), { x: textX + 52, y: footerHeight - 20, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
 
-            page.drawText("Timestamp:", { x: textX, y: footerHeight - 34, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-            page.drawText(`${dateStr}, ${timeStr}`, { x: textX + 58, y: footerHeight - 34, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText("User ID:", { x: textX, y: footerHeight - 32, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText(String(userId), { x: textX + 44, y: footerHeight - 32, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
+
+            page.drawText("Timestamp:", { x: textX, y: footerHeight - 44, size: 9.5, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
+            page.drawText(`${dateStr}, ${timeStr}`, { x: textX + 58, y: footerHeight - 44, size: 9.5, font, color: rgb(0.1, 0.1, 0.1) });
         };
 
         // Shrinks a page's existing content into the top portion of the
@@ -771,7 +785,7 @@
                 const r = items[0];
                 return `
                     <tr>
-                        <td>#${r.id}</td>
+                        <td>${serialOf(r.id)}</td>
                         <td>${titleDisplay}</td>
                         <td>${escapeHtml(r.printed_for)}</td>
                         <td>${escapeHtml(r.given_to)}</td>
@@ -792,7 +806,7 @@
 
             const childRows = isOpen ? items.map((r, i) => `
                 <tr class="child-row">
-                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(#${r.id})</span></td>
+                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(${serialOf(r.id)})</span></td>
                     <td></td>
                     <td>${escapeHtml(r.printed_for)}</td>
                     <td>${escapeHtml(r.given_to)}</td>
@@ -863,7 +877,7 @@
                 const r = items[0];
                 return `
                     <tr>
-                        <td>#${r.id}</td>
+                        <td>${serialOf(r.id)}</td>
                         <td>${userDisplay}</td>
                         <td>${titleDisplay}</td>
                         <td>${escapeHtml(r.printed_for)}</td>
@@ -886,7 +900,7 @@
 
             const childRows = isOpen ? items.map((r, i) => `
                 <tr class="child-row">
-                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(#${r.id})</span></td>
+                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(${serialOf(r.id)})</span></td>
                     <td></td>
                     <td></td>
                     <td>${escapeHtml(r.printed_for)}</td>
