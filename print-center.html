@@ -447,17 +447,18 @@
             const displayName   = data.user_name || userName;
             const serialNumber  = serialOf(data.id);
 
-            // This is exactly what a phone camera / QR reader will show as plain
-            // JSON text when the code is scanned — a self-contained "print record card".
-            const qrPayload = JSON.stringify({
-                serial_number: serialNumber,
-                log_id: data.id,
-                document_title: title,
-                user_id: Number(userId) || 0,
-                printed_for: printedFor,
-                given_to: givenTo,
-                timestamp_ist: data.printed_at
-            }, null, 2);
+            // This is what a phone camera / QR reader opens when the code is
+            // scanned: a link to verify.html, which renders the print record
+            // as a styled card. All the details travel inside the URL itself,
+            // so verify.html needs no backend call to display them.
+            const verifyUrl = new URL("verify.html", window.location.href);
+            verifyUrl.searchParams.set("serial", serialNumber);
+            verifyUrl.searchParams.set("title", title);
+            verifyUrl.searchParams.set("uid", displayUserId);
+            verifyUrl.searchParams.set("for", printedFor);
+            verifyUrl.searchParams.set("to", givenTo);
+            verifyUrl.searchParams.set("ts", data.printed_at);
+            const qrPayload = verifyUrl.toString();
 
             let blob;
             if (source === "upload" && file.type === "application/pdf") {
@@ -507,7 +508,7 @@
         const pageWidth  = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const footerTop  = pageHeight - FOOTER_BAND_MM; // reserved blank band starts here
-        const qrSize     = 28;
+        const qrSize     = 22;
 
         pdf.setDrawColor(17, 24, 39);
         pdf.setLineWidth(0.4);
