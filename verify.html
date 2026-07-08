@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="static/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>Print Verification | Panache WMS</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+    body {
+        min-height:100vh; display:flex; align-items:center; justify-content:center;
+        background:#111827; padding:24px;
+    }
+
+    .card {
+        width:100%; max-width:420px; background:#fff; border-radius:18px;
+        box-shadow:0 20px 50px rgba(0,0,0,.35); overflow:hidden;
+    }
+
+    .card-header {
+        background:#111827; color:#fff; padding:26px 28px 22px;
+        text-align:center;
+    }
+    .badge {
+        width:52px; height:52px; border-radius:50%; background:#2563eb;
+        display:flex; align-items:center; justify-content:center; margin:0 auto 12px;
+    }
+    .badge svg { width:26px; height:26px; }
+    .card-header h1 { font-size:17px; font-weight:600; }
+    .card-header p { font-size:12.5px; color:#9ca3af; margin-top:4px; }
+
+    .serial-strip {
+        background:#eff6ff; color:#2563eb; text-align:center;
+        padding:14px 20px; font-size:22px; font-weight:700; letter-spacing:1px;
+        border-bottom:1px solid #dbeafe;
+    }
+    .serial-strip span { display:block; font-size:11px; font-weight:600; color:#6b7280;
+        letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px; }
+
+    .details { padding:22px 28px 26px; }
+    .row {
+        display:flex; justify-content:space-between; gap:16px;
+        padding:12px 0; border-bottom:1px solid #f1f3f5;
+    }
+    .row:last-child { border-bottom:none; padding-bottom:0; }
+    .row .label { font-size:12.5px; color:#6b7280; font-weight:600; white-space:nowrap; }
+    .row .value { font-size:14px; color:#111827; font-weight:600; text-align:right; word-break:break-word; }
+
+    .footer-note {
+        text-align:center; font-size:11.5px; color:#9ca3af;
+        padding:16px 20px 22px;
+    }
+
+    .empty {
+        text-align:center; padding:40px 28px; color:#6b7280; font-size:14px;
+    }
+</style>
+</head>
+<body>
+
+    <div class="card" id="card">
+        <!-- filled in by script -->
+    </div>
+
+<script>
+    function esc(str) {
+        const d = document.createElement("div");
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function formatTimestamp(raw) {
+        if (!raw) return "—";
+        const dt = new Date(raw);
+        if (isNaN(dt.getTime())) return raw;
+        const dateStr = dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
+        const timeStr = dt.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" });
+        return `${dateStr}, ${timeStr} IST`;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const serial  = params.get("serial");
+    const title   = params.get("title");
+    const uid     = params.get("uid");
+    const forWhom = params.get("for");
+    const toWhom  = params.get("to");
+    const ts      = params.get("ts");
+
+    const card = document.getElementById("card");
+
+    if (!serial && !title) {
+        card.innerHTML = `<div class="empty">No print record data found in this link.</div>`;
+    } else {
+        const rows = [
+            ["Document",         title || "—"],
+            ["Purpose",          forWhom || "—"],
+            ["Given To",         toWhom || "—"],
+            ["User ID",          uid || "—"],
+            ["Timestamp",        formatTimestamp(ts)],
+        ];
+
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </div>
+                <h1>Verified Print Record</h1>
+                <p>Panache WMS · Print Center</p>
+            </div>
+            <div class="serial-strip">
+                <span>Serial No</span>
+                ${esc(serial || "—")}
+            </div>
+            <div class="details">
+                ${rows.map(([label, value]) => `
+                    <div class="row">
+                        <div class="label">${esc(label)}</div>
+                        <div class="value">${esc(value)}</div>
+                    </div>
+                `).join("")}
+            </div>
+            <div class="footer-note">Scanned from a document printed via Panache WMS</div>
+        `;
+    }
+</script>
+
+</body>
+</html>
