@@ -355,7 +355,7 @@
             const temp = document.createElement("div");
             temp.style.cssText = "position:absolute;left:-9999px;top:0;";
             document.body.appendChild(temp);
-            new QRCode(temp, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+            new QRCode(temp, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.L });
             setTimeout(() => {
                 const canvas = temp.querySelector("canvas");
                 let dataUrl = null;
@@ -451,12 +451,15 @@
             // scanned: a link to verify.html, which renders the print record
             // as a styled card. All the details travel inside the URL itself,
             // so verify.html needs no backend call to display them.
+            // Free-text fields are capped so the QR doesn't balloon into a
+            // high-density code that's hard to scan at small print sizes.
+            const clip = (str, max) => (str && str.length > max) ? str.slice(0, max - 1) + "…" : (str || "");
             const verifyUrl = new URL("verify.html", window.location.href);
             verifyUrl.searchParams.set("serial", serialNumber);
-            verifyUrl.searchParams.set("title", title);
+            verifyUrl.searchParams.set("title", clip(title, 40));
             verifyUrl.searchParams.set("uid", displayUserId);
-            verifyUrl.searchParams.set("for", printedFor);
-            verifyUrl.searchParams.set("to", givenTo);
+            verifyUrl.searchParams.set("for", clip(printedFor, 30));
+            verifyUrl.searchParams.set("to", clip(givenTo, 30));
             verifyUrl.searchParams.set("ts", data.printed_at);
             const qrPayload = verifyUrl.toString();
 
@@ -508,7 +511,7 @@
         const pageWidth  = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
         const footerTop  = pageHeight - FOOTER_BAND_MM; // reserved blank band starts here
-        const qrSize     = 22;
+        const qrSize     = 26;
 
         pdf.setDrawColor(17, 24, 39);
         pdf.setLineWidth(0.4);
@@ -610,7 +613,7 @@
             });
         }
 
-        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
+        const qrDataUrl = await generateQrDataUrl(qrPayload, 500);
         const totalPages = doc.internal.getNumberOfPages();
         drawPdfFooter(doc, 1, { qrDataUrl, userId, dateStr, timeStr, serialNumber });
         if (totalPages > 1) drawPdfFooter(doc, totalPages, { qrDataUrl, userId, dateStr, timeStr, serialNumber });
@@ -631,13 +634,13 @@
         const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
         const font     = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-        const qrDataUrl = await generateQrDataUrl(qrPayload, 240);
+        const qrDataUrl = await generateQrDataUrl(qrPayload, 500);
         const qrBytes   = await (await fetch(qrDataUrl)).arrayBuffer();
         const qrImage   = await pdfDoc.embedPng(qrBytes);
 
         const footerHeight = 100; // points of guaranteed-blank space reserved at the bottom
         const margin = 36;
-        const qrSize = 68; // ~24mm — slightly smaller than the typed/image PDF's 28mm QR
+        const qrSize = 73.7; // ~26mm — matches the typed/image PDF's QR size, sized for reliable scanning
 
         // Same footer content as the typed-content PDFs: QR code plus Serial
         // No, User ID, and Timestamp printed beside it. Printed For / Given
