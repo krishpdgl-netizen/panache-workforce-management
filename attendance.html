@@ -721,16 +721,28 @@ function formatLate(mins) {
 
 async function api(path, opts={}) {
     try {
+        const token = localStorage.getItem("authToken") || "";
         const headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""),
+            "Authorization": "Bearer " + token,
             ...(opts.headers || {})
         };
         const r = await fetch(API+path, { ...opts, headers });
         if (!r.ok) {
-            console.error(`API ${path} returned ${r.status}`);
-            // Try to parse error body, fall back to status text
-            try { return await r.json(); } catch { return {success:false, message:`Server error ${r.status}`}; }
+            if (r.status === 401) {
+                console.error(`API ${path} returned 401. authToken present: ${!!token}, length: ${token.length}`);
+            } else {
+                console.error(`API ${path} returned ${r.status}`);
+            }
+            // Try to parse error body (FastAPI typically sends {"detail": "..."})
+            // fall back to status text if the body isn't JSON.
+            let body;
+            try { body = await r.json(); } catch { body = {}; }
+            return {
+                success: false,
+                message: body.message || body.detail || `Server error ${r.status}`,
+                ...body
+            };
         }
         return await r.json();
     } catch(e) {
