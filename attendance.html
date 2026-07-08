@@ -740,6 +740,13 @@ async function api(path, opts={}) {
     }
 }
 
+// api() returns {success:false,...} on server/network errors instead of a
+// list — this guards every list-consuming call site so a down/unreachable
+// backend shows "no records" instead of crashing on .sort/.filter/.map.
+function asArray(res) {
+    return Array.isArray(res) ? res : [];
+}
+
 function numToWords(n) {
     const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
     const b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
@@ -858,7 +865,7 @@ async function loadPunchState() {
 
     const today = new Date().toISOString().split("T")[0];
     // Always filter by both emp_id AND att_date so we never get another employee's record
-    const rows  = await api(`/attendance?emp_id=${encodeURIComponent(EMP_ID)}&att_date=${today}`) || [];
+    const rows  = asArray(await api(`/attendance?emp_id=${encodeURIComponent(EMP_ID)}&att_date=${today}`));
     // Find the record that strictly belongs to this employee (defensive check)
     const rec   = rows.find(r => String(r.emp_id) === String(EMP_ID)) || null;
 
@@ -990,7 +997,7 @@ function renderCalendar() {
 async function renderHistory() {
     const m = document.getElementById("histMonth").value;
     const params = `emp_id=${EMP_ID}` + (m?`&month=${m}`:"");
-    const rows = await api(`/attendance?${params}`) || [];
+    const rows = asArray(await api(`/attendance?${params}`));
     rows.sort((a,b)=>b.att_date.localeCompare(a.att_date));
     const body = document.getElementById("historyBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="8" class="no-data">No records found.</td></tr>`; return; }
@@ -1040,7 +1047,7 @@ async function submitCorrection() {
 }
 
 async function renderMyRequests() {
-    const rows = await api(`/attendance/corrections?emp_id=${EMP_ID}`) || [];
+    const rows = asArray(await api(`/attendance/corrections?emp_id=${EMP_ID}`));
     const body = document.getElementById("myRequestsBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="7" class="no-data">No requests found.</td></tr>`; return; }
     body.innerHTML = rows.map(r=>`<tr>
@@ -1078,7 +1085,7 @@ async function renderAttendanceTable() {
     if (fd) qs.push("att_date="+fd);
     if (fdept) qs.push("department="+encodeURIComponent(fdept));
     if (fs) qs.push("status="+encodeURIComponent(fs));
-    let rows = await api("/attendance"+(qs.length?"?"+qs.join("&"):"")) || [];
+    let rows = asArray(await api("/attendance"+(qs.length?"?"+qs.join("&"):"")));
     if (fe) rows = rows.filter(r=>r.emp_name.toLowerCase().includes(fe.toLowerCase())||r.emp_id.toLowerCase().includes(fe.toLowerCase()));
     rows.sort((a,b)=>b.att_date.localeCompare(a.att_date));
     const body = document.getElementById("attendanceBody");
@@ -1117,11 +1124,11 @@ function openAddAttendance() {
 
 async function editAttendance(id) {
     // Fetch only the specific record by ID to avoid mixing up data across employees
-    const rows = await api(`/attendance?id=${id}`) || [];
+    const rows = asArray(await api(`/attendance?id=${id}`));
     let r = rows.find(a => a.id === id);
     // Fallback: if the backend doesn't support ?id= filter, search from a small date window
     if (!r) {
-        const allRows = await api("/attendance") || [];
+        const allRows = asArray(await api("/attendance"));
         r = allRows.find(a => a.id === id);
     }
     if (!r) { showToast("Record not found.", "error"); return; }
@@ -1204,7 +1211,7 @@ async function renderRequestsTable() {
     const fdate=document.getElementById("req-filter-date").value;
     if (fd) qs.push("department="+encodeURIComponent(fd));
     if (fdate) qs.push("att_date="+fdate);
-    let rows = await api("/attendance/corrections"+(qs.length?"?"+qs.join("&"):"")) || [];
+    let rows = asArray(await api("/attendance/corrections"+(qs.length?"?"+qs.join("&"):"")));
     const fe = document.getElementById("req-filter-emp").value.toLowerCase();
     if (fe) rows=rows.filter(r=>r.emp_name.toLowerCase().includes(fe)||r.emp_id.toLowerCase().includes(fe));
     rows.sort((a,b)=>b.submitted_at.localeCompare(a.submitted_at));
@@ -1461,7 +1468,7 @@ async function renderMySlips() {
         for(let i=y;i>=y-3;i--) yearSel.innerHTML+=`<option value="${i}">${i}</option>`;
     }
     const yr=yearSel.value;
-    const rows=await api(`/payslips?emp_id=${EMP_ID}&year=${yr}`)||[];
+    const rows=asArray(await api(`/payslips?emp_id=${EMP_ID}&year=${yr}`));
     const body=document.getElementById("mySlipsBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="7" class="no-data">No payslips for ${yr}.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr>
@@ -1476,7 +1483,7 @@ async function renderMySlips() {
 }
 
 async function viewSlipByEmpMonth(empId, month) {
-    const rows=await api(`/payslips?emp_id=${empId}&month=${month}`)||[];
+    const rows=asArray(await api(`/payslips?emp_id=${empId}&month=${month}`));
     if (!rows.length) { showToast("No payslip found. Lock payroll first.","error"); return; }
     viewSalarySlip(rows[0].id);
 }
@@ -1565,7 +1572,7 @@ async function renderAuditLog() {
     if (from) qs.push("from_date="+from);
     if (to)   qs.push("to_date="+to);
     if (srch) qs.push("search="+encodeURIComponent(srch));
-    const rows=await api("/attendance/audit"+(qs.length?"?"+qs.join("&"):""))||[];
+    const rows=asArray(await api("/attendance/audit"+(qs.length?"?"+qs.join("&"):"")));
     const body=document.getElementById("auditBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="9" class="no-data">No audit logs found.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr>
@@ -1591,7 +1598,7 @@ function switchReportTab(name, el) {
 async function renderLateReport() {
     const m=document.getElementById("rep-late-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=await api(`/reports/attendance/late?month=${m}`)||[];
+    const rows=asArray(await api(`/reports/attendance/late?month=${m}`));
     const body=document.getElementById("rep-late-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="5" class="no-data">No late records.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.late_days}</td><td>${formatLate(r.total_late_minutes)}</td><td>${formatLate(r.avg_late_minutes)}</td></tr>`).join("");
@@ -1600,7 +1607,7 @@ async function renderLateReport() {
 async function renderAbsentReport() {
     const m=document.getElementById("rep-absent-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=await api(`/reports/attendance/absentees?month=${m}`)||[];
+    const rows=asArray(await api(`/reports/attendance/absentees?month=${m}`));
     const body=document.getElementById("rep-absent-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="4" class="no-data">No absences.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.absent_days}</td><td>${r.leave_days}</td></tr>`).join("");
@@ -1609,7 +1616,7 @@ async function renderAbsentReport() {
 async function renderOTReport() {
     const m=document.getElementById("rep-ot-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=await api(`/reports/attendance/overtime?month=${m}`)||[];
+    const rows=asArray(await api(`/reports/attendance/overtime?month=${m}`));
     const body=document.getElementById("rep-ot-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="4" class="no-data">No overtime.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.ot_days}</td><td>${r.ot_hours}h</td></tr>`).join("");
@@ -1630,7 +1637,7 @@ async function renderPayrollSummary() {
 
 async function renderDeptSalary() {
     const m=document.getElementById("rep-dept-month").value;
-    const rows=await api(`/reports/payroll/department?month=${m}`)||[];
+    const rows=asArray(await api(`/reports/payroll/department?month=${m}`));
     const body=document.getElementById("rep-dept-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="5" class="no-data">No data.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.department||"—"}</td><td>${r.employees}</td><td>${fmtMoney(r.gross)}</td><td>${fmtMoney(r.deductions)}</td><td style="font-weight:700;">${fmtMoney(r.net)}</td></tr>`).join("");
