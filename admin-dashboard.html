@@ -30,6 +30,19 @@
             padding: 12px; margin-bottom: 8px; border-radius: 8px; transition: .3s;
         }
         .menu a:hover, .menu a.active { background: #2563eb; }
+        .menu-group { margin-bottom: 6px; }
+        .menu-group-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding: 10px 12px; cursor:pointer; border-radius:8px;
+            color: rgba(255,255,255,0.55); font-size:11px; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.6px; user-select:none;
+        }
+        .menu-group-header:hover { background: rgba(255,255,255,0.06); }
+        .menu-group-header .chev { transition: transform .2s; font-size:10px; }
+        .menu-group.open .menu-group-header .chev { transform: rotate(90deg); }
+        .menu-group-items { display:none; padding-left:2px; }
+        .menu-group.open .menu-group-items { display:block; }
+        .menu-group-items a { padding: 10px 12px; font-size: 13.5px; }
 
         /* MAIN */
         .main { margin-left: 260px; width: 100%; padding: 25px; }
@@ -89,23 +102,6 @@
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; }
         th { background: #f3f4f6; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; }
         tr:hover td { background: #f9fafb; }
-
-        /* Scrollable lists: show ~7 rows in preview, rest reachable by scrolling */
-        .table-scroll {
-            max-height: 340px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 8px;
-        }
-        .table-scroll thead th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-        .scroll-box {
-            max-height: 340px;
-            overflow-y: auto;
-        }
 
         /* BUTTONS */
         .btn-primary {
@@ -279,16 +275,41 @@
     <div class="logo">Panache Admin</div>
     <div class="menu">
         <a href="admin-dashboard.html" class="active">Dashboard</a>
-        <a href="sales-dashboard.html">Sales Dashboard</a>
-        <a href="settings.html">Settings</a>
-        <a href="calendar.html">Calendar</a>
-        <a href="employee-hub.html">Employee Hub</a>
-        <a href="letterhead.html">Letter head manager</a>
-        <a href="attendance.html">Attendance manager</a>
-        <a href="reminder.html">Reminders</a>
-        <a href="print-center.html">Print center</a>
-        <a href="admin-export.html">Data resource</a>
 
+        <div class="menu-group" data-group="Workforce">
+            <div class="menu-group-header" onclick="toggleSidebarGroup('Workforce')">Workforce<span class="chev">▶</span></div>
+            <div class="menu-group-items">
+                <a href="employee-hub.html">Employee Hub</a>
+                <a href="attendance.html">Attendance manager</a>
+                <a href="insurance-manager.html">Insurance</a>
+            </div>
+        </div>
+
+        <div class="menu-group" data-group="Documents">
+            <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+            <div class="menu-group-items">
+                <a href="letterhead.html">Letter head manager</a>
+                <a href="print-center.html">Print center</a>
+                <a href="admin-export.html">Data resource</a>
+            </div>
+        </div>
+
+        <div class="menu-group" data-group="Planning">
+            <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+            <div class="menu-group-items">
+                <a href="calendar.html">Calendar</a>
+                <a href="reminder.html">Reminders</a>
+            </div>
+        </div>
+
+        <div class="menu-group" data-group="Sales">
+            <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+            <div class="menu-group-items">
+                <a href="sales-dashboard.html">Sales Dashboard</a>
+            </div>
+        </div>
+
+        <a href="settings.html">Settings</a>
     </div>
 <!-- ── PERSONAL TO-DO ─────────────────────────────── -->
 <div style="margin-top:auto;padding-top:20px;border-top:0.5px solid rgba(255,255,255,0.12);">
@@ -445,7 +466,6 @@
 
         <!-- EMPLOYEES TAB -->
         <div id="tabEmployees">
-            <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -457,12 +477,10 @@
                     <tr><td colspan="7" class="no-data">Loading...</td></tr>
                 </tbody>
             </table>
-            </div>
         </div>
 
         <!-- MANAGERS TAB -->
         <div id="tabManagers" style="display:none;">
-            <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -473,7 +491,6 @@
                     <tr><td colspan="5" class="no-data">Loading...</td></tr>
                 </tbody>
             </table>
-            </div>
         </div>
     </div>
 
@@ -485,7 +502,6 @@
             <h2>All Tasks</h2>
             <button class="btn-primary" onclick="window.location.href='create-task.html'">+ New Task</button>
         </div>
-        <div class="table-scroll">
         <table>
             <thead>
                 <tr>
@@ -497,13 +513,11 @@
                 <tr><td colspan="7" class="no-data">Loading...</td></tr>
             </tbody>
         </table>
-        </div>
     </div>
 
     <!-- EMPLOYEE PERFORMANCE -->
     <div class="section">
         <h2 style="margin-bottom:18px;">Employee Performance</h2>
-        <div class="table-scroll">
         <table>
             <thead>
                 <tr>
@@ -515,14 +529,13 @@
                 <tr><td colspan="6" class="no-data">Loading...</td></tr>
             </tbody>
         </table>
-        </div>
     </div>
 
 
     <!-- SYSTEM ALERTS -->
     <div class="section">
         <h2 style="margin-bottom:18px;">System Alerts</h2>
-        <div id="alertsBox" class="scroll-box">
+        <div id="alertsBox">
             <div class="alert">Analyzing system...</div>
         </div>
     </div>
@@ -562,6 +575,26 @@
 
 <script>
     const BASE = "https://backend-production-53f3.up.railway.app";
+
+    // ── SIDEBAR GROUPS (collapsible, remembers open/closed state) ──
+    (function initSidebarGroups() {
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+        document.querySelectorAll(".menu-group").forEach(g => {
+            const name = g.dataset.group;
+            const hasActive = g.querySelector("a.active") !== null;
+            if (state[name] ?? hasActive) g.classList.add("open");
+        });
+    })();
+    window.toggleSidebarGroup = function(name) {
+        let state = {};
+        try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+        const el = document.querySelector(`.menu-group[data-group="${name}"]`);
+        const nowOpen = !el.classList.contains("open");
+        el.classList.toggle("open");
+        state[name] = nowOpen;
+        localStorage.setItem("sidebarGroupState", JSON.stringify(state));
+    };
 
     // ── PROFILE ──────────────────────────────────────────────
     document.getElementById("profileName").innerHTML  = localStorage.getItem("userName") || "Admin";
