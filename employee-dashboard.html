@@ -57,6 +57,7 @@
         .menu a:hover {
             background: #2563eb;
         }
+        .nav-dot { display:none; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-left:6px; vertical-align:middle; }
         .menu-group { margin-bottom: 6px; }
         .menu-group-header {
             display:flex; align-items:center; justify-content:space-between;
@@ -355,8 +356,6 @@
             <div class="menu-group-items">
                 <a href="employee-hub.html">Employee Hub</a>
                 <a href="letterhead.html">Letter head manager</a>
-                <a href="print-center.html">Print center</a>
-                
             </div>
         </div>
 
@@ -364,8 +363,8 @@
             <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
             <div class="menu-group-items">
                 <a href="calendar.html">Calendar</a>
-                <a href="reminder.html">Reminders</a>
-                <a href="travel-request.html">Travel Requests</a>
+                <a href="reminder.html">Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+                <a href="travel-request.html">Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
             </div>
         </div>
 
@@ -1216,6 +1215,15 @@ loadTeamRequests();
 
         renderWidget(items);
         renderBell(items);
+        applyNavDot(items);
+    }
+
+    function applyNavDot(items) {
+        const hasTravel = (items || []).some(i => i.is_travel_request);
+        const d1 = document.getElementById("navDotReminders");
+        const d2 = document.getElementById("navDotTravel");
+        if (d1) d1.style.display = hasTravel ? "inline-block" : "none";
+        if (d2) d2.style.display = hasTravel ? "inline-block" : "none";
     }
 
     function renderWidget(items) {
