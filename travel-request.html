@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Requests | Panache</title>
+    <link rel="icon" type="image/png" href="static/favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111827">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script>
+        const role = localStorage.getItem("userRole");
+        if (!role) { window.location.href = "index.html"; }
+    </script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+        body { display:flex; background:#f4f6f9; }
+
+        /* SIDEBAR */
+        .sidebar { width:250px; height:100vh; background:#111827; color:white; padding:20px; position:fixed; left:0; top:0; overflow-y:auto; }
+        .logo { font-size:22px; font-weight:bold; margin-bottom:30px; }
+        .menu a { display:block; color:white; text-decoration:none; padding:12px; margin-bottom:8px; border-radius:8px; transition:0.3s; }
+        .menu a:hover { background:#2563eb; }
+        .menu a.active { background:#2563eb; }
+        .menu-group { margin-bottom:6px; }
+        .menu-group-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; border-radius:8px; color:rgba(255,255,255,0.55); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; user-select:none; }
+        .menu-group-header:hover { background:rgba(255,255,255,0.06); }
+        .menu-group-header .chev { transition:transform .2s; font-size:10px; }
+        .menu-group.open .menu-group-header .chev { transform:rotate(90deg); }
+        .menu-group-items { display:none; padding-left:2px; }
+        .menu-group.open .menu-group-items { display:block; }
+        .menu-group-items a { padding:10px 12px; font-size:13.5px; }
+        .menu-group-items a.active { background:#2563eb; }
+
+        /* MAIN */
+        .main { margin-left:250px; padding:25px; width:calc(100% - 250px); }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:15px; }
+        .header h1 { color:#111827; }
+        .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
+        .logout-btn { background:#dc2626; padding:10px 18px; border:none; color:white; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:#b91c1c; }
+
+        .section { background:white; padding:20px; border-radius:15px; margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
+        .section h2 { margin-bottom:15px; }
+        .section p.hint { font-size:13px; color:#6b7280; margin-bottom:16px; }
+
+        /* FORM */
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+        .field { display:flex; flex-direction:column; gap:6px; }
+        .field label { font-size:13px; font-weight:600; color:#374151; }
+        .field input, .field select, .field textarea {
+            padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit; color:#111827;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:#2563eb; }
+        .field textarea { resize:vertical; min-height:70px; grid-column:1 / -1; }
+        .field.full { grid-column:1 / -1; }
+
+        .btn { border:none; padding:11px 22px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.2s; }
+        .btn-primary { background:#2563eb; color:white; margin-top:18px; }
+        .btn-primary:hover { background:#1d4ed8; }
+        .btn-primary:disabled { background:#93b4f0; cursor:default; }
+
+        /* TABLE */
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
+        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px; }
+        .no-data { color:#9ca3af; font-size:14px; text-align:center; padding:20px; }
+
+        .status-badge { display:inline-block; padding:4px 10px; border-radius:99px; font-size:12px; font-weight:600; }
+        .status-pending  { background:#fef9c3; color:#a16207; }
+        .status-approved { background:#dcfce7; color:#15803d; }
+        .status-rejected { background:#fee2e2; color:#b91c1c; }
+
+        .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .action-btn { border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12.5px; font-weight:600; transition:0.2s; white-space:nowrap; }
+        .btn-approve { background:#16a34a; color:white; }
+        .btn-approve:hover { background:#15803d; }
+        .btn-reject  { background:#dc2626; color:white; }
+        .btn-reject:hover { background:#b91c1c; }
+        .btn-meeting { background:#7c3aed; color:white; }
+        .btn-meeting:hover { background:#6d28d9; }
+
+        .toast { position:fixed; bottom:30px; right:30px; background:#111827; color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:9999; }
+        .toast.show { opacity:1; transform:translateY(0); }
+
+        /* MODAL */
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(17,24,39,0.5); z-index:5000; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal { background:white; border-radius:14px; padding:24px; width:min(420px, 92vw); box-shadow:0 20px 50px rgba(0,0,0,.25); }
+        .modal h3 { margin-bottom:16px; color:#111827; }
+        .modal .field { margin-bottom:14px; }
+        .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
+        .modal-actions button { border:none; padding:10px 18px; border-radius:8px; font-size:13.5px; font-weight:600; cursor:pointer; }
+        .modal-cancel { background:#e5e7eb; color:#374151; }
+        .modal-confirm { background:#7c3aed; color:white; }
+
+        @media (max-width:900px) {
+            .sidebar { width:200px; }
+            .main { margin-left:200px; width:calc(100% - 200px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">Panache WMS</div>
+    <div class="menu" id="sidebarMenu"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="header">
+        <h1>Business Travel Requests</h1>
+        <div style="display:flex;align-items:center;gap:15px;">
+            <div class="profile">
+                <b id="profileName">Loading...</b><br>
+                <span id="profileEmail"></span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- SUBMIT FORM -->
+    <div class="section">
+        <h2>Submit a Travel Request</h2>
+        <p class="hint">Fill in your trip details below. Your admin will be notified immediately, and reminded automatically every 4 hours until it's approved or a meeting is set up.</p>
+        <form id="travelForm">
+            <div class="form-grid">
+                <div class="field">
+                    <label>Origin</label>
+                    <input type="text" id="tOrigin" placeholder="e.g. Mumbai" required>
+                </div>
+                <div class="field">
+                    <label>Destination</label>
+                    <input type="text" id="tDestination" placeholder="e.g. Bengaluru" required>
+                </div>
+                <div class="field">
+                    <label>Mode of Travel</label>
+                    <select id="tMode">
+                        <option>Flight</option>
+                        <option>Train</option>
+                        <option>Car</option>
+                        <option>Bus</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Estimated Cost (₹, optional)</label>
+                    <input type="number" id="tCost" min="0" step="1" placeholder="e.g. 15000">
+                </div>
+                <div class="field">
+                    <label>Start Date</label>
+                    <input type="date" id="tStart" required>
+                </div>
+                <div class="field">
+                    <label>End Date</label>
+                    <input type="date" id="tEnd" required>
+                </div>
+                <div class="field full">
+                    <label>Reason / Purpose of Travel</label>
+                    <textarea id="tPurpose" placeholder="e.g. Client meeting to discuss Q3 renewal" required></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="tSubmitBtn">Submit Request</button>
+        </form>
+    </div>
+
+    <!-- MY REQUESTS -->
+    <div class="section">
+        <h2>My Travel Requests</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Destination</th>
+                    <th>Dates</th>
+                    <th>Mode</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="myRequestsTable">
+                <tr><td colspan="5" class="no-data">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ADMIN APPROVAL QUEUE -->
+    <div class="section" id="approvalSection" style="display:none;border-left:4px solid #7c3aed;">
+        <h2>Pending Approvals <span id="pendingCount" style="background:#7c3aed;color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span></h2>
+        <p class="hint">Approve, reject, or set up a meeting to discuss the trip with the requester.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Route</th>
+                    <th>Dates</th>
+                    <th>Purpose</th>
+                    <th>Est. Cost</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="approvalTable">
+                <tr><td colspan="6" class="no-data">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SETUP MEETING MODAL -->
+<div class="modal-overlay" id="meetingModal">
+    <div class="modal">
+        <h3>Setup a Meeting</h3>
+        <div class="field">
+            <label>Date</label>
+            <input type="date" id="mDate">
+        </div>
+        <div class="field">
+            <label>Start Time</label>
+            <input type="time" id="mStart">
+        </div>
+        <div class="field">
+            <label>End Time</label>
+            <input type="time" id="mEnd">
+        </div>
+        <div class="field">
+            <label>Location / Link</label>
+            <input type="text" id="mLocation" placeholder="e.g. Cabin 2 or Google Meet link">
+        </div>
+        <div class="modal-actions">
+            <button class="modal-cancel" onclick="closeMeetingModal()">Cancel</button>
+            <button class="modal-confirm" onclick="confirmMeeting()">Schedule</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE = "https://backend-production-53f3.up.railway.app";
+
+    // NOTE: this assumes the login page stores the session token in
+    // localStorage under the key "token" (matching the key name the
+    // /login API itself returns). If your login.html saves it under a
+    // different key, change AUTH_TOKEN_KEY below to match.
+    const AUTH_TOKEN_KEY = "token";
+
+    const userId   = localStorage.getItem("userId");
+    const userName = localStorage.getItem("userName") || "";
+    const userRole = localStorage.getItem("userRole") || "employee";
+
+    document.getElementById("profileName").innerHTML  = userName || "User";
+    document.getElementById("profileEmail").innerHTML = localStorage.getItem("userEmail") || "";
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    function authHeaders() {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = "Bearer " + token;
+        return headers;
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    // ── SIDEBAR (built based on role, "Travel Requests" marked active) ──
+    (function buildSidebar() {
+        const dashboardHref = userRole === "admin" ? "admin-dashboard.html"
+                             : userRole === "manager" ? "manager-dashboard.html"
+                             : "employee-dashboard.html";
+        const groups = [];
+        if (userRole === "admin") {
+            groups.push({ name: "Company", items: [
+                ["employee-hub.html", "Employee Hub"],
+                ["attendance.html", "Attendance manager"],
+                ["insurance-manager.html", "Insurance"],
+                ["letterhead.html", "Letter head manager"],
+                ["print-center.html", "Print center"],
+            ]});
+        } else {
+            groups.push({ name: "Company", items: [
+                ["employee-hub.html", "Employee Hub"],
+                ["letterhead.html", "Letter head manager"],
+            ]});
+        }
+        groups.push({ name: "Planning", items: [
+            ["calendar.html", "Calendar"],
+            ["reminder.html", "Reminders"],
+            ["travel-request.html", "Travel Requests"],
+        ]});
+
+        let html = `<div class="logo">Panache WMS</div><a href="${dashboardHref}">Dashboard</a>`;
+        groups.forEach(g => {
+            html += `<div class="menu-group open" data-group="${g.name}">
+                <div class="menu-group-header" onclick="toggleSidebarGroup('${g.name}')">${g.name}<span class="chev">▶</span></div>
+                <div class="menu-group-items">`;
+            g.items.forEach(([href, label]) => {
+                const active = href === "travel-request.html" ? "active" : "";
+                html += `<a href="${href}" class="${active}">${label}</a>`;
+            });
+            html += `</div></div>`;
+        });
+        html += `<a href="settings.html">Settings</a>`;
+        document.getElementById("sidebarMenu").innerHTML = html;
+    })();
+
+    window.toggleSidebarGroup = function(name) {
+        document.querySelector(`.menu-group[data-group="${name}"]`).classList.toggle("open");
+    };
+
+    // ── STATUS BADGE ──────────────────────────────────
+    function statusBadge(status) {
+        const cls = status === "Approved" ? "status-approved"
+                  : status === "Rejected" ? "status-rejected"
+                  : "status-pending";
+        return `<span class="status-badge ${cls}">${status}</span>`;
+    }
+
+    // ── SUBMIT FORM ────────────────────────────────────
+    document.getElementById("travelForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("tSubmitBtn");
+
+        const origin      = document.getElementById("tOrigin").value.trim();
+        const destination  = document.getElementById("tDestination").value.trim();
+        const travel_mode  = document.getElementById("tMode").value;
+        const start_date   = document.getElementById("tStart").value;
+        const end_date     = document.getElementById("tEnd").value;
+        const purpose       = document.getElementById("tPurpose").value.trim();
+        const costRaw        = document.getElementById("tCost").value;
+        const estimated_cost = costRaw ? parseFloat(costRaw) : null;
+
+        if (!origin || !destination || !start_date || !end_date || !purpose) {
+            showToast("Please fill in all required fields.");
+            return;
+        }
+        if (new Date(end_date) < new Date(start_date)) {
+            showToast("End date must be on or after the start date.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+
+        try {
+            const res = await fetch(`${BASE}/travel-requests`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: parseInt(userId),
+                    employee_name: userName,
+                    origin, destination, travel_mode,
+                    start_date, end_date, purpose, estimated_cost
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Travel request submitted.");
+                document.getElementById("travelForm").reset();
+                loadMyRequests();
+            } else {
+                showToast(data.message || "Could not submit request.");
+            }
+        } catch (err) {
+            showToast("Network error. Please try again.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Submit Request";
+        }
+    });
+
+    // ── MY REQUESTS ────────────────────────────────────
+    async function loadMyRequests() {
+        const tbody = document.getElementById("myRequestsTable");
+        try {
+            const res = await fetch(`${BASE}/travel-requests?user_id=${userId}`);
+            const rows = await res.json();
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="no-data">No travel requests yet.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.destination}</td>
+                    <td>${r.start_date} → ${r.end_date}</td>
+                    <td>${r.travel_mode}</td>
+                    <td>${r.purpose}</td>
+                    <td>${statusBadge(r.status)}</td>
+                </tr>
+            `).join("");
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="no-data">Could not load requests.</td></tr>`;
+        }
+    }
+
+    // ── ADMIN: PENDING APPROVALS ────────────────────────
+    let currentMeetingRequestId = null;
+
+    async function loadApprovals() {
+        if (userRole !== "admin") return;
+        document.getElementById("approvalSection").style.display = "block";
+        const tbody = document.getElementById("approvalTable");
+        try {
+            const res = await fetch(`${BASE}/travel-requests?status=Pending`);
+            const rows = await res.json();
+            document.getElementById("pendingCount").textContent = rows.length;
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="no-data">No pending requests.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td>${r.employee_name}</td>
+                    <td>${r.origin} → ${r.destination} (${r.travel_mode})</td>
+                    <td>${r.start_date} → ${r.end_date}</td>
+                    <td>${r.purpose}</td>
+                    <td>${r.estimated_cost ? "₹" + Number(r.estimated_cost).toLocaleString("en-IN") : "—"}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="action-btn btn-approve" onclick="actOnRequest(${r.id}, 'approve')">Approve</button>
+                            <button class="action-btn btn-reject" onclick="actOnRequest(${r.id}, 'reject')">Reject</button>
+                            <button class="action-btn btn-meeting" onclick="openMeetingModal(${r.id})">Setup Meeting</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join("");
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="6" class="no-data">Could not load approvals.</td></tr>`;
+        }
+    }
+
+    window.actOnRequest = async function(id, action) {
+        try {
+            const res = await fetch(`${BASE}/travel-requests/${id}/${action}`, {
+                method: "POST",
+                headers: authHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(action === "approve" ? "Request approved." : "Request rejected.");
+                loadApprovals();
+            } else {
+                showToast(data.message || "Action failed.");
+            }
+        } catch (err) {
+            showToast("Network error. Please try again.");
+        }
+    };
+
+    window.openMeetingModal = function(id) {
+        currentMeetingRequestId = id;
+        document.getElementById("mDate").value = "";
+        document.getElementById("mStart").value = "";
+        document.getElementById("mEnd").value = "";
+        document.getElementById("mLocation").value = "";
+        document.getElementById("meetingModal").classList.add("active");
+    };
+
+    window.closeMeetingModal = function() {
+        document.getElementById("meetingModal").classList.remove("active");
+        currentMeetingRequestId = null;
+    };
+
+    function timeToSlot(hhmm) {
+        const [h, m] = hhmm.split(":").map(Number);
+        return h * 2 + (m >= 30 ? 1 : 0);
+    }
+
+    window.confirmMeeting = async function() {
+        const meeting_date = document.getElementById("mDate").value;
+        const startTime    = document.getElementById("mStart").value;
+        const endTime      = document.getElementById("mEnd").value;
+        const location     = document.getElementById("mLocation").value.trim();
+
+        if (!meeting_date || !startTime || !endTime) {
+            showToast("Please fill in date and time.");
+            return;
+        }
+        const start_slot = timeToSlot(startTime);
+        const end_slot   = timeToSlot(endTime);
+        if (end_slot <= start_slot) {
+            showToast("End time must be after start time.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${BASE}/travel-requests/${currentMeetingRequestId}/schedule-meeting`, {
+                method: "POST",
+                headers: authHeaders(),
+                body: JSON.stringify({ meeting_date, start_slot, end_slot, location })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast("Meeting scheduled.");
+                closeMeetingModal();
+                loadApprovals();
+            } else {
+                showToast(data.message || "Could not schedule meeting.");
+            }
+        } catch (err) {
+            showToast("Network error. Please try again.");
+        }
+    };
+
+    // ── INIT ─────────────────────────────────────────
+    loadMyRequests();
+    loadApprovals();
+
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("service-worker.js").catch(err =>
+                console.warn("Service worker registration failed:", err)
+            );
+        });
+    }
+</script>
+
+</body>
+</html>
