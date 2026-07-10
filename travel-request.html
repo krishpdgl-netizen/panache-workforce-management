@@ -23,6 +23,7 @@
         .menu a { display:block; color:white; text-decoration:none; padding:12px; margin-bottom:8px; border-radius:8px; transition:0.3s; }
         .menu a:hover { background:#2563eb; }
         .menu a.active { background:#2563eb; }
+        .nav-dot { display:none; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-left:6px; vertical-align:middle; }
         .menu-group { margin-bottom:6px; }
         .menu-group-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; border-radius:8px; color:rgba(255,255,255,0.55); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; user-select:none; }
         .menu-group-header:hover { background:rgba(255,255,255,0.06); }
@@ -308,7 +309,8 @@
                 <div class="menu-group-items">`;
             g.items.forEach(([href, label]) => {
                 const active = href === "travel-request.html" ? "active" : "";
-                html += `<a href="${href}" class="${active}">${label}</a>`;
+                const dot = href === "reminder.html" ? ` <span class="nav-dot" id="navDotReminders"></span>` : "";
+                html += `<a href="${href}" class="${active}">${label}${dot}</a>`;
             });
             html += `</div></div>`;
         });
@@ -416,6 +418,8 @@
             const res = await fetch(`${BASE}/travel-requests?status=Pending`);
             const rows = await res.json();
             document.getElementById("pendingCount").textContent = rows.length;
+            const navDot = document.getElementById("navDotReminders");
+            if (navDot) navDot.style.display = rows.length ? "inline-block" : "none";
             if (!rows.length) {
                 tbody.innerHTML = `<tr><td colspan="6" class="no-data">No pending requests.</td></tr>`;
                 return;
