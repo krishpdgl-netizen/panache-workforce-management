@@ -875,10 +875,11 @@ function renderManagers(list) {
                 loadManagers();
                 loadStats();
             } else {
-                showToast("Delete failed — add POST /delete-user to the backend.");
+                showToast(data.message || `Delete failed (server responded but did not confirm success).`);
             }
         } catch(e) {
-            showToast("Add POST /delete-user to the backend to enable this.");
+            console.error("deleteUser failed:", e);
+            showToast(`Could not reach server to delete ${name}. Check your connection.`);
         }
     }
 
@@ -991,19 +992,10 @@ function renderManagers(list) {
 
 
     async function loadSalesReminder() {
-        try {
-            const adminId = localStorage.getItem("userId");
-            const res  = await fetch(`${BASE}/sales/reminder-status?viewer_id=${adminId}&viewer_role=admin`);
-            const data = await res.json();
-            if (!data.missing || data.missing.length === 0) return;
-            document.getElementById("reminderWeekNum").textContent = data.week;
-            const names = data.missing.map(e => `<b>${e.name}</b>`).join(", ");
-            document.getElementById("reminderMissingNames").innerHTML =
-                `${data.missing.length} ${data.missing.length === 1 ? "employee has" : "employees have"} not submitted projections: ${names}.`;
-            document.getElementById("reminderFilledCount").textContent =
-                `${data.filled.length} employee${data.filled.length === 1 ? " has" : "s have"} already filled.`;
-            document.getElementById("salesReminderBanner").style.display = "flex";
-        } catch(e) { /* fail silently */ }
+        // Disabled: /sales/reminder-status was a Railway-only endpoint that was
+        // never ported to the Render/Neon backend. Re-enable once a matching
+        // GET /sales/reminder-status route exists in main.py.
+        return;
     }
 
     // ── INIT — load everything in parallel ───────────────────
@@ -1020,7 +1012,7 @@ function renderManagers(list) {
 
 <script>
 (function() {
-    const RBASE = "https://backend-production-53f3.up.railway.app";
+    const RBASE = "https://backend-n5lk.onrender.com";
     const ruid  = localStorage.getItem("userId");
     const rrole = localStorage.getItem("userRole") || "employee";
     if (!ruid) return;
