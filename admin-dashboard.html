@@ -601,6 +601,7 @@
             <option value="employee">Employee</option>
             <option value="manager">Manager</option>
             <option value="admin">Admin</option>
+            <option value="ceo">CEO / Management</option>
         </select>
 
         <div class="modal-actions">
@@ -615,6 +616,9 @@
 
 <script>
     const BASE = "https://backend-production-53f3.up.railway.app";
+    function authHeaders(extra = {}) {
+        return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
+    }
 
     // ── SIDEBAR GROUPS (collapsible, remembers open/closed state) ──
     (function initSidebarGroups() {
@@ -853,7 +857,7 @@ function renderManagers(list) {
     async function deleteTask(taskId) {
         if (!confirm("Delete this task? This cannot be undone.")) return;
         try {
-            const res  = await fetch(`${BASE}/delete-task?task_id=${taskId}`, { method: "POST" });
+            const res  = await fetch(`${BASE}/delete-task?task_id=${taskId}`, { method: "POST", headers: authHeaders() });
             const data = await res.json();
             if (data.success) { showToast("Task deleted."); loadTasks(); loadStats(); }
         } catch(e) { showToast("Failed to delete task."); }
@@ -863,7 +867,7 @@ function renderManagers(list) {
     async function deleteUser(userId, name) {
         if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
         try {
-            const res  = await fetch(`${BASE}/delete-user?user_id=${userId}`, { method: "POST" });
+            const res  = await fetch(`${BASE}/delete-user?user_id=${userId}`, { method: "POST", headers: authHeaders() });
             const data = await res.json();
             if (data.success) {
                 showToast(`${name} removed.`);
@@ -897,7 +901,7 @@ function renderManagers(list) {
         try {
             const res    = await fetch(`${BASE}/register`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: authHeaders({ "Content-Type": "application/json" }),
                 body: JSON.stringify({ fullname: name, email, password, role })
             });
             const data   = await res.json();
