@@ -104,6 +104,36 @@
         th { background: #f3f4f6; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; }
         tr:hover td { background: #f9fafb; }
 
+        /* SCROLLABLE TABLE WRAPPER — shows ~6-7 rows, rest on scroll */
+        .scroll-table {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+        .scroll-table table { border-collapse: separate; border-spacing: 0; }
+        .scroll-table thead th {
+            position: sticky; top: 0; z-index: 1;
+            background: #f3f4f6;
+        }
+        .scroll-table tbody tr:last-child td { border-bottom: none; }
+        /* thin custom scrollbar */
+        .scroll-table::-webkit-scrollbar { width: 8px; }
+        .scroll-table::-webkit-scrollbar-track { background: transparent; }
+        .scroll-table::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+        .scroll-table::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* SCROLLABLE LIST WRAPPER (e.g. alerts) */
+        .scroll-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .scroll-list::-webkit-scrollbar { width: 8px; }
+        .scroll-list::-webkit-scrollbar-track { background: transparent; }
+        .scroll-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+        .scroll-list::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
         /* BUTTONS */
         .btn-primary {
             background: #2563eb; color: white; border: none;
@@ -468,6 +498,7 @@
 
         <!-- EMPLOYEES TAB -->
         <div id="tabEmployees">
+            <div class="scroll-table">
             <table>
                 <thead>
                     <tr>
@@ -479,10 +510,12 @@
                     <tr><td colspan="7" class="no-data">Loading...</td></tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- MANAGERS TAB -->
         <div id="tabManagers" style="display:none;">
+            <div class="scroll-table">
             <table>
                 <thead>
                     <tr>
@@ -493,6 +526,7 @@
                     <tr><td colspan="5" class="no-data">Loading...</td></tr>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 
@@ -504,6 +538,7 @@
             <h2>All Tasks</h2>
             <button class="btn-primary" onclick="window.location.href='create-task.html'">+ New Task</button>
         </div>
+        <div class="scroll-table">
         <table>
             <thead>
                 <tr>
@@ -515,11 +550,13 @@
                 <tr><td colspan="7" class="no-data">Loading...</td></tr>
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- EMPLOYEE PERFORMANCE -->
     <div class="section">
         <h2 style="margin-bottom:18px;">Employee Performance</h2>
+        <div class="scroll-table">
         <table>
             <thead>
                 <tr>
@@ -531,13 +568,14 @@
                 <tr><td colspan="6" class="no-data">Loading...</td></tr>
             </tbody>
         </table>
+        </div>
     </div>
 
 
     <!-- SYSTEM ALERTS -->
     <div class="section">
         <h2 style="margin-bottom:18px;">System Alerts</h2>
-        <div id="alertsBox">
+        <div id="alertsBox" class="scroll-list">
             <div class="alert">Analyzing system...</div>
         </div>
     </div>
