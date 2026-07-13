@@ -805,6 +805,10 @@
 <script>
     const BASE = "https://backend-production-53f3.up.railway.app";
 
+    function authHeaders(extra = {}) {
+        return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
+    }
+
     // ── SIDEBAR GROUPS (collapsible, remembers open/closed state) ──
     (function initSidebarGroups() {
         let state = {};
@@ -842,9 +846,6 @@ localStorage.getItem("userId");
         setInterval(qpTick, 1000);
         qpTick();
 
-        function authHeaders(extra = {}) {
-            return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
-        }
 
         async function qpApi(path, opts={}) {
             try {
@@ -934,6 +935,8 @@ localStorage.getItem("userId");
     let teamMembers = [];
 
     async function loadEmployees() {
+        const tableEl = document.getElementById("employeeTable");
+        if (!tableEl) return; // this page no longer has an employee table (moved to team-members.html)
         try {
             const res = await fetch(`${BASE}/team?manager_id=${managerId}`);
             teamMembers = await res.json();
@@ -947,7 +950,7 @@ localStorage.getItem("userId");
                         <td>${emp.task_count}</td>
                     </tr>`;
             });
-            document.getElementById("employeeTable").innerHTML = html || `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px;">No team members found.</td></tr>`;
+            tableEl.innerHTML = html || `<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px;">No team members found.</td></tr>`;
         } catch (e) {
             console.error("loadEmployees error:", e);
         }
