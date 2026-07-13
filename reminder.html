@@ -726,14 +726,14 @@
                 payload.status = document.getElementById("f_status").value;
                 res = await fetch(`${BASE}/reminders/${editingId}`, {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
+                    headers: authHeaders(),
                     body: JSON.stringify(payload)
                 });
             } else {
                 payload.created_by = parseInt(userId, 10);
                 res = await fetch(`${BASE}/reminders`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: authHeaders(),
                     body: JSON.stringify(payload)
                 });
             }
@@ -753,7 +753,7 @@
     async function deleteReminder(id) {
         if (!confirm("Delete this reminder permanently?")) return;
         try {
-            const res = await fetch(`${BASE}/reminders/${id}`, { method: "DELETE" });
+            const res = await fetch(`${BASE}/reminders/${id}`, { method: "DELETE", headers: authHeaders() });
             const data = await res.json();
             if (data.success) {
                 showToast("Reminder deleted");
@@ -825,7 +825,7 @@
     }
 
     // ---- Travel Requests (shown in this Reminders tab too) ----
-    const AUTH_TOKEN_KEY = "token"; // change if your login page stores the session token under a different key
+    const AUTH_TOKEN_KEY = "authToken";
     function authHeaders() {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         const headers = { "Content-Type": "application/json" };
