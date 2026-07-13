@@ -191,6 +191,10 @@
 
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
+    function authHeaders(extra = {}) {
+        return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
+    }
+
     function showToast(msg) {
         const t = document.getElementById("toast");
         t.textContent = msg;
@@ -229,7 +233,7 @@
     // ── REMOVE MEMBER ─────────────────────────────────────────
     async function removeMember(employeeId) {
         if (!confirm("Remove this employee from your team?")) return;
-        const res  = await fetch(`${BASE}/team/remove?manager_id=${managerId}&employee_id=${employeeId}`, { method:"POST" });
+        const res  = await fetch(`${BASE}/team/remove?manager_id=${managerId}&employee_id=${employeeId}`, { method:"POST", headers: authHeaders() });
         const data = await res.json();
         if (data.success) { showToast("Member removed."); loadTeam(); }
     }
@@ -299,7 +303,7 @@
 
         const res  = await fetch(
             `${BASE}/team/add?manager_id=${managerId}&employee_id=${employeeId}`,
-            { method: "POST" }
+            { method: "POST", headers: authHeaders() }
         );
         const data = await res.json();
 
