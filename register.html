@@ -164,9 +164,11 @@ async function registerUser(){
     try {
 
         const response = await fetch(
-`https://backend-production-53f3.up.railway.app/register?fullname=${encodeURIComponent(fullname)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&role=${role}`,
+`https://backend-production-53f3.up.railway.app/register`,
 {
-    method:"POST"
+    method:"POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fullname, email, password, role })
 });
 
         const data = await response.json();
