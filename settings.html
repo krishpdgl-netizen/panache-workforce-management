@@ -548,12 +548,15 @@
         document.getElementById("passSaveBtn").textContent = "Updating...";
 
         try {
-            const params = new URLSearchParams({
-                user_id: userId,
-                current_password: current,
-                new_password: newPass
+            const res  = await fetch(`${BASE}/change-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: Number(userId),
+                    current_password: current,
+                    new_password: newPass
+                })
             });
-            const res  = await fetch(`${BASE}/change-password?${params}`, { method: "POST" });
             const data = await res.json();
 
             if (data.success) {
