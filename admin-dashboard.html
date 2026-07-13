@@ -895,8 +895,11 @@ function renderManagers(list) {
         if (!name || !email || !password) { showToast("All fields are required."); return; }
 
         try {
-            const params = new URLSearchParams({ fullname: name, email, password, role });
-            const res    = await fetch(`${BASE}/register?${params}`, { method: "POST" });
+            const res    = await fetch(`${BASE}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ fullname: name, email, password, role })
+            });
             const data   = await res.json();
 
             if (data.success) {
