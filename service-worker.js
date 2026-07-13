@@ -4,7 +4,7 @@
 // It deliberately does NOT cache API responses — those always come fresh
 // from the network so your data is never stale.
 
-const CACHE_NAME = "panache-wms-shell-v3";
+const CACHE_NAME = "panache-wms-shell-v4";
 
 const SHELL_FILES = [
   "index.html",
@@ -13,6 +13,7 @@ const SHELL_FILES = [
   "employee-dashboard.html",
   "intern-dashboard.html",
   "admin-dashboard.html",
+  "ceo-dashboard.html",
   "attendance.html",
   "create-task.html",
   "team-members.html",
@@ -57,7 +58,7 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
 
   // Never cache API calls to the backend — always go to network.
-  if (req.url.includes("backend-production-53f3.up.railway.app")) {
+  if (req.url.includes("backend-n5lk.onrender.com")) {
     return;
   }
 
