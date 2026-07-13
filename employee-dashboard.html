@@ -1294,9 +1294,13 @@ loadTeamRequests();
     setInterval(qpTick, 1000);
     qpTick();
 
+    function authHeaders(extra = {}) {
+        return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
+    }
+
     async function qpApi(path, opts={}) {
         try {
-            const r = await fetch(QP_BASE + path, { headers:{"Content-Type":"application/json"}, ...opts });
+            const r = await fetch(QP_BASE + path, { headers: authHeaders({"Content-Type":"application/json"}), ...opts });
             return await r.json();
         } catch (e) {
             console.error("quick punch API error:", e);
