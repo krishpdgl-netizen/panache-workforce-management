@@ -321,12 +321,7 @@
             </div>
         </div>
 
-        <!-- AI RECOMMENDATION -->
-        <div class="ai-box" id="aiBox" style="display:none;">
-            <h3>AI Recommendation</h3>
-            <p id="aiWorkload">—</p>
-            <p id="aiSuggestion">—</p>
-        </div>
+
 
         <div style="margin-top: 25px;">
             <button class="cancel-btn" onclick="window.location.href='manager-dashboard.html'">
@@ -431,32 +426,7 @@
         renderEmployeeOptions(filtered);
     });
 
-    // ── AI RECOMMENDATION (lightweight) ──────────────────────
-    async function showAIRecommendation(employees) {
-        try {
-            const res  = await fetch(`${BASE}/employee-performance`);
-            const perf = await res.json();
-
-            if (!perf.length) return;
-
-            // Find employee with lowest assigned tasks (least loaded)
-            perf.sort((a, b) => a.assigned - b.assigned);
-            const recommended = perf[0];
-
-            document.getElementById("aiWorkload").textContent =
-                "Employee workload analyzed. Least loaded team member identified.";
-
-            document.getElementById("aiSuggestion").innerHTML =
-                `Recommended assignee: <b>${recommended.name}</b> — `
-                + `${recommended.assigned} tasks assigned, ${recommended.score}% productivity score.`;
-
-            document.getElementById("aiBox").style.display = "block";
-
-        } catch (e) {
-            // AI box is optional — silently skip if endpoint fails
-        }
-    }
-
+   
     // ── CREATE TASK ──────────────────────────────────────────
     async function createTask() {
         const title      = document.getElementById("taskTitle").value.trim();
