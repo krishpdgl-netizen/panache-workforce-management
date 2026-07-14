@@ -168,6 +168,159 @@
             gap: 20px;
         }
 
+        /* EMPLOYEE SEARCHABLE COMBOBOX */
+        .employee-select {
+            position: relative;
+        }
+
+        .employee-input-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .employee-search-icon {
+            position: absolute;
+            left: 13px;
+            width: 16px;
+            height: 16px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .employee-input-shell input#employeeSearch {
+            padding-left: 38px;
+        }
+
+        .employee-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(17,24,39,.12);
+            z-index: 20;
+            padding: 6px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .employee-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .employee-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            font-size: 14px;
+            color: #111827;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .12s ease;
+        }
+
+        .employee-option:hover,
+        .employee-option.active {
+            background: #eef4ff;
+        }
+
+        .employee-option .option-avatar {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .employee-option .option-id {
+            margin-left: auto;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .employee-option.empty {
+            color: #9ca3af;
+            cursor: default;
+            justify-content: center;
+            padding: 16px 10px;
+        }
+
+        .employee-option.empty:hover {
+            background: none;
+        }
+
+        /* SELECTED EMPLOYEE CHIP */
+        .employee-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #eef4ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+
+        .employee-chip .chip-avatar {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .employee-chip .chip-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            flex: 1;
+        }
+
+        .employee-chip .chip-remove {
+            background: none;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            cursor: pointer;
+            transition: background .12s ease, color .12s ease;
+        }
+
+        .employee-chip .chip-remove svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .employee-chip .chip-remove:hover {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
         /* BUTTONS */
         .submit-btn {
             background: #2563eb;
@@ -271,10 +424,29 @@
         <div class="row">
             <div class="form-group">
                 <label>Assign To</label>
-                <input type="text" id="employeeSearch" placeholder="Search employee by name..." autocomplete="off" style="margin-bottom:8px;">
-                <select id="taskAssignedTo" size="6" style="height:auto;">
-                    <option value="">Loading employees...</option>
-                </select>
+                <div class="employee-select" id="employeeSelectWrapper">
+
+                    <div class="employee-input-shell" id="employeeInputShell">
+                        <svg class="employee-search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                            <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <input type="text" id="employeeSearch" placeholder="Search employee by name..." autocomplete="off">
+                    </div>
+
+                    <div class="employee-chip" id="employeeChip" style="display:none;">
+                        <span class="chip-avatar" id="chipAvatar"></span>
+                        <span class="chip-name" id="chipName"></span>
+                        <button type="button" class="chip-remove" id="chipRemove" aria-label="Remove selection">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="taskAssignedTo">
+                    <div class="employee-dropdown" id="employeeDropdown"></div>
+                </div>
             </div>
             <div class="form-group">
                 <label>Priority</label>
@@ -349,10 +521,9 @@
         try {
             const res     = await fetch(url);
             const members = await res.json();
-            const select  = document.getElementById("taskAssignedTo");
 
             if (!Array.isArray(members) || members.length === 0) {
-                select.innerHTML = '<option value="">No employees found</option>';
+                document.getElementById("employeeSearch").placeholder = "No employees found";
                 showToast(isAdmin ? "No employees found in the org." : "No team members assigned to you yet.");
                 return;
             }
@@ -362,44 +533,103 @@
                 .map(emp => ({ id: emp.id, full_name: emp.full_name }))
                 .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
-            renderEmployeeOptions(allEmployees);
-
-            // Show AI box once team/employee list is loaded
         } catch (e) {
             console.error("loadEmployees error:", e);
             showToast("Could not load employees. Please refresh.");
         }
     }
 
-    function renderEmployeeOptions(list) {
-        const select = document.getElementById("taskAssignedTo");
-        const previouslySelected = select.value;
+    // ── EMPLOYEE SEARCHABLE COMBOBOX ─────────────────────────
+    const employeeSearchInput = document.getElementById("employeeSearch");
+    const employeeInputShell  = document.getElementById("employeeInputShell");
+    const employeeDropdown    = document.getElementById("employeeDropdown");
+    const employeeHiddenInput = document.getElementById("taskAssignedTo");
+    const employeeChip        = document.getElementById("employeeChip");
+    const chipAvatar          = document.getElementById("chipAvatar");
+    const chipName            = document.getElementById("chipName");
+    const chipRemove          = document.getElementById("chipRemove");
+
+    function initials(name) {
+        return name
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(w => w[0].toUpperCase())
+            .join("");
+    }
+
+    function renderEmployeeDropdown(list) {
+        employeeDropdown.innerHTML = "";
 
         if (list.length === 0) {
-            select.innerHTML = '<option value="">No matches found</option>';
+            const empty = document.createElement("div");
+            empty.className = "employee-option empty";
+            empty.textContent = "No matches found";
+            employeeDropdown.appendChild(empty);
             return;
         }
 
-        select.innerHTML = '<option value="">Select employee...</option>';
         list.forEach(emp => {
-            const opt       = document.createElement("option");
-            opt.value       = emp.id;
-            opt.textContent = `${emp.full_name} (ID: ${emp.id})`;
-            select.appendChild(opt);
+            const opt = document.createElement("div");
+            opt.className = "employee-option";
+            opt.innerHTML = `
+                <span class="option-avatar">${initials(emp.full_name)}</span>
+                <span>${emp.full_name}</span>
+                <span class="option-id">ID ${emp.id}</span>
+            `;
+            // mousedown (not click) fires before the input can blur/re-trigger focus logic,
+            // and preventDefault stops the input from losing focus mid-selection.
+            opt.addEventListener("mousedown", (e) => {
+                e.preventDefault();
+                selectEmployee(emp);
+            });
+            employeeDropdown.appendChild(opt);
         });
-
-        // Preserve selection across searches if the employee is still in the filtered list
-        if (list.some(emp => String(emp.id) === previouslySelected)) {
-            select.value = previouslySelected;
-        }
     }
 
-    document.getElementById("employeeSearch").addEventListener("input", (e) => {
-        const term = e.target.value.trim().toLowerCase();
+    function openEmployeeDropdown() {
+        const term = employeeSearchInput.value.trim().toLowerCase();
         const filtered = term
             ? allEmployees.filter(emp => emp.full_name.toLowerCase().includes(term))
             : allEmployees;
-        renderEmployeeOptions(filtered);
+        renderEmployeeDropdown(filtered);
+        employeeDropdown.classList.add("show");
+    }
+
+    function closeEmployeeDropdown() {
+        employeeDropdown.classList.remove("show");
+    }
+
+    function selectEmployee(emp) {
+        employeeHiddenInput.value = emp.id;
+
+        // Lock in the selection: hide the search field entirely and show a chip instead.
+        // This is what guarantees the dropdown can't linger or reopen after a pick.
+        chipAvatar.textContent = initials(emp.full_name);
+        chipName.textContent   = emp.full_name;
+        employeeChip.style.display = "flex";
+        employeeInputShell.style.display = "none";
+
+        closeEmployeeDropdown();
+        employeeSearchInput.value = "";
+    }
+
+    function clearEmployeeSelection() {
+        employeeHiddenInput.value = "";
+        employeeChip.style.display = "none";
+        employeeInputShell.style.display = "flex";
+        employeeSearchInput.value = "";
+        employeeSearchInput.focus();
+    }
+
+    employeeSearchInput.addEventListener("input", openEmployeeDropdown);
+    employeeSearchInput.addEventListener("focus", openEmployeeDropdown);
+    chipRemove.addEventListener("click", clearEmployeeSelection);
+
+    document.addEventListener("click", (e) => {
+        if (!document.getElementById("employeeSelectWrapper").contains(e.target)) {
+            closeEmployeeDropdown();
+        }
     });
 
     // ── CREATE TASK ──────────────────────────────────────────
