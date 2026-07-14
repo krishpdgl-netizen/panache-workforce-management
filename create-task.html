@@ -291,7 +291,8 @@
         <div class="row">
             <div class="form-group">
                 <label>Assign To</label>
-                <select id="taskAssignedTo">
+                <input type="text" id="employeeSearch" placeholder="Search employee by name..." autocomplete="off" style="margin-bottom:8px;">
+                <select id="taskAssignedTo" size="6" style="height:auto;">
                     <option value="">Loading employees...</option>
                 </select>
             </div>
@@ -360,39 +361,75 @@
         setTimeout(() => t.classList.remove("show"), 3000);
     }
 
-    // ── LOAD TEAM MEMBERS INTO DROPDOWN ─────────────────────
+    // ── LOAD EMPLOYEES INTO DROPDOWN ─────────────────────────
+    // Admins can assign to anyone in the org; managers only see their own team.
+    let allEmployees = []; // cached full list, used for client-side search filtering
+
     async function loadEmployees() {
-        const managerId = localStorage.getItem("userId");
-        if (!managerId) { showToast("Session expired. Please log in again."); return; }
+        const userId = localStorage.getItem("userId");
+        const role   = localStorage.getItem("userRole");
+        if (!userId) { showToast("Session expired. Please log in again."); return; }
+
+        const isAdmin = role === "admin";
+        const url     = isAdmin ? `${BASE}/employees` : `${BASE}/team?manager_id=${userId}`;
 
         try {
-            const res     = await fetch(`${BASE}/team?manager_id=${managerId}`);
+            const res     = await fetch(url);
             const members = await res.json();
             const select  = document.getElementById("taskAssignedTo");
 
             if (!Array.isArray(members) || members.length === 0) {
-                select.innerHTML = '<option value="">No team members found</option>';
-                showToast("No team members assigned to you yet.");
+                select.innerHTML = '<option value="">No employees found</option>';
+                showToast(isAdmin ? "No employees found in the org." : "No team members assigned to you yet.");
                 return;
             }
 
-            select.innerHTML = '<option value="">Select team member...</option>';
+            // Normalize field names (/employees uses full_name, /team also uses full_name)
+            allEmployees = members
+                .map(emp => ({ id: emp.id, full_name: emp.full_name }))
+                .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
-            members.forEach(emp => {
-                const opt       = document.createElement("option");
-                opt.value       = emp.id;
-                opt.textContent = `${emp.full_name} (ID: ${emp.id})`;
-                select.appendChild(opt);
-            });
+            renderEmployeeOptions(allEmployees);
 
-            // Show AI box once team is loaded
+            // Show AI box once team/employee list is loaded
             showAIRecommendation(members);
 
         } catch (e) {
             console.error("loadEmployees error:", e);
-            showToast("Could not load team members. Please refresh.");
+            showToast("Could not load employees. Please refresh.");
         }
     }
+
+    function renderEmployeeOptions(list) {
+        const select = document.getElementById("taskAssignedTo");
+        const previouslySelected = select.value;
+
+        if (list.length === 0) {
+            select.innerHTML = '<option value="">No matches found</option>';
+            return;
+        }
+
+        select.innerHTML = '<option value="">Select employee...</option>';
+        list.forEach(emp => {
+            const opt       = document.createElement("option");
+            opt.value       = emp.id;
+            opt.textContent = `${emp.full_name} (ID: ${emp.id})`;
+            select.appendChild(opt);
+        });
+
+        // Preserve selection across searches if the employee is still in the filtered list
+        if (list.some(emp => String(emp.id) === previouslySelected)) {
+            select.value = previouslySelected;
+        }
+    }
+
+    document.getElementById("employeeSearch").addEventListener("input", (e) => {
+        const term = e.target.value.trim().toLowerCase();
+        const filtered = term
+            ? allEmployees.filter(emp => emp.full_name.toLowerCase().includes(term))
+            : allEmployees;
+        renderEmployeeOptions(filtered);
+    });
 
     // ── AI RECOMMENDATION (lightweight) ──────────────────────
     async function showAIRecommendation(employees) {
