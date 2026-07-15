@@ -551,15 +551,14 @@ function buildWeekCalendar() {
     // instead of only current + upcoming weeks.
     const INITIAL_BACK = 26;
 
-    const startOffset  = weekPageOffset * WEEKS_PER_PAGE - INITIAL_BACK;
+    const startOffset  = weekPageOffset * WEEKS_PER_PAGE - 2;
     const visibleWeeks = [];
     for (let i = 0; i < WEEKS_PER_PAGE; i++) {
         visibleWeeks.push(currentWeekNum + startOffset + i);
     }
 
     const minWeek = allWeeks.length ? Math.min(...allWeeks, currentWeekNum) : currentWeekNum;
-    document.getElementById("weekNavPrev").disabled =
-        (currentWeekNum + startOffset - WEEKS_PER_PAGE) < minWeek;
+
     document.getElementById("weekNavNext").disabled =
         (currentWeekNum + startOffset + WEEKS_PER_PAGE) > currentWeekNum + FUTURE_WEEKS;
 
