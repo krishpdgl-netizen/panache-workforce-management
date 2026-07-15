@@ -1,85 +1,107 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-        <link rel="icon" type="image/png" href="static/favicon.png">
+    <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register User - Panache WMS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User - Panache WMS</title>
 
-<style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',sans-serif;
-}
+    <style>
+        :root {
+            --ink: #14161B;
+            --paper: #F5F3EE; --surface: #FFFFFF;
+            --border: #E8E3D6; --text: #1C1E24; --text-muted: #6B6E76; --text-faint: #9A9CA3;
+            --brass: #C79A45; --brass-dark: #8F6A2C;
+            --font-display: 'Fraunces', Georgia, serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
 
-body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:linear-gradient(135deg,#2563eb,#1e3a8a);
-}
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
 
-.card{
-width:450px;
-background:white;
-padding:40px;
-border-radius:20px;
-box-shadow:0 15px 40px rgba(0,0,0,.25);
-}
+        body {
+            min-height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background: var(--paper);
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(199,154,69,.10), transparent 40%),
+                radial-gradient(circle at 90% 85%, rgba(20,22,27,.05), transparent 45%);
+            padding: 24px;
+        }
 
-h2{
-margin-bottom:10px;
-}
+        .card{
+            width:440px;
+            max-width: 100%;
+            background:var(--surface);
+            padding:40px;
+            border-radius:22px;
+            box-shadow: 0 30px 70px rgba(20,22,27,.18);
+            border: 1px solid var(--border);
+        }
 
-p{
-color:gray;
-margin-bottom:25px;
-}
+        .eyebrow { font-size: 11px; font-weight: 700; color: var(--brass-dark); text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 8px; }
+        h2{ font-family: var(--font-display); font-weight: 600; font-size: 26px; color: var(--text); margin-bottom:8px; }
+        p.sub{ color: var(--text-muted); font-size: 13.5px; margin-bottom:28px; }
 
-input,
-select{
-width:100%;
-padding:14px;
-margin-bottom:15px;
-border:1px solid #ddd;
-border-radius:10px;
-outline:none;
-}
+        label { display:block; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+        .form-group { margin-bottom: 16px; }
 
-button{
-width:100%;
-padding:14px;
-background:#2563eb;
-color:white;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:16px;
-}
+        input, select{
+            width:100%;
+            padding:12px 14px;
+            border:1.5px solid var(--border);
+            border-radius:10px;
+            outline:none;
+            font-size: 14px;
+            color: var(--text);
+            background: #FBFAF6;
+            transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+        }
+        input:focus, select:focus { border-color: var(--brass-dark); background: var(--surface); box-shadow: 0 0 0 3px rgba(143,106,44,.12); }
 
-button:hover{
-background:#1d4ed8;
-}
+        button{
+            width:100%;
+            padding:13px;
+            background: var(--ink);
+            color:white;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            font-size:14.5px;
+            font-weight: 700;
+            transition: filter .2s ease;
+            margin-top: 4px;
+        }
+        button:hover{ filter: brightness(1.3); }
 
-.back-link{
-display:block;
-text-align:center;
-margin-top:15px;
-text-decoration:none;
-color:#2563eb;
-font-weight:600;
-}
+        .back-link{
+            display:block;
+            text-align:center;
+            margin-top:18px;
+            text-decoration:none;
+            color: var(--brass-dark);
+            font-weight:700;
+            font-size: 13.5px;
+        }
+        .back-link:hover { text-decoration: underline; }
 
-</style>
+        #pwaInstallBtn {
+            display:none; position:fixed; bottom:24px; right:24px; z-index:9998;
+            background: var(--ink); color:#fff; border:none; padding:12px 20px;
+            border-radius: 12px; cursor:pointer; font-size:14px; font-weight:700;
+            box-shadow: 0 20px 48px rgba(20,22,27,.16); width: auto;
+        }
+        #pwaInstallBtn:hover { filter: brightness(1.3); }
+    </style>
 
 </head>
 
@@ -87,61 +109,38 @@ font-weight:600;
 
 <div class="card">
 
+<div class="eyebrow">Administrator</div>
 <h2>Create User</h2>
+<p class="sub">Add a new employee account</p>
 
-<p>Add a new employee account</p>
+<div class="form-group">
+    <label for="fullname">Full name</label>
+    <input type="text" id="fullname" placeholder="Jane Doe" required>
+</div>
 
-<input
-type="text"
-id="fullname"
-placeholder="fullname"
-required
+<div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="jane@panache.com" required>
+</div>
 
->
+<div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Temporary password" required>
+</div>
 
-<input
-type="email"
-id="email"
-placeholder="Email"
-required
+<div class="form-group">
+    <label for="role">Role</label>
+    <select id="role">
+        <option value="employee">Employee</option>
+        <option value="intern">Intern</option>
+        <option value="manager">Manager</option>
+        <option value="admin">Admin</option>
+    </select>
+</div>
 
->
+<button onclick="registerUser()">Create User</button>
 
-<input
-type="password"
-id="password"
-placeholder="Password"
-required
-
->
-
-<select id="role">
-
-<option value="employee">
-Employee
-</option>
-
-<option value="intern">
-Intern
-</option>
-
-<option value="manager">
-Manager
-</option>
-
-<option value="admin">
-Admin
-</option>
-
-</select>
-
-<button onclick="registerUser()">
-Create User
-</button>
-
-<a href="index.html" class="back-link">
-← Back to Login
-</a>
+<a href="index.html" class="back-link">← Back to Login</a>
 
 </div>
 
@@ -164,7 +163,7 @@ async function registerUser(){
     try {
 
         const response = await fetch(
-`https://backend-production-53f3.up.railway.app/register`,
+`https://backend-n5lk.onrender.com/register`,
 {
     method:"POST",
     headers: { "Content-Type": "application/json" },
@@ -202,13 +201,7 @@ async function registerUser(){
 
 
 <!-- PWA: installable app support -->
-<button id="pwaInstallBtn" onclick="pwaInstallApp()"
-        style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
-               border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
-               box-shadow:0 4px 14px rgba(0,0,0,.2);">
-    ⬇ Install App
-</button>
+<button id="pwaInstallBtn" onclick="pwaInstallApp()">⬇ Install App</button>
 <script>
     if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
