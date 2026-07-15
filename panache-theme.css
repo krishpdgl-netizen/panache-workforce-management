@@ -462,9 +462,11 @@ input:checked + .toggle-slider::before { transform: translateX(18px); }
    MODALS
 ============================================================ */
 .modal-overlay {
+    display: none;
     position:fixed; inset:0; background:rgba(20,22,27,.55); backdrop-filter: blur(2px);
     z-index:1000; align-items:center; justify-content:center;
 }
+.modal-overlay.active { display: flex; }
 .modal-box {
     background: var(--surface); border-radius: var(--radius-lg); padding: 30px;
     width: 460px; max-width: 92vw; box-shadow: var(--shadow-lg);
