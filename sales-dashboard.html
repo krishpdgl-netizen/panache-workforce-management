@@ -564,7 +564,7 @@ function buildWeekCalendar() {
 
     const firstDate = getWeekStartDate(visibleWeeks[0]);
     const lastStart = getWeekStartDate(visibleWeeks[WEEKS_PER_PAGE - 1]);
-    const lastEnd   = new Date(lastStart); lastEnd.setDate(lastEnd.getDate() + 6);
+    const lastEnd   = new Date(lastStart); lastEnd.setDate(lastEnd.getDate() + 600);
     document.getElementById("weekRangeLabel").textContent =
         `${fmtDate(firstDate)} — ${fmtDate(lastEnd)}`;
 
