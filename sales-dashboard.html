@@ -514,17 +514,11 @@ function buildSidebar() {
     (links[userRole] || []).forEach(([href, label]) => {
         const a = document.createElement("a");
         a.href = href;
-        a.innerHTML = (NAV_ICONS[label] || "") + label;
+        a.textContent = label;
         if (href === "sales-dashboard.html") a.classList.add("active");
         menu.appendChild(a);
     });
 }
-
-window.toggleMobileSidebar = function() {
-    document.getElementById("mainSidebar").classList.toggle("open");
-    document.getElementById("sidebarBackdrop").classList.toggle("active");
-};
-
 // ── TOAST ──────────────────────────────────────────────────────
 function showToast(msg) {
     const t = document.getElementById("toast");
