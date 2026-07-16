@@ -6,31 +6,36 @@
     <title>Intern Dashboard | Panache</title>
         <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <script>
         const role = localStorage.getItem("userRole");
         if (!role || role !== "intern") { window.location.href = "index.html"; }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: var(--font-body);
         }
 
         body {
             display: flex;
-            background: #f4f6f9;
+            background: var(--paper);
         }
 
         /* SIDEBAR */
         .sidebar {
             width: 250px;
             height: 100vh;
-            background: #111827;
+            background: var(--ink);
             color: white;
             padding: 20px;
             position: fixed;
@@ -55,7 +60,7 @@
         }
 
         .menu a:hover {
-            background: #2563eb;
+            background: var(--brass);
         }
 
         /* MAIN */
@@ -74,7 +79,7 @@
             gap: 15px;
         }
 
-        .header h1 { color: #111827; }
+        .header h1 { color: var(--ink); }
 
         .profile {
             background: white;
@@ -84,7 +89,7 @@
         }
 
         .logout-btn {
-            background: #dc2626;
+            background: var(--danger);
             padding: 10px 18px;
             border: none;
             color: white;
@@ -92,7 +97,7 @@
             cursor: pointer;
         }
 
-        .logout-btn:hover { background: #b91c1c; }
+        .logout-btn:hover { background: color-mix(in srgb, var(--danger) 80%, black); }
 
         /* CARDS */
         .cards {
@@ -110,7 +115,7 @@
         }
 
         .card h2 {
-            color: #2563eb;
+            color: var(--brass);
             margin-bottom: 10px;
         }
 
@@ -133,15 +138,15 @@
 
         th, td {
             padding: 12px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-soft);
             text-align: left;
             font-size: 14px;
         }
 
         th {
-            background: #f3f4f6;
+            background: var(--surface-muted);
             font-size: 13px;
-            color: #6b7280;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.4px;
         }
@@ -155,10 +160,10 @@
             font-weight: 600;
         }
 
-        .status-assigned    { background: #dbeafe; color: #1d4ed8; }
-        .status-inprogress  { background: #fef9c3; color: #a16207; }
-        .status-review      { background: #ffedd5; color: #c2410c; }
-        .status-completed   { background: #dcfce7; color: #15803d; }
+        .status-assigned    { background: var(--brass-tint); color: var(--brass-dark); }
+        .status-inprogress  { background: var(--warning-tint); color: color-mix(in srgb, var(--warning) 70%, black); }
+        .status-review      { background: var(--warning-tint); color: color-mix(in srgb, var(--warning) 65%, black); }
+        .status-completed   { background: var(--success-tint); color: color-mix(in srgb, var(--success) 78%, black); }
 
         /* ACTION BUTTONS */
         .action-btn {
@@ -171,15 +176,15 @@
             transition: 0.2s;
         }
 
-        .btn-start    { background: #2563eb; color: white; }
-        .btn-start:hover { background: #1d4ed8; }
+        .btn-start    { background: var(--brass); color: white; }
+        .btn-start:hover { background: var(--brass-dark); }
 
-        .btn-review   { background: #f59e0b; color: white; }
-        .btn-review:hover { background: #d97706; }
+        .btn-review   { background: var(--warning); color: white; }
+        .btn-review:hover { background: color-mix(in srgb, var(--warning) 80%, black); }
 
         .btn-disabled {
-            background: #e5e7eb;
-            color: #9ca3af;
+            background: var(--border-soft);
+            color: var(--text-faint);
             cursor: default;
             padding: 8px 14px;
             border-radius: 8px;
@@ -191,7 +196,7 @@
         .progress-bar {
             width: 100%;
             height: 12px;
-            background: #e5e7eb;
+            background: var(--border-soft);
             border-radius: 10px;
             overflow: hidden;
             margin-top: 10px;
@@ -200,45 +205,45 @@
         .progress {
             height: 100%;
             width: 0%;
-            background: #2563eb;
+            background: var(--brass);
             border-radius: 10px;
             transition: width 0.8s ease;
         }
 
         /* AI BOX */
         .ai {
-            background: #eef4ff;
+            background: var(--brass-tint);
             padding: 15px 20px;
-            border-left: 5px solid #2563eb;
+            border-left: 5px solid var(--brass);
             border-radius: 10px;
         }
 
-        .ai b { color: #1d4ed8; }
+        .ai b { color: var(--brass-dark); }
 
         .ai ol {
             margin: 12px 0 12px 20px;
             font-size: 14px;
-            color: #374151;
+            color: var(--text);
             line-height: 1.8;
         }
 
-        .ai p { font-size: 14px; color: #374151; }
+        .ai p { font-size: 14px; color: var(--text); }
 
         /* NOTIFICATIONS */
         .notification {
             padding: 12px 15px;
             margin-bottom: 10px;
-            background: #f9fafb;
-            border-left: 4px solid #2563eb;
+            background: var(--surface-muted);
+            border-left: 4px solid var(--brass);
             border-radius: 6px;
             font-size: 14px;
-            color: #374151;
+            color: var(--text);
         }
 
         .notification:last-child { margin-bottom: 0; }
 
         .no-data {
-            color: #9ca3af;
+            color: var(--text-faint);
             font-size: 14px;
             text-align: center;
             padding: 20px;
@@ -249,7 +254,7 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: #111827;
+            background: var(--ink);
             color: white;
             padding: 14px 22px;
             border-radius: 10px;
@@ -275,32 +280,32 @@
         .reminder-widget-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
         }
-        .reminder-widget-header h2 { font-size: 17px; color: #111827; }
-        .reminder-widget-header a { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }
+        .reminder-widget-header h2 { font-size: 17px; color: var(--ink); }
+        .reminder-widget-header a { font-size: 13px; color: var(--brass); text-decoration: none; font-weight: 600; }
         .reminder-list { display: flex; flex-direction: column; gap: 10px; }
         .reminder-item {
             display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-            border-radius: 10px; background: #f9fafb; border-left: 4px solid #d1d5db;
+            border-radius: 10px; background: var(--surface-muted); border-left: 4px solid var(--border);
         }
-        .reminder-item.crit  { border-left-color: #dc2626; background: #fef2f2; }
-        .reminder-item.high  { border-left-color: #f97316; background: #fff7ed; }
-        .reminder-item.med   { border-left-color: #f59e0b; background: #fffbeb; }
-        .reminder-item.low   { border-left-color: #6b7280; }
+        .reminder-item.crit  { border-left-color: var(--danger); background: var(--danger-tint); }
+        .reminder-item.high  { border-left-color: var(--warning); background: var(--warning-tint); }
+        .reminder-item.med   { border-left-color: var(--warning); background: var(--warning-tint); }
+        .reminder-item.low   { border-left-color: var(--text-muted); }
         .reminder-dot { font-size: 16px; line-height:1; flex-shrink:0; }
         .reminder-item-body { flex: 1; min-width:0; }
-        .reminder-item-title { font-weight: 600; color: #111827; font-size: 14px; }
-        .reminder-item-sub { font-size: 12px; color: #6b7280; }
-        .reminder-item-amt { font-size: 13px; font-weight: 700; color: #111827; white-space:nowrap; }
+        .reminder-item-title { font-weight: 600; color: var(--ink); font-size: 14px; }
+        .reminder-item-sub { font-size: 12px; color: var(--text-muted); }
+        .reminder-item-amt { font-size: 13px; font-weight: 700; color: var(--ink); white-space:nowrap; }
 
         .bell-wrap { position: relative; }
         .bell-btn {
             width: 42px; height: 42px; border-radius: 50%; background: white;
-            border: 1px solid #e5e7eb; cursor: pointer; font-size: 18px;
+            border: 1px solid var(--border-soft); cursor: pointer; font-size: 18px;
             display: flex; align-items: center; justify-content: center; position: relative;
         }
-        .bell-btn:hover { background: #f3f4f6; }
+        .bell-btn:hover { background: var(--surface-muted); }
         .bell-count {
-            position: absolute; top: -4px; right: -4px; background: #dc2626; color: white;
+            position: absolute; top: -4px; right: -4px; background: var(--danger); color: white;
             font-size: 10px; font-weight: 700; border-radius: 99px; min-width: 17px; height: 17px;
             display: flex; align-items: center; justify-content: center; padding: 0 4px;
         }
@@ -310,12 +315,12 @@
             box-shadow: 0 10px 35px rgba(0,0,0,0.18); z-index: 2000; padding: 10px;
         }
         .bell-dropdown.active { display: block; }
-        .bell-dropdown-header { font-weight: 700; font-size: 13px; color: #111827; padding: 6px 8px 10px; border-bottom: 1px solid #f3f4f6; margin-bottom: 6px; }
+        .bell-dropdown-header { font-weight: 700; font-size: 13px; color: var(--ink); padding: 6px 8px 10px; border-bottom: 1px solid var(--surface-muted); margin-bottom: 6px; }
         .bell-item { padding: 9px 8px; border-radius: 8px; font-size: 13px; }
-        .bell-item:hover { background: #f9fafb; }
-        .bell-item-title { font-weight: 600; color: #111827; }
-        .bell-item-sub { font-size: 12px; color: #6b7280; margin-top:2px; }
-        .bell-empty { text-align:center; padding: 30px 10px; color: #9ca3af; font-size: 13px; }
+        .bell-item:hover { background: var(--surface-muted); }
+        .bell-item-title { font-weight: 600; color: var(--ink); }
+        .bell-item-sub { font-size: 12px; color: var(--text-muted); margin-top:2px; }
+        .bell-empty { text-align:center; padding: 30px 10px; color: var(--text-faint); font-size: 13px; }
 
     </style>
 </head>
@@ -346,7 +351,7 @@
                style="flex:1;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
                onkeydown="if(event.key==='Enter')addSidebarTodo()" />
         <button onclick="addSidebarTodo()"
-                style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+                style="width:28px;height:28px;border-radius:6px;background:var(--brass);border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
     </div>
 </div>
 </div>
@@ -395,8 +400,8 @@
         const circle = document.getElementById("sidebarTodos")
                                .children[i]
                                .querySelector("div");
-        circle.style.background    = "#22c55e";
-        circle.style.borderColor   = "#22c55e";
+        circle.style.background    = "var(--success)";
+        circle.style.borderColor   = "var(--success)";
         circle.innerHTML           = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         setTimeout(() => {
             const todos = load();
@@ -417,14 +422,14 @@
         <h1>Intern Dashboard</h1>
         <div style="display:flex;align-items:center;gap:15px;">
             <!-- QUICK PUNCH WIDGET (compact, header version) -->
-            <div id="quickPunchCard" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:12px;">
+            <div id="quickPunchCard" style="background:var(--surface-muted);border:1.5px solid var(--border);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:12px;">
                 <div style="text-align:center;">
-                    <div style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Time (IST)</div>
-                    <div id="qpClock" style="font-size:16px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;">--:--:--</div>
+                    <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Time (IST)</div>
+                    <div id="qpClock" style="font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;">--:--:--</div>
                 </div>
-                <div id="qpStatus" style="font-size:12px;color:#6b7280;max-width:170px;line-height:1.3;">Loading…</div>
-                <button id="qpBtnIn"  onclick="qpDoPunch('in')"  style="display:none;background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🟢 Punch In</button>
-                <button id="qpBtnOut" onclick="qpDoPunch('out')" style="display:none;background:#16a34a;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🔴 Punch Out</button>
+                <div id="qpStatus" style="font-size:12px;color:var(--text-muted);max-width:170px;line-height:1.3;">Loading…</div>
+                <button id="qpBtnIn"  onclick="qpDoPunch('in')"  style="display:none;background:var(--brass);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🟢 Punch In</button>
+                <button id="qpBtnOut" onclick="qpDoPunch('out')" style="display:none;background:var(--success);color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🔴 Punch Out</button>
             </div>
             <div class="profile">
                 <b id="profileName">Loading...</b><br>
@@ -447,7 +452,7 @@
             <a href="reminder.html">View All</a>
         </div>
         <div class="reminder-list" id="reminderWidgetList">
-            <div style="color:#9ca3af;font-size:14px;">Loading reminders...</div>
+            <div style="color:var(--text-faint);font-size:14px;">Loading reminders...</div>
         </div>
     </div>
 
@@ -495,11 +500,11 @@
     <!-- PROGRESS -->
     <div class="section">
         <h2>My Progress</h2>
-        <p style="color:#6b7280;font-size:14px;">Weekly Completion Rate</p>
+        <p style="color:var(--text-muted);font-size:14px;">Weekly Completion Rate</p>
         <div class="progress-bar">
             <div class="progress" id="progressBar"></div>
         </div>
-        <p style="margin-top:10px;font-size:14px;color:#374151;">
+        <p style="margin-top:10px;font-size:14px;color:var(--text);">
             <span id="progressLabel">Calculating...</span>
         </p>
     </div>
@@ -517,12 +522,12 @@
     </div>
 
     <!-- TEAM REQUESTS -->
-    <div class="section" id="teamRequestsSection" style="display:none;border-left:4px solid #2563eb;">
+    <div class="section" id="teamRequestsSection" style="display:none;border-left:4px solid var(--brass);">
         <h2 style="margin-bottom:4px;">
                 <!-- NOTIFICATIONS -->#128101; Team Join Requests
-            <span id="teamRequestBadge" style="background:#2563eb;color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span>
+            <span id="teamRequestBadge" style="background:var(--brass);color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span>
         </h2>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">A manager wants to add you to their team. Approving gives them visibility of your sales data.</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">A manager wants to add you to their team. Approving gives them visibility of your sales data.</p>
         <div id="teamRequestsList"></div>
     </div>
 
@@ -625,7 +630,7 @@
                         <td>${task.due_date ? task.due_date.split("T")[0] : "—"}</td>
                         <td>
                             <button class="action-btn"
-                                    style="background:#eef4ff;color:#2563eb;"
+                                    style="background:var(--brass-tint);color:var(--brass);"
                                     onclick="openDetailsModal(${task.id})">
                                 View
                             </button>
@@ -641,7 +646,7 @@
         } catch (e) {
             console.error("loadTasks error:", e);
             document.getElementById("taskTable").innerHTML =
-                `<tr><td colspan="6" class="no-data" style="color:#dc2626;">
+                `<tr><td colspan="6" class="no-data" style="color:var(--danger);">
                     Failed to load tasks. Please refresh.
                 </td></tr>`;
         }
@@ -714,7 +719,7 @@
 
         const top3 = active.slice(0, 3);
         document.getElementById("aiPriorities").innerHTML =
-            top3.map(t => `<li>${t.title} <b style="color:#f59e0b;">[${t.priority}]</b></li>`).join("");
+            top3.map(t => `<li>${t.title} <b style="color:var(--warning);">[${t.priority}]</b></li>`).join("");
 
         const overdue = active.filter(t => new Date(t.due_date) < new Date()).length;
         document.getElementById("aiStatus").textContent = overdue > 0
@@ -767,21 +772,21 @@
 <div id="detailsModal" style="display:none;position:fixed;inset:0;
     background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:white;border-radius:14px;padding:28px;width:480px;max-width:95vw;">
-        <h2 id="detailsTitle" style="font-size:17px;margin-bottom:6px;color:#111827;">Task Details</h2>
-        <p id="detailsMeta" style="font-size:12px;color:#6b7280;margin-bottom:18px;"></p>
+        <h2 id="detailsTitle" style="font-size:17px;margin-bottom:6px;color:var(--ink);">Task Details</h2>
+        <p id="detailsMeta" style="font-size:12px;color:var(--text-muted);margin-bottom:18px;"></p>
 
-        <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">
             Description
         </label>
         <p id="detailsDescription"
-           style="font-size:14px;color:#374151;line-height:1.5;white-space:pre-wrap;
-                  background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;
+           style="font-size:14px;color:var(--text);line-height:1.5;white-space:pre-wrap;
+                  background:var(--surface-muted);border:1px solid var(--border-soft);border-radius:8px;padding:14px;
                   margin-bottom:20px;max-height:260px;overflow-y:auto;">
         </p>
 
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button onclick="closeDetailsModal()"
-                    style="background:#e5e7eb;color:#374151;border:none;padding:10px 20px;
+                    style="background:var(--border-soft);color:var(--text);border:none;padding:10px 20px;
                            border-radius:8px;cursor:pointer;font-size:14px;">Close</button>
         </div>
     </div>
@@ -791,35 +796,35 @@
 <div id="submitModal" style="display:none;position:fixed;inset:0;
     background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:white;border-radius:14px;padding:28px;width:440px;max-width:95vw;">
-        <h2 style="font-size:17px;margin-bottom:16px;color:#111827;">Submit Task for Review</h2>
+        <h2 style="font-size:17px;margin-bottom:16px;color:var(--ink);">Submit Task for Review</h2>
         <input type="hidden" id="submitTaskId" />
 
-        <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">
             Attach a File (optional)
         </label>
         <input type="file" id="submitFile"
-               style="width:100%;padding:8px;border:1.5px dashed #e5e7eb;border-radius:8px;
+               style="width:100%;padding:8px;border:1.5px dashed var(--border-soft);border-radius:8px;
                       font-size:13px;cursor:pointer;margin-bottom:10px;" />
 
         <!-- UPLOAD PROGRESS -->
         <div id="uploadProgressWrap" style="display:none;margin-bottom:18px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span id="uploadProgressLabel" style="font-size:12px;color:#6b7280;">Uploading…</span>
-                <span id="uploadProgressPercent" style="font-size:12px;font-weight:600;color:#2563eb;">0%</span>
+                <span id="uploadProgressLabel" style="font-size:12px;color:var(--text-muted);">Uploading…</span>
+                <span id="uploadProgressPercent" style="font-size:12px;font-weight:600;color:var(--brass);">0%</span>
             </div>
-            <div style="width:100%;height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden;">
+            <div style="width:100%;height:8px;background:var(--border-soft);border-radius:99px;overflow:hidden;">
                 <div id="uploadProgressBar"
-                     style="width:0%;height:100%;background:#2563eb;border-radius:99px;
+                     style="width:0%;height:100%;background:var(--brass);border-radius:99px;
                             transition:width 0.15s ease;"></div>
             </div>
         </div>
 
         <div style="display:flex;gap:10px;justify-content:flex-end;">
             <button id="submitCancelBtn" onclick="closeSubmitModal()"
-                    style="background:#e5e7eb;color:#374151;border:none;padding:10px 20px;
+                    style="background:var(--border-soft);color:var(--text);border:none;padding:10px 20px;
                            border-radius:8px;cursor:pointer;font-size:14px;">Cancel</button>
             <button id="submitConfirmBtn" onclick="submitForReview()"
-                    style="background:#2563eb;color:white;border:none;padding:10px 20px;
+                    style="background:var(--brass);color:white;border:none;padding:10px 20px;
                            border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
                     Submit for Review
             </button>
@@ -838,13 +843,13 @@
     panel.innerHTML = `
         <div style="background:white;border-radius:14px;padding:22px;
                     box-shadow:0 2px 10px rgba(0,0,0,.07);margin-top:20px;
-                    border-left:4px solid #f59e0b;">
-            <h2 style="font-size:16px;color:#111827;margin-bottom:4px;">
+                    border-left:4px solid var(--warning);">
+            <h2 style="font-size:16px;color:var(--ink);margin-bottom:4px;">
                 ⚠ Corrections Pending
-                <span id="remarkCount" style="background:#f59e0b;color:white;font-size:12px;
+                <span id="remarkCount" style="background:var(--warning);color:white;font-size:12px;
                     padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span>
             </h2>
-            <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
                 Your manager has sent corrections on the following tasks. Please review and re-submit.
             </p>
             <div id="remarksList"></div>
@@ -1002,22 +1007,22 @@ async function loadRemarks() {
         document.getElementById("remarkCount").textContent = pending.length;
 
         document.getElementById("remarksList").innerHTML = pending.map(r => `
-            <div style="border:1px solid #fde68a;border-radius:10px;padding:14px;
-                        margin-bottom:12px;background:#fffbeb;">
+            <div style="border:1px solid color-mix(in srgb, var(--warning) 45%, white);border-radius:10px;padding:14px;
+                        margin-bottom:12px;background:var(--warning-tint);">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
                     <div>
-                        <b style="font-size:14px;color:#111827;">${r.task_title}</b>
-                        <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+                        <b style="font-size:14px;color:var(--ink);">${r.task_title}</b>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
                             From <b>${r.manager_name}</b> ·
                             ${new Date(r.created_at).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})}
                         </div>
-                        <p style="font-size:13px;color:#92400e;margin-top:8px;
-                                  background:#fef3c7;padding:8px 12px;border-radius:6px;">
+                        <p style="font-size:13px;color:color-mix(in srgb, var(--warning) 55%, black);margin-top:8px;
+                                  background:var(--warning-tint);padding:8px 12px;border-radius:6px;">
                             ${r.remark}
                         </p>
                     </div>
                     <button onclick="resolveRemark(${r.id})"
-                            style="background:#059669;color:white;border:none;
+                            style="background:var(--success);color:white;border:none;
                                    padding:7px 14px;border-radius:7px;font-size:12px;
                                    font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">
                         Mark Resolved
@@ -1060,26 +1065,26 @@ async function loadTeamRequests() {
         badge.textContent     = requests.length;
 
         list.innerHTML = requests.map(r => `
-            <div style="border:1px solid #dbeafe;border-radius:10px;padding:16px;
-                        margin-bottom:12px;background:#f0f7ff;">
+            <div style="border:1px solid var(--brass-tint);border-radius:10px;padding:16px;
+                        margin-bottom:12px;background:var(--brass-tint);">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
                     <div>
-                        <b style="font-size:15px;color:#111827;">${r.manager_name}</b>
-                        <div style="font-size:12px;color:#6b7280;margin-top:3px;">
+                        <b style="font-size:15px;color:var(--ink);">${r.manager_name}</b>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
                             Manager ID: ${r.manager_id} &nbsp;·&nbsp; ${r.manager_email}
                         </div>
-                        <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">
                             Requested on ${new Date(r.created_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}
                         </div>
                     </div>
                     <div style="display:flex;gap:8px;flex-shrink:0;">
                         <button onclick="respondTeamRequest(${r.id}, 'approved', this)"
-                                style="background:#16a34a;color:white;border:none;padding:8px 18px;
+                                style="background:var(--success);color:white;border:none;padding:8px 18px;
                                        border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
                             ✓ Approve
                         </button>
                         <button onclick="respondTeamRequest(${r.id}, 'rejected', this)"
-                                style="background:#dc2626;color:white;border:none;padding:8px 18px;
+                                style="background:var(--danger);color:white;border:none;padding:8px 18px;
                                        border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
                             ✕ Reject
                         </button>
@@ -1157,7 +1162,7 @@ loadTeamRequests();
         const list = document.getElementById("reminderWidgetList");
         if (!list) return;
         if (!items || items.length === 0) {
-            list.innerHTML = `<div style="color:#9ca3af;font-size:14px;padding:6px 2px;">No reminders today.</div>`;
+            list.innerHTML = `<div style="color:var(--text-faint);font-size:14px;padding:6px 2px;">No reminders today.</div>`;
             return;
         }
         list.innerHTML = items.slice(0, 6).map(r => `
@@ -1240,15 +1245,15 @@ loadTeamRequests();
         const rec   = Array.isArray(rows) ? rows.find(r => String(r.emp_id) === String(QP_EMP_ID)) : null;
 
         if (!rec || !rec.check_in) {
-            statusEl.innerHTML = `<span style="color:#f59e0b;font-weight:600;">⏳ Not checked in yet</span>`;
+            statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600;">⏳ Not checked in yet</span>`;
             btnIn.style.display  = "inline-block";
             btnOut.style.display = "none";
         } else if (rec.check_in && !rec.check_out) {
-            statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>`;
+            statusEl.innerHTML = `<span style="color:var(--success);font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>`;
             btnIn.style.display  = "none";
             btnOut.style.display = "inline-block";
         } else {
-            statusEl.innerHTML = `<span style="color:#6b7280;font-weight:600;">✅ In: <b>${rec.check_in}</b> · Out: <b>${rec.check_out}</b></span>`;
+            statusEl.innerHTML = `<span style="color:var(--text-muted);font-weight:600;">✅ In: <b>${rec.check_in}</b> · Out: <b>${rec.check_out}</b></span>`;
             btnIn.style.display  = "inline-block"; // re-punch restarts today's record, same as attendance.html
             btnOut.style.display = "none";
         }
@@ -1280,7 +1285,7 @@ loadTeamRequests();
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
