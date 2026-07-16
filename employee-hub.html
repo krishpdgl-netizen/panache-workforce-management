@@ -720,6 +720,17 @@
 const BASE   = "https://backend-n5lk.onrender.com";
 const userId = localStorage.getItem("userId");
 
+/* ── Authenticated fetch helper (matches attendance.html / admin pages) ── */
+async function api(path, opts = {}) {
+    const token = localStorage.getItem("authToken") || "";
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+        ...(opts.headers || {})
+    };
+    return fetch(BASE + path, { ...opts, headers });
+}
+
 /* ── Profile ──────────────────────────────────────────────── */
 document.getElementById("profileName").textContent  = localStorage.getItem("userName")  || "—";
 document.getElementById("profileEmail").textContent = localStorage.getItem("userEmail") || "";
@@ -773,7 +784,7 @@ function statusBadge(status) {
 /* ── Stat cards ───────────────────────────────────────────── */
 async function loadLeaveStats() {
     try {
-        const res  = await fetch(`${BASE}/leave-stats`);
+        const res  = await api(`/leave-stats`);
         const data = await res.json();
         document.getElementById("stat-total").textContent    = data.total    ?? 0;
         document.getElementById("stat-pending").textContent  = data.pending  ?? 0;
@@ -796,7 +807,7 @@ let _apprFilter = "all";
 /* ── Load all leave requests ──────────────────────────────── */
 async function loadLeaveRequests() {
     try {
-        const res  = await fetch(`${BASE}/leave-requests`);
+        const res  = await api(`/leave-requests`);
         _allLeaves = await res.json();
         renderMyLeaves();
         renderApprovalQueue();
@@ -922,7 +933,7 @@ async function approveLeave(id) {
     const btn = document.getElementById(`btn-a-${id}`);
     if (btn) { btn.disabled = true; btn.textContent = "…"; }
     try {
-        const res  = await fetch(`${BASE}/leave-requests/${id}/approve`, { method:"POST" });
+        const res  = await api(`/leave-requests/${id}/approve`, { method:"POST" });
         const data = await res.json();
         if (data.success) {
             showToast("Leave request approved.");
@@ -943,7 +954,7 @@ async function rejectLeave(id) {
     const btn = document.getElementById(`btn-r-${id}`);
     if (btn) { btn.disabled = true; btn.textContent = "…"; }
     try {
-        const res  = await fetch(`${BASE}/leave-requests/${id}/reject`, { method:"POST" });
+        const res  = await api(`/leave-requests/${id}/reject`, { method:"POST" });
         const data = await res.json();
         if (data.success) {
             showToast("Leave request rejected.");
@@ -964,7 +975,7 @@ async function escalateLeave(id) {
     const btn = document.getElementById(`btn-e-${id}`);
     if (btn) { btn.disabled = true; btn.textContent = "…"; }
     try {
-        const res  = await fetch(`${BASE}/leave-requests/${id}/escalate`, { method:"POST" });
+        const res  = await api(`/leave-requests/${id}/escalate`, { method:"POST" });
         const data = await res.json();
         if (data.success) {
             showToast("Request forwarded to admin.");
@@ -1035,9 +1046,8 @@ async function submitLeave() {
     btn.textContent = "Submitting…";
 
     try {
-        const res  = await fetch(`${BASE}/leave-requests`, {
+        const res  = await api(`/leave-requests`, {
             method:  "POST",
-            headers: { "Content-Type":"application/json" },
             body: JSON.stringify({
                 user_id:       parseInt(userId),
                 employee_name: localStorage.getItem("userName") || "Employee",
