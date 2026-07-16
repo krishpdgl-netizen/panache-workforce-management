@@ -6,24 +6,29 @@
     <title>Travel Requests | Panache</title>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <script>
         const role = localStorage.getItem("userRole");
         if (!role) { window.location.href = "index.html"; }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
-        body { display:flex; background:#f4f6f9; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
+        body { display:flex; background:var(--paper); }
 
         /* SIDEBAR */
-        .sidebar { width:250px; height:100vh; background:#111827; color:white; padding:20px; position:fixed; left:0; top:0; overflow-y:auto; }
+        .sidebar { width:250px; height:100vh; background:var(--ink); color:white; padding:20px; position:fixed; left:0; top:0; overflow-y:auto; }
         .logo { font-size:22px; font-weight:bold; margin-bottom:30px; }
         .menu a { display:block; color:white; text-decoration:none; padding:12px; margin-bottom:8px; border-radius:8px; transition:0.3s; }
-        .menu a:hover { background:#2563eb; }
-        .menu a.active { background:#2563eb; }
-        .nav-dot { display:none; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-left:6px; vertical-align:middle; }
+        .menu a:hover { background:var(--brass); }
+        .menu a.active { background:var(--brass); }
+        .nav-dot { display:none; width:8px; height:8px; border-radius:50%; background:var(--danger); margin-left:6px; vertical-align:middle; }
         .menu-group { margin-bottom:6px; }
         .menu-group-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; border-radius:8px; color:rgba(255,255,255,0.55); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; user-select:none; }
         .menu-group-header:hover { background:rgba(255,255,255,0.06); }
@@ -32,69 +37,69 @@
         .menu-group-items { display:none; padding-left:2px; }
         .menu-group.open .menu-group-items { display:block; }
         .menu-group-items a { padding:10px 12px; font-size:13.5px; }
-        .menu-group-items a.active { background:#2563eb; }
+        .menu-group-items a.active { background:var(--brass); }
 
         /* MAIN */
         .main { margin-left:250px; padding:25px; width:calc(100% - 250px); }
         .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:15px; }
-        .header h1 { color:#111827; }
+        .header h1 { color:var(--ink); }
         .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
-        .logout-btn { background:#dc2626; padding:10px 18px; border:none; color:white; border-radius:8px; cursor:pointer; }
-        .logout-btn:hover { background:#b91c1c; }
+        .logout-btn { background:var(--danger); padding:10px 18px; border:none; color:white; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         .section { background:white; padding:20px; border-radius:15px; margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
         .section h2 { margin-bottom:15px; }
-        .section p.hint { font-size:13px; color:#6b7280; margin-bottom:16px; }
+        .section p.hint { font-size:13px; color:var(--text-muted); margin-bottom:16px; }
 
         /* FORM */
         .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
         .field { display:flex; flex-direction:column; gap:6px; }
-        .field label { font-size:13px; font-weight:600; color:#374151; }
+        .field label { font-size:13px; font-weight:600; color:var(--text); }
         .field input, .field select, .field textarea {
-            padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:8px; font-size:14px; font-family:inherit; color:#111827;
+            padding:10px 12px; border:1.5px solid var(--border-soft); border-radius:8px; font-size:14px; font-family:inherit; color:var(--ink);
         }
-        .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:#2563eb; }
+        .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--brass); }
         .field textarea { resize:vertical; min-height:70px; grid-column:1 / -1; }
         .field.full { grid-column:1 / -1; }
 
         .btn { border:none; padding:11px 22px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:0.2s; }
-        .btn-primary { background:#2563eb; color:white; margin-top:18px; }
-        .btn-primary:hover { background:#1d4ed8; }
-        .btn-primary:disabled { background:#93b4f0; cursor:default; }
+        .btn-primary { background:var(--brass); color:white; margin-top:18px; }
+        .btn-primary:hover { background:var(--brass-dark); }
+        .btn-primary:disabled { background:var(--brass-tint); cursor:default; }
 
         /* TABLE */
         table { width:100%; border-collapse:collapse; }
-        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:0.4px; }
-        .no-data { color:#9ca3af; font-size:14px; text-align:center; padding:20px; }
+        th, td { padding:12px; border-bottom:1px solid var(--border-soft); text-align:left; font-size:14px; }
+        th { background:var(--surface-muted); font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px; }
+        .no-data { color:var(--text-faint); font-size:14px; text-align:center; padding:20px; }
 
         .status-badge { display:inline-block; padding:4px 10px; border-radius:99px; font-size:12px; font-weight:600; }
-        .status-pending  { background:#fef9c3; color:#a16207; }
-        .status-approved { background:#dcfce7; color:#15803d; }
-        .status-rejected { background:#fee2e2; color:#b91c1c; }
+        .status-pending  { background:var(--warning-tint); color:color-mix(in srgb, var(--warning) 70%, black); }
+        .status-approved { background:var(--success-tint); color:color-mix(in srgb, var(--success) 78%, black); }
+        .status-rejected { background:var(--danger-tint); color:color-mix(in srgb, var(--danger) 80%, black); }
 
         .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
         .action-btn { border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12.5px; font-weight:600; transition:0.2s; white-space:nowrap; }
-        .btn-approve { background:#16a34a; color:white; }
-        .btn-approve:hover { background:#15803d; }
-        .btn-reject  { background:#dc2626; color:white; }
-        .btn-reject:hover { background:#b91c1c; }
-        .btn-meeting { background:#7c3aed; color:white; }
-        .btn-meeting:hover { background:#6d28d9; }
+        .btn-approve { background:var(--success); color:white; }
+        .btn-approve:hover { background:color-mix(in srgb, var(--success) 78%, black); }
+        .btn-reject  { background:var(--danger); color:white; }
+        .btn-reject:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
+        .btn-meeting { background:var(--purple); color:white; }
+        .btn-meeting:hover { background:color-mix(in srgb, var(--purple) 80%, black); }
 
-        .toast { position:fixed; bottom:30px; right:30px; background:#111827; color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:9999; }
+        .toast { position:fixed; bottom:30px; right:30px; background:var(--ink); color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:9999; }
         .toast.show { opacity:1; transform:translateY(0); }
 
         /* MODAL */
         .modal-overlay { display:none; position:fixed; inset:0; background:rgba(17,24,39,0.5); z-index:5000; align-items:center; justify-content:center; }
         .modal-overlay.active { display:flex; }
         .modal { background:white; border-radius:14px; padding:24px; width:min(420px, 92vw); box-shadow:0 20px 50px rgba(0,0,0,.25); }
-        .modal h3 { margin-bottom:16px; color:#111827; }
+        .modal h3 { margin-bottom:16px; color:var(--ink); }
         .modal .field { margin-bottom:14px; }
         .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:6px; }
         .modal-actions button { border:none; padding:10px 18px; border-radius:8px; font-size:13.5px; font-weight:600; cursor:pointer; }
-        .modal-cancel { background:#e5e7eb; color:#374151; }
-        .modal-confirm { background:#7c3aed; color:white; }
+        .modal-cancel { background:var(--border-soft); color:var(--text); }
+        .modal-confirm { background:var(--purple); color:white; }
 
         @media (max-width:900px) {
             .sidebar { width:200px; }
@@ -188,8 +193,8 @@
     </div>
 
     <!-- ADMIN APPROVAL QUEUE -->
-    <div class="section" id="approvalSection" style="display:none;border-left:4px solid #7c3aed;">
-        <h2>Pending Approvals <span id="pendingCount" style="background:#7c3aed;color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span></h2>
+    <div class="section" id="approvalSection" style="display:none;border-left:4px solid var(--purple);">
+        <h2>Pending Approvals <span id="pendingCount" style="background:var(--purple);color:white;font-size:12px;padding:2px 8px;border-radius:99px;margin-left:8px;font-weight:700;"></span></h2>
         <p class="hint">Approve, reject, or set up a meeting to discuss the trip with the requester.</p>
         <table>
             <thead>
