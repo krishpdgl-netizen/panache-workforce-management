@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +12,19 @@
         const role = localStorage.getItem("userRole");
         if (!role || role !== "admin") { window.location.href = "index.html"; }
     </script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
 
-        body { display: flex; background: #f4f6f9; }
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+
+        body { display: flex; background: var(--paper); }
 
         /* SIDEBAR */
         .sidebar {
-            width: 260px; height: 100vh; background: #111827; color: white;
+            width: 260px; height: 100vh; background: var(--ink); color: white;
             position: fixed; left: 0; top: 0; padding: 20px; overflow-y: auto;
         }
         .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
@@ -27,12 +32,12 @@
             display: block; color: white; text-decoration: none;
             padding: 12px; margin-bottom: 8px; border-radius: 8px; transition: 0.3s;
         }
-        .menu a:hover, .menu a.active { background: #2563eb; }
+        .menu a:hover, .menu a.active { background: var(--brass); }
         .logout-btn {
-            background: #dc2626; color: white; border: none;
+            background: var(--danger); color: white; border: none;
             padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 12px;
         }
-        .logout-btn:hover { background: #b91c1c; }
+        .logout-btn:hover { background: color-mix(in srgb, var(--danger) 80%, black); }
 
         /* MAIN */
         .main { margin-left: 260px; width: 100%; padding: 30px; }
@@ -41,7 +46,7 @@
             display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 30px;
         }
-        .header h1 { color: #111827; font-size: 26px; }
+        .header h1 { color: var(--ink); font-size: 26px; }
         .profile {
             background: white; padding: 10px 20px;
             border-radius: 10px; font-weight: bold; font-size: 14px;
@@ -49,9 +54,9 @@
 
         /* PAGE DESCRIPTION */
         .page-desc {
-            background: #eff6ff; border-left: 5px solid #2563eb;
+            background: var(--brass-tint); border-left: 5px solid var(--brass);
             padding: 16px 20px; border-radius: 10px; margin-bottom: 28px;
-            font-size: 14px; color: #1e40af;
+            font-size: 14px; color: var(--brass-dark);
         }
         .page-desc b { display: block; font-size: 15px; margin-bottom: 4px; }
 
@@ -64,12 +69,12 @@
         .group-header {
             display: flex; align-items: center; gap: 10px;
             margin-bottom: 18px; padding-bottom: 14px;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid var(--surface-muted);
         }
         .group-header .icon { font-size: 22px; }
-        .group-header h2 { font-size: 16px; color: #111827; font-weight: 700; }
+        .group-header h2 { font-size: 16px; color: var(--ink); font-weight: 700; }
         .group-header .count {
-            background: #f3f4f6; color: #6b7280; font-size: 12px;
+            background: var(--surface-muted); color: var(--text-muted); font-size: 12px;
             font-weight: 600; padding: 2px 8px; border-radius: 99px; margin-left: auto;
         }
 
@@ -82,36 +87,36 @@
         /* DOWNLOAD BUTTON */
         .dl-btn {
             display: flex; align-items: center; gap: 12px;
-            background: #f9fafb; border: 1.5px solid #e5e7eb;
+            background: var(--surface-muted); border: 1.5px solid var(--border-soft);
             border-radius: 12px; padding: 14px 16px; cursor: pointer;
             transition: all 0.2s; text-align: left; text-decoration: none;
-            color: #111827; position: relative; overflow: hidden;
+            color: var(--ink); position: relative; overflow: hidden;
         }
         .dl-btn:hover {
-            border-color: #2563eb; background: #eff6ff;
+            border-color: var(--brass); background: var(--brass-tint);
             transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.12);
         }
         .dl-btn:active { transform: translateY(0); }
         .dl-btn.loading {
-            pointer-events: none; border-color: #93c5fd; background: #dbeafe;
+            pointer-events: none; border-color: var(--brass-tint); background: var(--brass-tint);
         }
         .dl-btn .btn-icon {
             width: 38px; height: 38px; border-radius: 10px;
-            background: #e0e7ff; display: flex; align-items: center;
+            background: var(--purple-tint); display: flex; align-items: center;
             justify-content: center; font-size: 18px; flex-shrink: 0;
         }
         .dl-btn .btn-text { flex: 1; min-width: 0; }
-        .dl-btn .btn-label { font-weight: 600; font-size: 14px; color: #111827; }
-        .dl-btn .btn-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+        .dl-btn .btn-label { font-weight: 600; font-size: 14px; color: var(--ink); }
+        .dl-btn .btn-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
         .dl-btn .dl-arrow {
-            font-size: 16px; color: #9ca3af; transition: color 0.2s;
+            font-size: 16px; color: var(--text-faint); transition: color 0.2s;
         }
-        .dl-btn:hover .dl-arrow { color: #2563eb; }
+        .dl-btn:hover .dl-arrow { color: var(--brass); }
 
         /* Spinner inside button */
         .spinner {
             display: none; width: 18px; height: 18px;
-            border: 2px solid #93c5fd; border-top-color: #2563eb;
+            border: 2px solid var(--brass-tint); border-top-color: var(--brass);
             border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
         }
         .dl-btn.loading .dl-arrow { display: none; }
@@ -121,37 +126,37 @@
 
         /* TOAST */
         .toast {
-            position: fixed; bottom: 30px; right: 30px; background: #111827;
+            position: fixed; bottom: 30px; right: 30px; background: var(--ink);
             color: white; padding: 14px 22px; border-radius: 10px; font-size: 14px;
             opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 9999;
             display: flex; align-items: center; gap: 10px;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: #15803d; }
-        .toast.error   { background: #dc2626; }
+        .toast.success { background: color-mix(in srgb, var(--success) 78%, black); }
+        .toast.error   { background: var(--danger); }
 
         /* DOWNLOAD ALL STRIP */
         .dl-all-bar {
-            background: #111827; border-radius: 14px; padding: 20px 26px;
+            background: var(--ink); border-radius: 14px; padding: 20px 26px;
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
         }
-        .dl-all-bar p { color: #d1d5db; font-size: 14px; }
+        .dl-all-bar p { color: var(--border); font-size: 14px; }
         .dl-all-bar b { color: white; display: block; font-size: 16px; margin-bottom: 3px; }
         .dl-all-btn {
-            background: #2563eb; color: white; border: none; padding: 12px 24px;
+            background: var(--brass); color: white; border: none; padding: 12px 24px;
             border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
             white-space: nowrap; display: flex; align-items: center; gap: 8px;
         }
-        .dl-all-btn:hover { background: #1d4ed8; }
-        .dl-all-btn:disabled { background: #4b5563; cursor: not-allowed; }
+        .dl-all-btn:hover { background: var(--brass-dark); }
+        .dl-all-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
 
         /* Progress bar for download all */
         .progress-wrap { display: none; margin-bottom: 22px; }
         .progress-wrap.show { display: block; }
-        .progress-label { font-size: 13px; color: #374151; margin-bottom: 6px; font-weight: 500; }
-        .progress-bar-bg { background: #e5e7eb; border-radius: 99px; height: 8px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: #2563eb; border-radius: 99px; transition: width 0.3s; width: 0%; }
+        .progress-label { font-size: 13px; color: var(--text); margin-bottom: 6px; font-weight: 500; }
+        .progress-bar-bg { background: var(--border-soft); border-radius: 99px; height: 8px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--brass); border-radius: 99px; transition: width 0.3s; width: 0%; }
 
         @media (max-width: 900px) {
             .sidebar { width: 200px; }
@@ -183,7 +188,7 @@
         <h1>📥 Export Data</h1>
         <div class="profile">
             <b id="profileName">Loading...</b>
-            <span id="profileEmail" style="font-weight:normal;font-size:13px;color:#6b7280;"></span>
+            <span id="profileEmail" style="font-weight:normal;font-size:13px;color:var(--text-muted);"></span>
         </div>
     </div>
 
@@ -193,21 +198,21 @@
     </div>
 
     <!-- SALES PROJECTIONS (Excel file, not SQL) -->
-    <div class="group" style="border: 2px solid #d1fae5; background: #f0fdf4;">
-        <div class="group-header" style="border-bottom-color: #d1fae5;">
+    <div class="group" style="border: 2px solid var(--success-tint); background: var(--success-tint);">
+        <div class="group-header" style="border-bottom-color: var(--success-tint);">
             <span class="icon">📈</span>
-            <h2 style="color: #15803d;">Sales Projections</h2>
-            <span class="count" style="background:#d1fae5;color:#15803d;">Live Excel file</span>
+            <h2 style="color: color-mix(in srgb, var(--success) 78%, black);">Sales Projections</h2>
+            <span class="count" style="background:var(--success-tint);color:color-mix(in srgb, var(--success) 78%, black);">Live Excel file</span>
         </div>
         <div class="btn-grid">
-            <button class="dl-btn" onclick="downloadSales()" style="border-color:#86efac;background:#f0fdf4;" id="salesBtn">
-                <div class="btn-icon" style="background:#dcfce7;">📊</div>
+            <button class="dl-btn" onclick="downloadSales()" style="border-color:var(--success-tint);background:var(--success-tint);" id="salesBtn">
+                <div class="btn-icon" style="background:var(--success-tint);">📊</div>
                 <div class="btn-text">
                     <div class="btn-label">Sales Tracker</div>
                     <div class="btn-sub">All weeks · projections &amp; actuals</div>
                 </div>
-                <div class="dl-arrow" style="color:#16a34a;">⬇</div>
-                <div class="spinner" style="border-color:#86efac;border-top-color:#16a34a;"></div>
+                <div class="dl-arrow" style="color:var(--success);">⬇</div>
+                <div class="spinner" style="border-color:var(--success-tint);border-top-color:var(--success);"></div>
             </button>
         </div>
     </div>
@@ -675,7 +680,7 @@
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
