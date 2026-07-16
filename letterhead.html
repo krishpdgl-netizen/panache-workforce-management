@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,13 +15,18 @@
         const isReadOnly = false;
         const canVoid    = (role === "admin" || role === "manager");
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-        body { display:flex; background:#f4f6f9; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
+        body { display:flex; background:var(--paper); }
 
         /* SIDEBAR */
         .sidebar {
-            width:260px; height:100vh; background:#111827;
+            width:260px; height:100vh; background:var(--ink);
             color:white; position:fixed; padding:20px;
             display:flex; flex-direction:column;
         }
@@ -30,7 +35,7 @@
             display:block; color:white; text-decoration:none;
             padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
         }
-        .menu a:hover, .menu a.active { background:#2563eb; }
+        .menu a:hover, .menu a.active { background:var(--brass); }
 
         /* MAIN */
         .main { margin-left:260px; width:100%; padding:25px; }
@@ -39,14 +44,14 @@
             display:flex; justify-content:space-between;
             align-items:center; margin-bottom:25px;
         }
-        .header h1 { color:#111827; }
+        .header h1 { color:var(--ink); }
 
         .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
         .logout-btn {
-            background:#dc2626; color:white; border:none;
+            background:var(--danger); color:white; border:none;
             padding:10px 20px; border-radius:8px; cursor:pointer;
         }
-        .logout-btn:hover { background:#b91c1c; }
+        .logout-btn:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         /* CARDS */
         .cards {
@@ -57,12 +62,12 @@
             background:white; padding:20px; border-radius:15px;
             box-shadow:0 2px 10px rgba(0,0,0,.08);
         }
-        .card h2 { color:#2563eb; font-size:30px; margin-bottom:6px; }
-        .card p  { color:#6b7280; font-size:14px; }
-        .card.green h2  { color:#16a34a; }
-        .card.yellow h2 { color:#f59e0b; }
-        .card.red h2    { color:#dc2626; }
-        .card.purple h2 { color:#7c3aed; }
+        .card h2 { color:var(--brass); font-size:30px; margin-bottom:6px; }
+        .card p  { color:var(--text-muted); font-size:14px; }
+        .card.green h2  { color:var(--success); }
+        .card.yellow h2 { color:var(--warning); }
+        .card.red h2    { color:var(--danger); }
+        .card.purple h2 { color:var(--purple); }
 
         /* SECTION */
         .section {
@@ -73,70 +78,70 @@
             display:flex; justify-content:space-between;
             align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;
         }
-        .section-header h2 { color:#111827; }
+        .section-header h2 { color:var(--ink); }
 
         .header-actions { display:flex; gap:10px; flex-wrap:wrap; }
 
         /* SEARCH + FILTER */
         .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
         .toolbar input, .toolbar select {
-            padding:9px 14px; border:1px solid #d1d5db;
+            padding:9px 14px; border:1px solid var(--border);
             border-radius:8px; font-size:14px;
         }
         .toolbar input { flex:1; min-width:180px; }
-        .toolbar input:focus, .toolbar select:focus { outline:none; border-color:#2563eb; }
+        .toolbar input:focus, .toolbar select:focus { outline:none; border-color:var(--brass); }
 
         /* TABLE */
         table { width:100%; border-collapse:collapse; }
-        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
-        tr:hover td { background:#f9fafb; }
+        th, td { padding:12px; border-bottom:1px solid var(--border-soft); text-align:left; font-size:14px; }
+        th { background:var(--surface-muted); font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+        tr:hover td { background:var(--surface-muted); }
 
         /* BUTTONS */
         .btn-primary {
-            background:#2563eb; color:white; border:none;
+            background:var(--brass); color:white; border:none;
             padding:10px 18px; border-radius:8px; cursor:pointer;
             font-size:14px; font-weight:600;
         }
-        .btn-primary:hover { background:#1d4ed8; }
+        .btn-primary:hover { background:var(--brass-dark); }
 
         .btn-success {
-            background:#16a34a; color:white; border:none;
+            background:var(--success); color:white; border:none;
             padding:10px 18px; border-radius:8px; cursor:pointer;
             font-size:14px; font-weight:600;
         }
-        .btn-success:hover { background:#15803d; }
+        .btn-success:hover { background:color-mix(in srgb, var(--success) 78%, black); }
 
         .btn-danger {
-            background:#dc2626; color:white; border:none;
+            background:var(--danger); color:white; border:none;
             padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
         }
-        .btn-danger:hover { background:#b91c1c; }
+        .btn-danger:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         .btn-warning {
-            background:#f59e0b; color:white; border:none;
+            background:var(--warning); color:white; border:none;
             padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
         }
-        .btn-warning:hover { background:#d97706; }
+        .btn-warning:hover { background:color-mix(in srgb, var(--warning) 80%, black); }
 
         .btn-purple {
-            background:#7c3aed; color:white; border:none;
+            background:var(--purple); color:white; border:none;
             padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px;
         }
-        .btn-purple:hover { background:#6d28d9; }
+        .btn-purple:hover { background:color-mix(in srgb, var(--purple) 80%, black); }
 
         /* BADGES */
         .badge {
             display:inline-block; padding:3px 10px;
             border-radius:99px; font-size:12px; font-weight:600;
         }
-        .badge-green  { background:#dcfce7; color:#15803d; }
-        .badge-blue   { background:#dbeafe; color:#1d4ed8; }
-        .badge-yellow { background:#fef9c3; color:#a16207; }
-        .badge-orange { background:#ffedd5; color:#c2410c; }
-        .badge-red    { background:#fee2e2; color:#b91c1c; }
-        .badge-purple { background:#f3e8ff; color:#7c3aed; }
-        .badge-gray   { background:#f3f4f6; color:#6b7280; }
+        .badge-green  { background:var(--success-tint); color:color-mix(in srgb, var(--success) 78%, black); }
+        .badge-blue   { background:var(--brass-tint); color:var(--brass-dark); }
+        .badge-yellow { background:var(--warning-tint); color:color-mix(in srgb, var(--warning) 70%, black); }
+        .badge-orange { background:var(--warning-tint); color:color-mix(in srgb, var(--warning) 65%, black); }
+        .badge-red    { background:var(--danger-tint); color:color-mix(in srgb, var(--danger) 80%, black); }
+        .badge-purple { background:var(--purple-tint); color:var(--purple); }
+        .badge-gray   { background:var(--surface-muted); color:var(--text-muted); }
 
         /* MODAL */
         .modal-overlay {
@@ -150,69 +155,69 @@
             width:520px; max-width:95%; max-height:90vh; overflow-y:auto;
             box-shadow:0 10px 40px rgba(0,0,0,0.2);
         }
-        .modal h2 { margin-bottom:20px; color:#111827; }
+        .modal h2 { margin-bottom:20px; color:var(--ink); }
         .modal label {
             display:block; margin-bottom:5px;
-            font-weight:600; color:#374151; font-size:14px;
+            font-weight:600; color:var(--text); font-size:14px;
         }
         .modal input, .modal select, .modal textarea {
-            width:100%; padding:10px 12px; border:1px solid #d1d5db;
+            width:100%; padding:10px 12px; border:1px solid var(--border);
             border-radius:8px; margin-bottom:14px; font-size:14px;
-            font-family:'Segoe UI',sans-serif;
+            font-family: var(--font-body);
         }
         .modal textarea { resize:vertical; min-height:80px; }
         .modal input:focus, .modal select:focus, .modal textarea:focus {
-            outline:none; border-color:#2563eb;
+            outline:none; border-color:var(--brass);
         }
         .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:5px; }
         .btn-cancel {
-            background:#e5e7eb; color:#374151; border:none;
+            background:var(--border-soft); color:var(--text); border:none;
             padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px;
         }
         .btn-save {
-            background:#2563eb; color:white; border:none;
+            background:var(--brass); color:white; border:none;
             padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;
         }
-        .btn-save:hover { background:#1d4ed8; }
+        .btn-save:hover { background:var(--brass-dark); }
 
         /* FORM GRID */
         .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
         /* NO DATA */
-        .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
+        .no-data { text-align:center; padding:25px; color:var(--text-faint); font-size:14px; }
 
         /* TOAST */
         .toast {
             position:fixed; bottom:30px; right:30px;
-            background:#111827; color:white; padding:14px 22px;
+            background:var(--ink); color:white; padding:14px 22px;
             border-radius:10px; font-size:14px; opacity:0;
             transform:translateY(10px); transition:all 0.3s; z-index:9999;
         }
         .toast.show { opacity:1; transform:translateY(0); }
-        .toast.success { background:#16a34a; }
-        .toast.error   { background:#dc2626; }
+        .toast.success { background:var(--success); }
+        .toast.error   { background:var(--danger); }
 
         /* PREVIEW AREA */
         .lh-preview-box {
-            border:2px dashed #d1d5db; border-radius:10px; padding:15px;
-            background:#fafafa; margin-bottom:14px; font-size:13px; color:#6b7280;
+            border:2px dashed var(--border); border-radius:10px; padding:15px;
+            background:var(--surface-muted); margin-bottom:14px; font-size:13px; color:var(--text-muted);
             text-align:center;
         }
 
         /* SERIAL NUMBER CELL */
         .serial-no {
-            font-weight:700; color:#111827; font-family:'Courier New',monospace;
-            background:#f3f4f6; padding:3px 8px; border-radius:6px; font-size:13px;
+            font-weight:700; color:var(--ink); font-family:'Courier New',monospace;
+            background:var(--surface-muted); padding:3px 8px; border-radius:6px; font-size:13px;
         }
 
         /* TABS */
         .tabs { display:flex; gap:8px; margin-bottom:18px; }
         .tab {
             padding:8px 18px; border-radius:8px; cursor:pointer;
-            font-size:14px; font-weight:600; border:2px solid #e5e7eb;
-            color:#6b7280; background:white; transition:.2s;
+            font-size:14px; font-weight:600; border:2px solid var(--border-soft);
+            color:var(--text-muted); background:white; transition:.2s;
         }
-        .tab.active { background:#2563eb; color:white; border-color:#2563eb; }
+        .tab.active { background:var(--brass); color:white; border-color:var(--brass); }
 
         /* SIDEBAR TODOS */
         #sidebarTodos::-webkit-scrollbar { width:3px; }
@@ -242,7 +247,7 @@
                    style="flex:1;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
                    onkeydown="if(event.key==='Enter')addSidebarTodo()" />
             <button onclick="addSidebarTodo()"
-                    style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+                    style="width:28px;height:28px;border-radius:6px;background:var(--brass);border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
         </div>
     </div>
 </div>
@@ -274,7 +279,7 @@
     };
     window.completeSidebarTodo = function(i) {
         const circle = document.getElementById("sidebarTodos").children[i].querySelector("div");
-        circle.style.background = "#22c55e"; circle.style.borderColor = "#22c55e";
+        circle.style.background = "var(--success)"; circle.style.borderColor = "var(--success)";
         circle.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         setTimeout(() => { const t = load(); t.splice(i,1); save(t); render(); }, 500);
     };
@@ -291,7 +296,7 @@
         <div style="display:flex;align-items:center;gap:15px;">
             <div class="profile">
                 <b id="profileName">Admin</b><br>
-                <span id="profileEmail" style="font-size:12px;color:#6b7280;font-weight:400;"></span>
+                <span id="profileEmail" style="font-size:12px;color:var(--text-muted);font-weight:400;"></span>
             </div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
@@ -382,7 +387,7 @@
             </tbody>
         </table>
 
-        <div id="pagination" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;align-items:center;font-size:14px;color:#6b7280;"></div>
+        <div id="pagination" style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;align-items:center;font-size:14px;color:var(--text-muted);"></div>
     </div>
 
 </div><!-- /main -->
@@ -393,7 +398,7 @@
 <div class="modal-overlay" id="generateModal">
     <div class="modal">
         <h2>⊕ Generate &amp; Issue Letterhead</h2>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
             A new serial number will be assigned automatically. The letterhead document will be generated and downloaded as <b id="previewFileName">LH-XXXX.docx</b>.
         </p>
 
@@ -439,7 +444,7 @@
 
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeGenerateModal()">Cancel</button>
-            <button class="btn-save" style="background:#16a34a;" onclick="generateAndIssue()">⊕ Generate &amp; Download</button>
+            <button class="btn-save" style="background:var(--success);" onclick="generateAndIssue()">⊕ Generate &amp; Download</button>
         </div>
     </div>
 </div>
@@ -450,11 +455,11 @@
 <div class="modal-overlay" id="logModal">
     <div class="modal">
         <h2>+ Log Existing Letterhead</h2>
-        <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">
             Use this to record a letterhead that was already issued offline or outside the system.
         </p>
 
-        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#0369a1;">
+        <div style="background:var(--brass-tint);border:1px solid color-mix(in srgb, var(--brass) 45%, white);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--brass-dark);">
             ℹ️ A serial number will be <b>automatically assigned</b> from the shared counter so the sequence stays continuous.
         </div>
         <div class="form-row">
@@ -512,7 +517,7 @@
 <div class="modal-overlay" id="voidModal">
     <div class="modal" style="width:400px;">
         <h2>Void Letterhead</h2>
-        <p style="font-size:14px;color:#6b7280;margin-bottom:18px;">
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:18px;">
             Voiding marks this letterhead as cancelled. This action is logged but not deleted.
         </p>
         <input type="hidden" id="voidId">
@@ -520,7 +525,7 @@
         <textarea id="voidReason" placeholder="e.g. Issued in error, content needs correction..." style="min-height:90px;"></textarea>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeVoidModal()">Cancel</button>
-            <button class="btn-save" style="background:#dc2626;" onclick="confirmVoid()">Void Letterhead</button>
+            <button class="btn-save" style="background:var(--danger);" onclick="confirmVoid()">Void Letterhead</button>
         </div>
     </div>
 </div>
@@ -531,7 +536,7 @@
 <div class="modal-overlay" id="viewModal">
     <div class="modal">
         <h2>Letterhead Details</h2>
-        <div id="viewContent" style="font-size:14px;line-height:1.8;color:#374151;"></div>
+        <div id="viewContent" style="font-size:14px;line-height:1.8;color:var(--text);"></div>
         <div class="modal-actions" style="margin-top:20px;">
             <button class="btn-cancel" onclick="closeViewModal()">Close</button>
             <button class="btn-purple" id="redownloadBtn" onclick="redownloadLetterhead()">⬇ Re-download Document</button>
@@ -768,7 +773,7 @@
                 <td style="max-width:200px;">${r.purpose}</td>
                 <td><span class="badge badge-gray">${r.department || "—"}</span></td>
                 <td>${r.authorised_by || "—"}</td>
-                <td style="max-width:140px;font-size:13px;color:#6b7280;">${r.remarks || "—"}</td>
+                <td style="max-width:140px;font-size:13px;color:var(--text-muted);">${r.remarks || "—"}</td>
                 <td>
                     <div style="display:flex;gap:6px;">
                         <button class="btn-warning" onclick="viewRecord(${r.id})">View</button>
@@ -1134,8 +1139,8 @@
                 <div><b>Authorised By</b><br>${r.authorised_by || "—"}</div>
                 <div><b>Status</b><br>${r.status === "Voided" ? `<span class="badge badge-red">Voided</span>` : `<span class="badge badge-green">Active</span>`}</div>
                 <div><b>Remarks</b><br>${r.remarks || "—"}</div>
-                ${r.void_reason ? `<div style="grid-column:span 2;"><b>Void Reason</b><br><span style="color:#dc2626;">${r.void_reason}</span></div>` : ""}
-                ${r.body_content ? `<div style="grid-column:span 2;"><b>Body Content</b><br><div style="background:#f9fafb;border-radius:8px;padding:12px;margin-top:6px;font-size:13px;white-space:pre-line;">${r.body_content}</div></div>` : ""}
+                ${r.void_reason ? `<div style="grid-column:span 2;"><b>Void Reason</b><br><span style="color:var(--danger);">${r.void_reason}</span></div>` : ""}
+                ${r.body_content ? `<div style="grid-column:span 2;"><b>Body Content</b><br><div style="background:var(--surface-muted);border-radius:8px;padding:12px;margin-top:6px;font-size:13px;white-space:pre-line;">${r.body_content}</div></div>` : ""}
             </div>`;
 
         document.getElementById("redownloadBtn").style.display = r.body_content ? "inline-block" : "none";
@@ -1177,7 +1182,7 @@
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
