@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,14 +12,19 @@
         const role = localStorage.getItem("userRole");
         if (!role) { window.location.href = "index.html"; }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
         /* ── RESET & BASE ── */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { display: flex; background: #f4f6f9; min-height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+        body { display: flex; background: var(--paper); min-height: 100vh; }
 
         /* ── SIDEBAR ── */
         .sidebar {
-            width: 260px; height: 100vh; background: #111827;
+            width: 260px; height: 100vh; background: var(--ink);
             color: white; position: fixed; top: 0; left: 0;
             padding: 20px; display: flex; flex-direction: column;
             overflow-y: auto; z-index: 100;
@@ -30,7 +35,7 @@
             color: white; text-decoration: none; padding: 12px;
             margin-bottom: 6px; border-radius: 8px; transition: .2s; font-size: 14px;
         }
-        .menu a:hover, .menu a.active { background: #2563eb; }
+        .menu a:hover, .menu a.active { background: var(--brass); }
 
 
         /* Mini todo in sidebar */
@@ -46,7 +51,7 @@
             border-radius: 6px; padding: 6px 8px; font-size: 12px; color: #fff; outline: none;
         }
         .sidebar-todo-add button {
-            width: 28px; height: 28px; border-radius: 6px; background: #2563eb;
+            width: 28px; height: 28px; border-radius: 6px; background: var(--brass);
             border: none; color: #fff; font-size: 20px; cursor: pointer; line-height: 1; flex-shrink: 0;
         }
 
@@ -57,41 +62,41 @@
         .page-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
         }
-        .page-header h1 { color: #111827; font-size: 26px; font-weight: 700; }
+        .page-header h1 { color: var(--ink); font-size: 26px; font-weight: 700; }
         .header-actions { display: flex; align-items: center; gap: 12px; }
         .profile-badge {
             background: white; padding: 8px 18px; border-radius: 10px;
-            font-weight: 600; font-size: 14px; color: #111827;
+            font-weight: 600; font-size: 14px; color: var(--ink);
         }
         .btn-logout {
-            background: #dc2626; color: white; border: none;
+            background: var(--danger); color: white; border: none;
             padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 14px;
         }
-        .btn-logout:hover { background: #b91c1c; }
+        .btn-logout:hover { background: color-mix(in srgb, var(--danger) 80%, black); }
         .btn-new-meeting {
-            background: #2563eb; color: white; border: none;
+            background: var(--brass); color: white; border: none;
             padding: 9px 18px; border-radius: 8px; cursor: pointer;
             font-size: 14px; font-weight: 600;
         }
-        .btn-new-meeting:hover { background: #1d4ed8; }
+        .btn-new-meeting:hover { background: var(--brass-dark); }
         /* Add Task button */
         .btn-new-task {
-            background: #7c3aed; color: white; border: none;
+            background: var(--purple); color: white; border: none;
             padding: 9px 18px; border-radius: 8px; cursor: pointer;
             font-size: 14px; font-weight: 600;
         }
-        .btn-new-task:hover { background: #6d28d9; }
+        .btn-new-task:hover { background: color-mix(in srgb, var(--purple) 80%, black); }
 
         /* ── VIEW TABS (Meeting / Task) ── */
         .view-mode-tabs {
-            display: flex; gap: 4px; background: #f3f4f6;
+            display: flex; gap: 4px; background: var(--surface-muted);
             border-radius: 8px; padding: 4px; margin-bottom: 20px; width: fit-content;
         }
         .view-mode-tab {
             padding: 7px 20px; border-radius: 6px; border: none; cursor: pointer;
-            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent; transition: .15s;
+            font-size: 13px; font-weight: 600; color: var(--text-muted); background: transparent; transition: .15s;
         }
-        .view-mode-tab.active { background: white; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+        .view-mode-tab.active { background: white; color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
 
         /* ── CALENDAR LAYOUT ── */
         .calendar-wrapper {
@@ -102,57 +107,57 @@
         /* ── CALENDAR TOOLBAR ── */
         .cal-toolbar {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 18px 24px; border-bottom: 1px solid #f0f0f0;
+            padding: 18px 24px; border-bottom: 1px solid var(--border-soft);
         }
         .cal-nav { display: flex; align-items: center; gap: 10px; }
         .cal-nav button {
-            background: #f3f4f6; border: none; border-radius: 8px;
+            background: var(--surface-muted); border: none; border-radius: 8px;
             width: 34px; height: 34px; cursor: pointer; font-size: 18px;
-            display: flex; align-items: center; justify-content: center; color: #374151; transition: .15s;
+            display: flex; align-items: center; justify-content: center; color: var(--text); transition: .15s;
         }
-        .cal-nav button:hover { background: #2563eb; color: white; }
-        .cal-title { font-size: 20px; font-weight: 700; color: #111827; min-width: 200px; text-align: center; }
-        .cal-view-tabs { display: flex; gap: 4px; background: #f3f4f6; border-radius: 8px; padding: 4px; }
+        .cal-nav button:hover { background: var(--brass); color: white; }
+        .cal-title { font-size: 20px; font-weight: 700; color: var(--ink); min-width: 200px; text-align: center; }
+        .cal-view-tabs { display: flex; gap: 4px; background: var(--surface-muted); border-radius: 8px; padding: 4px; }
         .cal-view-tab {
             padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer;
-            font-size: 13px; font-weight: 600; color: #6b7280; background: transparent; transition: .15s;
+            font-size: 13px; font-weight: 600; color: var(--text-muted); background: transparent; transition: .15s;
         }
-        .cal-view-tab.active { background: white; color: #111827; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+        .cal-view-tab.active { background: white; color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
         .btn-today {
-            background: white; border: 1.5px solid #d1d5db; border-radius: 8px;
+            background: white; border: 1.5px solid var(--border); border-radius: 8px;
             padding: 6px 14px; cursor: pointer; font-size: 13px; font-weight: 600;
-            color: #374151; transition: .15s;
+            color: var(--text); transition: .15s;
         }
-        .btn-today:hover { border-color: #2563eb; color: #2563eb; }
+        .btn-today:hover { border-color: var(--brass); color: var(--brass); }
 
         /* ── MONTH VIEW ── */
         #monthView { display: block; }
         .month-grid { padding: 0; }
         .month-weekdays {
             display: grid; grid-template-columns: repeat(7, 1fr);
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-soft);
         }
         .month-weekday {
             text-align: center; padding: 10px; font-size: 12px;
-            font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .5px;
+            font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .5px;
         }
         .month-days { display: grid; grid-template-columns: repeat(7, 1fr); }
         .month-day {
-            min-height: 110px; border-right: 1px solid #f0f0f0;
-            border-bottom: 1px solid #f0f0f0; padding: 8px; cursor: pointer;
+            min-height: 110px; border-right: 1px solid var(--border-soft);
+            border-bottom: 1px solid var(--border-soft); padding: 8px; cursor: pointer;
             transition: background .15s; position: relative;
         }
-        .month-day:hover { background: #f8faff; }
+        .month-day:hover { background: var(--surface-muted); }
         .month-day:nth-child(7n) { border-right: none; }
-        .month-day.other-month { background: #fafafa; }
-        .month-day.other-month .day-num { color: #d1d5db; }
-        .month-day.today { background: #eff6ff; }
+        .month-day.other-month { background: var(--surface-muted); }
+        .month-day.other-month .day-num { color: var(--border); }
+        .month-day.today { background: var(--brass-tint); }
         .month-day.today .day-num {
-            background: #2563eb; color: white; width: 28px; height: 28px;
+            background: var(--brass); color: white; width: 28px; height: 28px;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
         .day-num {
-            font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px;
+            font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px;
             width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
         }
         .month-meeting-pill {
@@ -165,44 +170,44 @@
             display: block; padding: 2px 7px; border-radius: 4px;
             font-size: 11px; font-weight: 600; margin-bottom: 2px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
-            background: #f3e8ff; color: #7c3aed; border-left: 3px solid #7c3aed;
+            background: var(--purple-tint); color: var(--purple); border-left: 3px solid var(--purple);
         }
-        .month-more { font-size: 11px; color: #6b7280; padding: 2px 4px; }
+        .month-more { font-size: 11px; color: var(--text-muted); padding: 2px 4px; }
 
         /* ── DAY VIEW ── */
         #dayView { display: none; }
         .day-view-header {
             display: flex; align-items: center; gap: 14px;
-            padding: 16px 24px; border-bottom: 1px solid #f0f0f0;
+            padding: 16px 24px; border-bottom: 1px solid var(--border-soft);
         }
         .back-to-month {
-            background: #f3f4f6; border: none; border-radius: 8px;
+            background: var(--surface-muted); border: none; border-radius: 8px;
             padding: 7px 14px; cursor: pointer; font-size: 13px;
-            font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; transition: .15s;
+            font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; transition: .15s;
         }
-        .back-to-month:hover { background: #e5e7eb; }
-        .day-view-title { font-size: 18px; font-weight: 700; color: #111827; }
-        .day-view-subtitle { font-size: 13px; color: #6b7280; margin-top: 2px; }
+        .back-to-month:hover { background: var(--border-soft); }
+        .day-view-title { font-size: 18px; font-weight: 700; color: var(--ink); }
+        .day-view-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
         .day-schedule {
             display: grid; grid-template-columns: 64px 1fr;
             height: calc(100vh - 280px); overflow-y: auto; position: relative;
         }
-        .time-gutter { border-right: 1px solid #f0f0f0; }
+        .time-gutter { border-right: 1px solid var(--border-soft); }
         .time-label {
             height: 48px; display: flex; align-items: flex-start;
             justify-content: flex-end; padding: 4px 10px 0 0;
-            font-size: 11px; color: #9ca3af; font-weight: 500;
+            font-size: 11px; color: var(--text-faint); font-weight: 500;
         }
         .slots-column { position: relative; }
         .slot-row {
-            height: 48px; border-bottom: 1px solid #f3f4f6;
+            height: 48px; border-bottom: 1px solid var(--surface-muted);
             position: relative; cursor: pointer; transition: background .1s;
         }
-        .slot-row:nth-child(odd) { border-bottom: 1px dashed #f3f4f6; }
-        .slot-row:hover { background: #f0f6ff; }
-        .slot-row.selecting { background: #dbeafe; }
-        .slot-row.busy { background: #fef2f2; cursor: not-allowed; }
+        .slot-row:nth-child(odd) { border-bottom: 1px dashed var(--surface-muted); }
+        .slot-row:hover { background: var(--brass-tint); }
+        .slot-row.selecting { background: var(--brass-tint); }
+        .slot-row.busy { background: var(--danger-tint); cursor: not-allowed; }
 
         /* Meeting blocks */
         .meeting-block {
@@ -236,16 +241,16 @@
             width: 22px; height: 22px; cursor: pointer; font-size: 12px;
             display: flex; align-items: center; justify-content: center; color: inherit;
         }
-        .task-block .tb-delete:hover { background: rgba(220,38,38,.2); color: #dc2626; }
+        .task-block .tb-delete:hover { background: rgba(220,38,38,.2); color: var(--danger); }
 
         /* Current time line */
         .current-time-line {
             position: absolute; left: 0; right: 0;
-            height: 2px; background: #ef4444; z-index: 20; pointer-events: none;
+            height: 2px; background: var(--danger); z-index: 20; pointer-events: none;
         }
         .current-time-line::before {
             content: ''; position: absolute; left: -5px; top: -4px;
-            width: 10px; height: 10px; border-radius: 50%; background: #ef4444;
+            width: 10px; height: 10px; border-radius: 50%; background: var(--danger);
         }
 
         /* ── MODAL ── */
@@ -261,65 +266,65 @@
             box-shadow: 0 16px 48px rgba(0,0,0,.22);
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-        .modal-header h2 { color: #111827; font-size: 18px; }
+        .modal-header h2 { color: var(--ink); font-size: 18px; }
         .modal-close {
-            background: #f3f4f6; border: none; border-radius: 8px;
-            width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: #6b7280;
+            background: var(--surface-muted); border: none; border-radius: 8px;
+            width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: var(--text-muted);
             display: flex; align-items: center; justify-content: center;
         }
-        .modal-close:hover { background: #e5e7eb; }
+        .modal-close:hover { background: var(--border-soft); }
         .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block; margin-bottom: 6px;
-            font-weight: 600; color: #374151; font-size: 13px;
+            font-weight: 600; color: var(--text); font-size: 13px;
         }
         .form-group input,
         .form-group textarea,
         .form-group select {
             width: 100%; padding: 10px 12px;
-            border: 1.5px solid #e5e7eb; border-radius: 8px;
-            font-size: 14px; color: #111827; outline: none; transition: border-color .15s; background: white;
+            border: 1.5px solid var(--border-soft); border-radius: 8px;
+            font-size: 14px; color: var(--ink); outline: none; transition: border-color .15s; background: white;
         }
         .form-group input:focus,
         .form-group textarea:focus,
-        .form-group select:focus { border-color: #2563eb; }
+        .form-group select:focus { border-color: var(--brass); }
         .form-group textarea { resize: vertical; min-height: 80px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .participants-list {
-            border: 1.5px solid #e5e7eb; border-radius: 8px;
+            border: 1.5px solid var(--border-soft); border-radius: 8px;
             max-height: 160px; overflow-y: auto; padding: 8px;
         }
         .participant-item {
             display: flex; align-items: center; gap: 8px;
             padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background .1s;
         }
-        .participant-item:hover { background: #f3f4f6; }
-        .participant-item input[type=checkbox] { accent-color: #2563eb; width: 16px; height: 16px; }
-        .participant-name { font-size: 14px; color: #374151; }
-        .participant-role { font-size: 11px; color: #9ca3af; margin-left: auto; }
+        .participant-item:hover { background: var(--surface-muted); }
+        .participant-item input[type=checkbox] { accent-color: var(--brass); width: 16px; height: 16px; }
+        .participant-name { font-size: 14px; color: var(--text); }
+        .participant-role { font-size: 11px; color: var(--text-faint); margin-left: auto; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
         .btn-cancel {
-            background: #f3f4f6; color: #374151; border: none;
+            background: var(--surface-muted); color: var(--text); border: none;
             padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
         }
         .btn-save {
-            background: #2563eb; color: white; border: none;
+            background: var(--brass); color: white; border: none;
             padding: 10px 24px; border-radius: 8px; cursor: pointer;
             font-size: 14px; font-weight: 700;
         }
-        .btn-save:hover { background: #1d4ed8; }
-        .btn-save:disabled { background: #93c5fd; cursor: not-allowed; }
+        .btn-save:hover { background: var(--brass-dark); }
+        .btn-save:disabled { background: var(--brass-tint); cursor: not-allowed; }
         .btn-save-task {
-            background: #7c3aed; color: white; border: none;
+            background: var(--purple); color: white; border: none;
             padding: 10px 24px; border-radius: 8px; cursor: pointer;
             font-size: 14px; font-weight: 700;
         }
-        .btn-save-task:hover { background: #6d28d9; }
-        .btn-save-task:disabled { background: #c4b5fd; cursor: not-allowed; }
+        .btn-save-task:hover { background: color-mix(in srgb, var(--purple) 80%, black); }
+        .btn-save-task:disabled { background: color-mix(in srgb, var(--purple) 55%, white); cursor: not-allowed; }
         .time-range-display {
-            background: #eff6ff; border: 1.5px solid #bfdbfe;
+            background: var(--brass-tint); border: 1.5px solid var(--brass-tint);
             border-radius: 8px; padding: 10px 14px;
-            font-size: 14px; color: #1d4ed8; font-weight: 600;
+            font-size: 14px; color: var(--brass-dark); font-weight: 600;
             margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
         }
 
@@ -330,39 +335,39 @@
             border: 2px solid transparent; transition: border-color .15s, transform .15s;
         }
         .color-swatch:hover { transform: scale(1.15); }
-        .color-swatch.selected { border-color: #111827; }
+        .color-swatch.selected { border-color: var(--ink); }
 
 
 
         /* ── MEETING DETAIL MODAL ── */
         .meeting-detail { padding: 4px 0; }
         .detail-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
-        .detail-icon { color: #6b7280; margin-top: 2px; flex-shrink: 0; }
-        .detail-label { font-size: 12px; color: #9ca3af; margin-bottom: 2px; }
-        .detail-value { font-size: 14px; color: #111827; }
+        .detail-icon { color: var(--text-muted); margin-top: 2px; flex-shrink: 0; }
+        .detail-label { font-size: 12px; color: var(--text-faint); margin-bottom: 2px; }
+        .detail-value { font-size: 14px; color: var(--ink); }
         .attendee-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
         .attendee-chip {
-            background: #eff6ff; color: #1d4ed8;
+            background: var(--brass-tint); color: var(--brass-dark);
             border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600;
         }
         .status-badge {
             display: inline-block; padding: 3px 10px; border-radius: 99px;
             font-size: 12px; font-weight: 700;
         }
-        .status-confirmed { background: #dcfce7; color: #16a34a; }
-        .status-pending   { background: #fef9c3; color: #a16207; }
+        .status-confirmed { background: var(--success-tint); color: var(--success); }
+        .status-pending   { background: var(--warning-tint); color: color-mix(in srgb, var(--warning) 70%, black); }
 
         /* ── TOAST ── */
         .toast {
             position: fixed; bottom: 28px; right: 28px;
-            background: #111827; color: white; padding: 13px 20px;
+            background: var(--ink); color: white; padding: 13px 20px;
             border-radius: 10px; font-size: 14px; opacity: 0;
             transform: translateY(8px); transition: all .28s; z-index: 9999;
             pointer-events: none; max-width: 320px;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background: #16a34a; }
-        .toast.error   { background: #dc2626; }
+        .toast.success { background: var(--success); }
+        .toast.error   { background: var(--danger); }
 
         /* ── MINI CALENDAR (sidebar) ── */
         .mini-cal { margin-bottom: 20px; }
@@ -380,20 +385,20 @@
             padding: 4px; border-radius: 4px; cursor: pointer;
         }
         .mini-cal-day:hover { background: rgba(255,255,255,.1); }
-        .mini-cal-day.today { background: #2563eb; color: white; font-weight: 700; }
+        .mini-cal-day.today { background: var(--brass); color: white; font-weight: 700; }
         .mini-cal-day.selected { background: rgba(37,99,235,.5); color: white; }
         .mini-cal-day.has-event::after {
             content: ''; display: block; width: 4px; height: 4px;
-            border-radius: 50%; background: #60a5fa; margin: 1px auto 0;
+            border-radius: 50%; background: var(--brass); margin: 1px auto 0;
         }
         .mini-cal-day.other { color: rgba(255,255,255,.2); }
 
         /* Meeting colors */
-        .color-blue   { background: #dbeafe; color: #1d4ed8; }
-        .color-green  { background: #dcfce7; color: #15803d; }
-        .color-purple { background: #f3e8ff; color: #7c3aed; }
-        .color-orange { background: #ffedd5; color: #c2410c; }
-        .color-teal   { background: #ccfbf1; color: #0f766e; }
+        .color-blue   { background: var(--brass-tint); color: var(--brass-dark); }
+        .color-green  { background: var(--success-tint); color: color-mix(in srgb, var(--success) 78%, black); }
+        .color-purple { background: var(--purple-tint); color: var(--purple); }
+        .color-orange { background: var(--warning-tint); color: color-mix(in srgb, var(--warning) 65%, black); }
+        .color-teal   { background: var(--teal-tint); color: var(--teal); }
 
         /* Loading spinner */
         .loading-overlay {
@@ -402,8 +407,8 @@
             z-index: 50; border-radius: 16px;
         }
         .spinner {
-            width: 28px; height: 28px; border: 3px solid #e5e7eb;
-            border-top-color: #2563eb; border-radius: 50%;
+            width: 28px; height: 28px; border: 3px solid var(--border-soft);
+            border-top-color: var(--brass); border-radius: 50%;
             animation: spin .7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -411,7 +416,7 @@
         /* Empty state */
         .empty-day {
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 200px; color: #9ca3af;
+            justify-content: center; height: 200px; color: var(--text-faint);
         }
         .empty-day svg { margin-bottom: 12px; opacity: .4; }
         .empty-day p { font-size: 15px; font-weight: 600; }
@@ -420,7 +425,7 @@
         /* Scrollbar */
         .day-schedule::-webkit-scrollbar { width: 6px; }
         .day-schedule::-webkit-scrollbar-track { background: transparent; }
-        .day-schedule::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+        .day-schedule::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -545,7 +550,7 @@
         <div class="form-group">
             <label>Participants</label>
             <div class="participants-list" id="participantsList">
-                <div style="color:#9ca3af;font-size:13px;padding:8px">Loading users…</div>
+                <div style="color:var(--text-faint);font-size:13px;padding:8px">Loading users…</div>
             </div>
         </div>
         <div class="modal-footer">
@@ -562,7 +567,7 @@
             <h2>✅ Add Calendar Task</h2>
             <button class="modal-close" onclick="closeTaskModal()">✕</button>
         </div>
-        <div class="time-range-display" style="background:#f5f3ff;border-color:#ddd6fe;color:#7c3aed">
+        <div class="time-range-display" style="background:var(--purple-tint);border-color:color-mix(in srgb, var(--purple) 45%, white);color:var(--purple)">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span id="taskTimeRangeText">Select time range</span>
         </div>
@@ -593,7 +598,7 @@
         <div class="form-group">
             <label>Color</label>
             <div class="color-picker" id="taskColorPicker"></div>
-            <input type="hidden" id="taskColor" value="#7c3aed">
+            <input type="hidden" id="taskColor" value="var(--purple)">
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
@@ -642,14 +647,14 @@ let pendingModalType = "meeting"; // "meeting" | "task"
 
 /* ── Task color options ─────────────────────────────── */
 const TASK_COLORS = [
-    { hex: "#7c3aed", label: "Purple" },
-    { hex: "#2563eb", label: "Blue"   },
-    { hex: "#16a34a", label: "Green"  },
-    { hex: "#d97706", label: "Amber"  },
-    { hex: "#dc2626", label: "Red"    },
+    { hex: "var(--purple)", label: "Purple" },
+    { hex: "var(--brass)", label: "Blue"   },
+    { hex: "var(--success)", label: "Green"  },
+    { hex: "color-mix(in srgb, var(--warning) 80%, black)", label: "Amber"  },
+    { hex: "var(--danger)", label: "Red"    },
     { hex: "#0891b2", label: "Cyan"   },
     { hex: "#be185d", label: "Pink"   },
-    { hex: "#374151", label: "Gray"   },
+    { hex: "var(--text)", label: "Gray"   },
 ];
 
 /* ─── INIT ──────────────────────────────────────────── */
@@ -764,7 +769,7 @@ function populateSlotSelects() {
 function buildTaskColorPicker() {
     const picker = document.getElementById("taskColorPicker");
     picker.innerHTML = TASK_COLORS.map(c => `
-        <div class="color-swatch ${c.hex === "#7c3aed" ? "selected" : ""}"
+        <div class="color-swatch ${c.hex === "var(--purple)" ? "selected" : ""}"
              style="background:${c.hex}"
              title="${c.label}"
              onclick="selectTaskColor('${c.hex}', this)"></div>
@@ -790,7 +795,7 @@ async function loadUsers() {
 function renderParticipantsList() {
     const container = document.getElementById("participantsList");
     if (!allUsers.length) {
-        container.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:8px">No users found</div>`;
+        container.innerHTML = `<div style="color:var(--text-faint);font-size:13px;padding:8px">No users found</div>`;
         return;
     }
     container.innerHTML = allUsers
@@ -1082,7 +1087,7 @@ async function renderDayView(date) {
     }
 
     // Render meeting blocks
-    const meetingColors = ["#dbeafe|#1d4ed8","#dcfce7|#15803d","#ffedd5|#c2410c","#ccfbf1|#0f766e","#fef9c3|#a16207"];
+    const meetingColors = ["var(--brass-tint)|var(--brass-dark)","var(--success-tint)|color-mix(in srgb, var(--success) 78%, black)","var(--warning-tint)|color-mix(in srgb, var(--warning) 65%, black)","var(--teal-tint)|var(--teal)","var(--warning-tint)|color-mix(in srgb, var(--warning) 70%, black)"];
     meetings.forEach((m, i) => {
         const [bg, fg] = meetingColors[i % meetingColors.length].split("|");
         const block    = document.createElement("div");
@@ -1098,7 +1103,7 @@ async function renderDayView(date) {
 
     // Render personal task blocks
     tasks.forEach(t => {
-        const color = t.color || "#7c3aed";
+        const color = t.color || "var(--purple)";
         const block = document.createElement("div");
         block.className = "task-block";
         // Make a lighter background from the hex color
@@ -1322,7 +1327,7 @@ function openTaskModal(startSlot, endSlot, date) {
     document.getElementById("taskEndSlot").value   = Math.min(endSlot, 47);
     document.getElementById("taskTitle").value     = "";
     document.getElementById("taskDesc").value      = "";
-    document.getElementById("taskColor").value     = "#7c3aed";
+    document.getElementById("taskColor").value     = "var(--purple)";
     buildTaskColorPicker();  // reset selection
     updateTaskTimeDisplay();
     document.getElementById("taskModal").classList.add("active");
@@ -1430,7 +1435,7 @@ async function showMeetingDetail(m) {
             <div>
                 <div class="detail-label">Participants</div>
                 <div class="attendee-chips">
-                    ${attendeeNames.map(n => `<span class="attendee-chip">${n}</span>`).join("") || "<span style='color:#9ca3af;font-size:13px'>None invited</span>"}
+                    ${attendeeNames.map(n => `<span class="attendee-chip">${n}</span>`).join("") || "<span style='color:var(--text-faint);font-size:13px'>None invited</span>"}
                 </div>
             </div>
         </div>
@@ -1472,7 +1477,7 @@ document.getElementById("detailModal").addEventListener("click",  e => { if (e.t
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
