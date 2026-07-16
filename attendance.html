@@ -6,19 +6,24 @@
     <title>Attendance & Payroll | Panache WMS</title>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
     <script>
         const _role = localStorage.getItem("userRole");
         if (!_role) { window.location.href = "index.html"; }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-        body { display:flex; background:#f4f6f9; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
+        body { display:flex; background:var(--paper); }
 
         /* SIDEBAR — identical to admin-dashboard.html */
         .sidebar {
-            width: 260px; height: 100vh; background: #111827;
+            width: 260px; height: 100vh; background: var(--ink);
             color: white; position: fixed; padding: 20px;
             display: flex; flex-direction: column;
         }
@@ -27,32 +32,32 @@
             display:block; color:white; text-decoration:none;
             padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
         }
-        .menu a:hover, .menu a.active { background:#2563eb; }
+        .menu a:hover, .menu a.active { background:var(--brass); }
 
         /* MAIN */
         .main { margin-left:260px; width:calc(100% - 260px); padding:25px; min-height:100vh; }
 
         /* HEADER */
         .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
-        .header h1 { color:#111827; }
+        .header h1 { color:var(--ink); }
         .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; font-size:14px; }
-        .logout-btn { background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
-        .logout-btn:hover { background:#b91c1c; }
+        .logout-btn { background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         /* CARDS */
         .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:25px; }
         .card { background:white; padding:20px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
-        .card h2 { font-size:30px; color:#2563eb; margin-bottom:6px; }
-        .card p  { color:#6b7280; font-size:14px; }
-        .card.green h2  { color:#16a34a; }
-        .card.yellow h2 { color:#f59e0b; }
-        .card.red h2    { color:#dc2626; }
-        .card.purple h2 { color:#7c3aed; }
+        .card h2 { font-size:30px; color:var(--brass); margin-bottom:6px; }
+        .card p  { color:var(--text-muted); font-size:14px; }
+        .card.green h2  { color:var(--success); }
+        .card.yellow h2 { color:var(--warning); }
+        .card.red h2    { color:var(--danger); }
+        .card.purple h2 { color:var(--purple); }
 
         /* SECTION */
         .section { background:white; padding:22px; border-radius:15px; margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
         .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
-        .section-header h2 { color:#111827; }
+        .section-header h2 { color:var(--ink); }
 
         /* PAGE VIEWS */
         .page-view { display:none; }
@@ -60,126 +65,126 @@
 
         /* TABLE */
         table { width:100%; border-collapse:collapse; }
-        th,td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
-        tr:hover td { background:#f9fafb; }
+        th,td { padding:12px; border-bottom:1px solid var(--border-soft); text-align:left; font-size:14px; }
+        th { background:var(--surface-muted); font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+        tr:hover td { background:var(--surface-muted); }
 
         /* BUTTONS */
-        .btn-primary { background:#2563eb; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:.2s; }
-        .btn-primary:hover { background:#1d4ed8; }
-        .btn-success { background:#16a34a; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
-        .btn-success:hover { background:#15803d; }
-        .btn-danger { background:#dc2626; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
-        .btn-danger:hover { background:#b91c1c; }
-        .btn-warning { background:#f59e0b; color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
-        .btn-warning:hover { background:#d97706; }
-        .btn-secondary { background:#e5e7eb; color:#374151; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
-        .btn-secondary:hover { background:#d1d5db; }
-        .btn-cancel { background:#e5e7eb; color:#374151; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; }
-        .btn-outline { background:white; color:#2563eb; border:2px solid #2563eb; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
-        .btn-outline:hover { background:#eff6ff; }
+        .btn-primary { background:var(--brass); color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:.2s; }
+        .btn-primary:hover { background:var(--brass-dark); }
+        .btn-success { background:var(--success); color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+        .btn-success:hover { background:color-mix(in srgb, var(--success) 78%, black); }
+        .btn-danger { background:var(--danger); color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+        .btn-danger:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
+        .btn-warning { background:var(--warning); color:white; border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+        .btn-warning:hover { background:color-mix(in srgb, var(--warning) 80%, black); }
+        .btn-secondary { background:var(--border-soft); color:var(--text); border:none; padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+        .btn-secondary:hover { background:var(--border); }
+        .btn-cancel { background:var(--border-soft); color:var(--text); border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px; }
+        .btn-outline { background:white; color:var(--brass); border:2px solid var(--brass); padding:7px 13px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+        .btn-outline:hover { background:var(--brass-tint); }
 
         /* BADGES */
         .badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; }
-        .badge-green  { background:#dcfce7; color:#15803d; }
-        .badge-blue   { background:#dbeafe; color:#1d4ed8; }
-        .badge-yellow { background:#fef9c3; color:#a16207; }
-        .badge-orange { background:#ffedd5; color:#c2410c; }
-        .badge-red    { background:#fee2e2; color:#b91c1c; }
-        .badge-gray   { background:#f3f4f6; color:#6b7280; }
-        .badge-purple { background:#ede9fe; color:#6d28d9; }
-        .badge-teal   { background:#ccfbf1; color:#0f766e; }
+        .badge-green  { background:var(--success-tint); color:color-mix(in srgb, var(--success) 78%, black); }
+        .badge-blue   { background:var(--brass-tint); color:var(--brass-dark); }
+        .badge-yellow { background:var(--warning-tint); color:color-mix(in srgb, var(--warning) 70%, black); }
+        .badge-orange { background:var(--warning-tint); color:color-mix(in srgb, var(--warning) 65%, black); }
+        .badge-red    { background:var(--danger-tint); color:color-mix(in srgb, var(--danger) 80%, black); }
+        .badge-gray   { background:var(--surface-muted); color:var(--text-muted); }
+        .badge-purple { background:var(--purple-tint); color:color-mix(in srgb, var(--purple) 80%, black); }
+        .badge-teal   { background:var(--teal-tint); color:var(--teal); }
 
         /* TABS */
         .tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
-        .tab { padding:8px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; border:2px solid #e5e7eb; color:#6b7280; background:white; transition:.2s; }
-        .tab.active { background:#2563eb; color:white; border-color:#2563eb; }
+        .tab { padding:8px 18px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; border:2px solid var(--border-soft); color:var(--text-muted); background:white; transition:.2s; }
+        .tab.active { background:var(--brass); color:white; border-color:var(--brass); }
 
         /* FORM */
         .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
         .form-group { display:flex; flex-direction:column; gap:5px; }
-        .form-group label { font-size:14px; font-weight:600; color:#374151; }
+        .form-group label { font-size:14px; font-weight:600; color:var(--text); }
         .form-group input,.form-group select,.form-group textarea {
-            padding:10px 12px; border:1px solid #d1d5db; border-radius:8px;
-            font-size:14px; font-family:'Segoe UI',sans-serif;
+            padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+            font-size:14px; font-family: var(--font-body);
         }
         .form-group input:focus,.form-group select:focus,.form-group textarea:focus {
-            outline:none; border-color:#2563eb;
+            outline:none; border-color:var(--brass);
         }
         .form-group textarea { resize:vertical; min-height:80px; }
 
         /* FILTER ROW */
         .filter-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; align-items:center; }
         .filter-row input,.filter-row select {
-            padding:9px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;
+            padding:9px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px;
         }
-        .filter-row input:focus,.filter-row select:focus { outline:none; border-color:#2563eb; }
+        .filter-row input:focus,.filter-row select:focus { outline:none; border-color:var(--brass); }
 
         /* MODAL */
         .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
         .modal-overlay.active { display:flex; }
         .modal { background:white; border-radius:15px; padding:30px; width:500px; max-width:95%; box-shadow:0 10px 40px rgba(0,0,0,.2); max-height:90vh; overflow-y:auto; }
-        .modal h2 { margin-bottom:20px; color:#111827; }
-        .modal label { display:block; margin-bottom:5px; font-weight:600; color:#374151; font-size:14px; }
-        .modal input,.modal select,.modal textarea { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; margin-bottom:14px; font-size:14px; font-family:'Segoe UI',sans-serif; }
-        .modal input:focus,.modal select:focus,.modal textarea:focus { outline:none; border-color:#2563eb; }
+        .modal h2 { margin-bottom:20px; color:var(--ink); }
+        .modal label { display:block; margin-bottom:5px; font-weight:600; color:var(--text); font-size:14px; }
+        .modal input,.modal select,.modal textarea { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:14px; font-size:14px; font-family: var(--font-body); }
+        .modal input:focus,.modal select:focus,.modal textarea:focus { outline:none; border-color:var(--brass); }
         .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:5px; }
 
         /* ALERT */
         .alert-banner { padding:12px 15px; border-radius:8px; font-size:14px; margin-bottom:14px; }
-        .alert-warning { background:#fff7ed; border-left:4px solid #f97316; color:#9a3412; }
-        .alert-info    { background:#eff6ff; border-left:4px solid #2563eb; color:#1e40af; }
-        .alert-success { background:#f0fdf4; border-left:4px solid #16a34a; color:#14532d; }
-        .alert-danger  { background:#fef2f2; border-left:4px solid #dc2626; color:#7f1d1d; }
+        .alert-warning { background:var(--warning-tint); border-left:4px solid var(--warning); color:color-mix(in srgb, var(--warning) 60%, black); }
+        .alert-info    { background:var(--brass-tint); border-left:4px solid var(--brass); color:var(--brass-dark); }
+        .alert-success { background:var(--success-tint); border-left:4px solid var(--success); color:color-mix(in srgb, var(--success) 60%, black); }
+        .alert-danger  { background:var(--danger-tint); border-left:4px solid var(--danger); color:color-mix(in srgb, var(--danger) 60%, black); }
 
         /* CALENDAR */
         .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-        .cal-day-label { text-align:center; font-size:11px; font-weight:700; color:#6b7280; padding:6px 0; text-transform:uppercase; }
-        .cal-cell { min-height:56px; border-radius:8px; padding:6px; font-size:12px; border:1px solid #e5e7eb; }
-        .cal-cell.present  { background:#f0fdf4; border-color:#86efac; }
-        .cal-cell.absent   { background:#fef2f2; border-color:#fca5a5; }
-        .cal-cell.leave    { background:#eff6ff; border-color:#93c5fd; }
-        .cal-cell.holiday  { background:#fdf4ff; border-color:#d8b4fe; }
-        .cal-cell.wfh      { background:#ecfeff; border-color:#67e8f9; }
-        .cal-cell.halfday  { background:#fffbeb; border-color:#fcd34d; }
-        .cal-cell.empty    { background:#f9fafb; border-color:transparent; }
-        .cal-cell.today    { border-color:#2563eb !important; border-width:2px; }
-        .cal-date { font-weight:700; color:#374151; }
+        .cal-day-label { text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); padding:6px 0; text-transform:uppercase; }
+        .cal-cell { min-height:56px; border-radius:8px; padding:6px; font-size:12px; border:1px solid var(--border-soft); }
+        .cal-cell.present  { background:var(--success-tint); border-color:var(--success-tint); }
+        .cal-cell.absent   { background:var(--danger-tint); border-color:color-mix(in srgb, var(--danger) 50%, white); }
+        .cal-cell.leave    { background:var(--brass-tint); border-color:var(--brass-tint); }
+        .cal-cell.holiday  { background:var(--purple-tint); border-color:color-mix(in srgb, var(--purple) 50%, white); }
+        .cal-cell.wfh      { background:var(--teal-tint); border-color:color-mix(in srgb, var(--teal) 50%, white); }
+        .cal-cell.halfday  { background:var(--warning-tint); border-color:color-mix(in srgb, var(--warning) 50%, white); }
+        .cal-cell.empty    { background:var(--surface-muted); border-color:transparent; }
+        .cal-cell.today    { border-color:var(--brass) !important; border-width:2px; }
+        .cal-date { font-weight:700; color:var(--text); }
         .cal-status { font-size:10px; margin-top:2px; }
 
         /* SALARY SLIP */
         .slip-page { background:white; max-width:700px; margin:0 auto; padding:36px; font-size:13px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
-        .slip-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #111827; padding-bottom:16px; margin-bottom:20px; }
-        .slip-title { text-align:center; background:#111827; color:white; padding:8px; border-radius:6px; font-weight:700; font-size:14px; margin-bottom:18px; }
+        .slip-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:20px; }
+        .slip-title { text-align:center; background:var(--ink); color:white; padding:8px; border-radius:6px; font-weight:700; font-size:14px; margin-bottom:18px; }
         .slip-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
-        .slip-info-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f3f4f6; font-size:13px; }
-        .slip-info-row span:first-child { color:#6b7280; }
+        .slip-info-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--surface-muted); font-size:13px; }
+        .slip-info-row span:first-child { color:var(--text-muted); }
         .slip-info-row span:last-child { font-weight:600; }
-        .slip-earnings-grid { display:grid; grid-template-columns:1fr 1fr; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; margin-bottom:16px; }
-        .slip-col-head { background:#f3f4f6; padding:9px 14px; font-size:13px; font-weight:700; color:#374151; border-bottom:1px solid #e5e7eb; }
-        .slip-col-row { display:flex; justify-content:space-between; padding:7px 14px; border-bottom:1px solid #f3f4f6; font-size:13px; }
+        .slip-earnings-grid { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--border-soft); border-radius:8px; overflow:hidden; margin-bottom:16px; }
+        .slip-col-head { background:var(--surface-muted); padding:9px 14px; font-size:13px; font-weight:700; color:var(--text); border-bottom:1px solid var(--border-soft); }
+        .slip-col-row { display:flex; justify-content:space-between; padding:7px 14px; border-bottom:1px solid var(--surface-muted); font-size:13px; }
         .slip-col-row:last-child { border-bottom:none; }
-        .slip-total { background:#f9fafb; font-weight:700; }
-        .slip-net { background:#111827; color:white; padding:14px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:14px; }
+        .slip-total { background:var(--surface-muted); font-weight:700; }
+        .slip-net { background:var(--ink); color:white; padding:14px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:14px; }
         .slip-net span { font-size:16px; font-weight:700; }
-        .slip-words { font-size:12px; color:#6b7280; margin-bottom:24px; font-style:italic; }
-        .slip-footer { display:flex; justify-content:space-between; border-top:1px solid #e5e7eb; padding-top:14px; font-size:12px; color:#9ca3af; }
+        .slip-words { font-size:12px; color:var(--text-muted); margin-bottom:24px; font-style:italic; }
+        .slip-footer { display:flex; justify-content:space-between; border-top:1px solid var(--border-soft); padding-top:14px; font-size:12px; color:var(--text-faint); }
 
         /* TIMELINE */
-        .timeline { padding-left:18px; border-left:3px solid #e5e7eb; }
+        .timeline { padding-left:18px; border-left:3px solid var(--border-soft); }
         .timeline-item { position:relative; padding:0 0 14px 18px; }
-        .timeline-item::before { content:''; position:absolute; left:-9px; top:4px; width:14px; height:14px; border-radius:50%; background:#2563eb; border:2px solid white; box-shadow:0 0 0 2px #2563eb; }
-        .timeline-item.approved::before { background:#16a34a; box-shadow:0 0 0 2px #16a34a; }
-        .timeline-item.rejected::before { background:#dc2626; box-shadow:0 0 0 2px #dc2626; }
-        .timeline-label { font-size:13px; font-weight:700; color:#111827; }
-        .timeline-time  { font-size:12px; color:#9ca3af; margin-top:1px; }
+        .timeline-item::before { content:''; position:absolute; left:-9px; top:4px; width:14px; height:14px; border-radius:50%; background:var(--brass); border:2px solid white; box-shadow:0 0 0 2px var(--brass); }
+        .timeline-item.approved::before { background:var(--success); box-shadow:0 0 0 2px var(--success); }
+        .timeline-item.rejected::before { background:var(--danger); box-shadow:0 0 0 2px var(--danger); }
+        .timeline-label { font-size:13px; font-weight:700; color:var(--ink); }
+        .timeline-time  { font-size:12px; color:var(--text-faint); margin-top:1px; }
 
         /* NO DATA / TOAST */
-        .no-data { text-align:center; padding:25px; color:#9ca3af; font-size:14px; }
-        .toast { position:fixed; bottom:30px; right:30px; background:#111827; color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all .3s; z-index:9999; max-width:340px; }
+        .no-data { text-align:center; padding:25px; color:var(--text-faint); font-size:14px; }
+        .toast { position:fixed; bottom:30px; right:30px; background:var(--ink); color:white; padding:14px 22px; border-radius:10px; font-size:14px; opacity:0; transform:translateY(10px); transition:all .3s; z-index:9999; max-width:340px; }
         .toast.show { opacity:1; transform:translateY(0); }
-        .toast.success { background:#16a34a; }
-        .toast.error   { background:#dc2626; }
+        .toast.success { background:var(--success); }
+        .toast.error   { background:var(--danger); }
 
         @media(max-width:1000px) { .sidebar{width:200px;} .main{margin-left:200px;width:calc(100% - 200px);} }
         @media(max-width:700px)  { .form-grid{grid-template-columns:1fr;} }
@@ -206,7 +211,7 @@
                    style="flex:1;background:rgba(255,255,255,.08);border:.5px solid rgba(255,255,255,.15);border-radius:6px;padding:6px 8px;font-size:12px;color:#fff;outline:none;"
                    onkeydown="if(event.key==='Enter')addSidebarTodo()"/>
             <button onclick="addSidebarTodo()"
-                    style="width:28px;height:28px;border-radius:6px;background:#2563eb;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
+                    style="width:28px;height:28px;border-radius:6px;background:var(--brass);border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;flex-shrink:0;">+</button>
         </div>
     </div>
 </div>
@@ -219,7 +224,7 @@
         <div style="display:flex;align-items:center;gap:15px;">
             <div class="profile">
                 <b id="profileName">—</b><br>
-                <span id="profileRole" style="font-size:12px;color:#6b7280;font-weight:400;"></span>
+                <span id="profileRole" style="font-size:12px;color:var(--text-muted);font-weight:400;"></span>
             </div>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
@@ -237,16 +242,16 @@
         <div class="section">
             <div class="section-header">
                 <h2>Today's Attendance</h2>
-                <span id="todayDateLabel" style="font-size:14px;color:#6b7280;"></span>
+                <span id="todayDateLabel" style="font-size:14px;color:var(--text-muted);"></span>
             </div>
             <!-- PUNCH IN / OUT CARD -->
-            <div id="punchCard" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:18px;">
+            <div id="punchCard" style="background:var(--surface-muted);border:1.5px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
                     <div>
-                        <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Current Time (IST)</div>
-                        <div id="liveClock" style="font-size:28px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums;">--:--:--</div>
+                        <div style="font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Current Time (IST)</div>
+                        <div id="liveClock" style="font-size:28px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;">--:--:--</div>
                     </div>
-                    <div id="punchStatus" style="font-size:14px;color:#6b7280;">Loading…</div>
+                    <div id="punchStatus" style="font-size:14px;color:var(--text-muted);">Loading…</div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                         <button id="btnCheckin"  class="btn-primary"  onclick="doPunch('in')"  style="display:none;padding:12px 28px;font-size:15px;">🟢 Punch In</button>
                         <button id="btnCheckout" class="btn-success"  onclick="doPunch('out')" style="display:none;padding:12px 28px;font-size:15px;">🔴 Punch Out</button>
@@ -259,13 +264,13 @@
             <div class="section-header">
                 <h2>Monthly Calendar</h2>
                 <div style="display:flex;gap:8px;">
-                    <select id="calMonth" onchange="renderCalendar()" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+                    <select id="calMonth" onchange="renderCalendar()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
                         <option value="0">January</option><option value="1">February</option><option value="2">March</option>
                         <option value="3">April</option><option value="4">May</option><option value="5">June</option>
                         <option value="6">July</option><option value="7">August</option><option value="8">September</option>
                         <option value="9">October</option><option value="10">November</option><option value="11">December</option>
                     </select>
-                    <select id="calYear" onchange="renderCalendar()" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;"></select>
+                    <select id="calYear" onchange="renderCalendar()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
                 </div>
             </div>
             <div class="cal-grid" id="calGrid"></div>
@@ -273,7 +278,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>Attendance History</h2>
-                <input type="month" id="histMonth" onchange="renderHistory()" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+                <input type="month" id="histMonth" onchange="renderHistory()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
             </div>
             <table>
                 <thead><tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Hours</th><th>Status</th><th>Late (min)</th><th>OT</th><th>Remarks</th></tr></thead>
@@ -415,7 +420,7 @@
         <div class="section" id="salaryStructSection">
             <div class="section-header">
                 <h2>Employee Salary Structures</h2>
-                <span style="font-size:13px;color:#6b7280;">Set a salary structure for each employee — payroll can only be generated for employees who have one.</span>
+                <span style="font-size:13px;color:var(--text-muted);">Set a salary structure for each employee — payroll can only be generated for employees who have one.</span>
             </div>
             <table>
                 <thead><tr><th>Emp ID</th><th>Name</th><th>Email</th><th>Basic Salary</th><th>Gross (est.)</th><th></th></tr></thead>
@@ -427,7 +432,7 @@
             <div class="section-header">
                 <h2>Payroll Processing</h2>
                 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                    <select id="payroll-month" onchange="renderPayrollTable()" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;"></select>
+                    <select id="payroll-month" onchange="renderPayrollTable()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
                     <button class="btn-primary" onclick="generatePayroll()">Generate Payroll</button>
                     <button class="btn-success" onclick="lockPayroll()">Lock Payroll</button>
                 </div>
@@ -450,7 +455,7 @@
         <div class="section">
             <div class="section-header">
                 <h2>My Salary Slips</h2>
-                <select id="slip-filter-year" onchange="renderMySlips()" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;"></select>
+                <select id="slip-filter-year" onchange="renderMySlips()" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
             </div>
             <table>
                 <thead><tr><th>Payslip No.</th><th>Month</th><th>Gross</th><th>Deductions</th><th>Net Salary</th><th>Generated</th><th>Actions</th></tr></thead>
@@ -501,7 +506,7 @@
             <div class="section">
                 <div class="section-header"><h2>Late Employees</h2>
                     <div style="display:flex;gap:8px;">
-                        <input type="month" id="rep-late-month" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+                        <input type="month" id="rep-late-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
                         <button class="btn-primary" onclick="renderLateReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('late')">Export CSV</button>
                     </div>
@@ -514,7 +519,7 @@
             <div class="section">
                 <div class="section-header"><h2>Absentees</h2>
                     <div style="display:flex;gap:8px;">
-                        <input type="month" id="rep-absent-month" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+                        <input type="month" id="rep-absent-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
                         <button class="btn-primary" onclick="renderAbsentReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('absent')">Export CSV</button>
                     </div>
@@ -527,7 +532,7 @@
             <div class="section">
                 <div class="section-header"><h2>Overtime Summary</h2>
                     <div style="display:flex;gap:8px;">
-                        <input type="month" id="rep-ot-month" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+                        <input type="month" id="rep-ot-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
                         <button class="btn-primary" onclick="renderOTReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('overtime')">Export CSV</button>
                     </div>
@@ -540,7 +545,7 @@
             <div class="section">
                 <div class="section-header"><h2>Payroll Summary</h2>
                     <div style="display:flex;gap:8px;">
-                        <select id="rep-pr-month" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;"></select>
+                        <select id="rep-pr-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
                         <button class="btn-primary" onclick="renderPayrollSummary()">Generate</button>
                     </div>
                 </div>
@@ -552,7 +557,7 @@
             <div class="section">
                 <div class="section-header"><h2>Department Salary</h2>
                     <div style="display:flex;gap:8px;">
-                        <select id="rep-dept-month" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;"></select>
+                        <select id="rep-dept-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;"></select>
                         <button class="btn-primary" onclick="renderDeptSalary()">Generate</button>
                     </div>
                 </div>
@@ -587,7 +592,7 @@
             </div>
             <div><label>Late Minutes</label><input type="number" id="att-late" min="0" value="0"></div>
             <div><label>Overtime Hours</label><input type="number" id="att-ot" min="0" step="0.5" value="0"></div>
-            <div><label>Working Hours</label><input type="text" id="att-hours" readonly style="background:#f9fafb;"></div>
+            <div><label>Working Hours</label><input type="text" id="att-hours" readonly style="background:var(--surface-muted);"></div>
         </div>
         <div style="margin-top:12px;"><label>Remarks</label><input type="text" id="att-remarks" placeholder="Optional"></div>
         <div class="modal-actions">
@@ -869,7 +874,7 @@ async function loadPunchState() {
     // Guard: EMP_ID must be a valid non-empty value
     if (!EMP_ID) {
         const storedKeys = `userId=${EMP_ID}, userName=${EMP_NAME}, userEmail=${EMP_EMAIL}`;
-        statusEl.innerHTML = `<span style="color:#dc2626;font-weight:600;">⚠️ Session error: employee ID not found.<br><span style="font-size:12px;font-weight:400;">Stored keys: [${storedKeys}]. Please log out and log in again.</span></span>`;
+        statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600;">⚠️ Session error: employee ID not found.<br><span style="font-size:12px;font-weight:400;">Stored keys: [${storedKeys}]. Please log out and log in again.</span></span>`;
         btnIn.style.display  = "none";
         btnOut.style.display = "none";
         return;
@@ -883,12 +888,12 @@ async function loadPunchState() {
 
     if (!rec || !rec.check_in) {
         // Not checked in yet — show Punch In
-        statusEl.innerHTML = `<span style="color:#f59e0b;font-weight:600;">⏳ Not checked in yet</span>`;
+        statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600;">⏳ Not checked in yet</span>`;
         btnIn.style.display  = "inline-block";
         btnOut.style.display = "none";
     } else if (rec.check_in && !rec.check_out) {
         // Checked in, not out yet — show Punch Out
-        statusEl.innerHTML = `<span style="color:#16a34a;font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:#f59e0b;font-size:13px;">⚠️ ${formatLate(rec.late_minutes)} late</span>`:""}`;
+        statusEl.innerHTML = `<span style="color:var(--success);font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:var(--warning);font-size:13px;">⚠️ ${formatLate(rec.late_minutes)} late</span>`:""}`;
         btnIn.style.display  = "none";
         btnOut.style.display = "inline-block";
     } else {
@@ -896,13 +901,13 @@ async function loadPunchState() {
         // (backend now supports re-punch which resets the day cleanly)
         statusEl.innerHTML = `
             <div>
-                <span style="color:#6b7280;font-weight:600;">
+                <span style="color:var(--text-muted);font-weight:600;">
                     ✅ Checked in: <b>${rec.check_in}</b> &nbsp;|&nbsp; Checked out: <b>${rec.check_out}</b>
                 </span><br>
-                <span style="color:#2563eb;font-size:13px;">
+                <span style="color:var(--brass);font-size:13px;">
                     Hours: ${rec.working_hours||"—"}${rec.overtime>0?" · OT: "+rec.overtime+"h":""}
                 </span><br>
-                <span style="color:#9ca3af;font-size:12px;">
+                <span style="color:var(--text-faint);font-size:12px;">
                     Punching in again will restart today's record.
                 </span>
             </div>`;
@@ -958,11 +963,11 @@ async function renderMyAttendance() {
         : null;
     if (rec) {
         tbox.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Status</div><div style="margin-top:6px;">${statusBadge(rec.status)}</div></div>
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Check-In</div><div style="font-size:22px;font-weight:700;color:#2563eb;margin-top:4px;">${rec.check_in||"—"}</div></div>
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Check-Out</div><div style="font-size:22px;font-weight:700;color:#16a34a;margin-top:4px;">${rec.check_out||"—"}</div></div>
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Hours</div><div style="font-size:22px;font-weight:700;color:#111827;margin-top:4px;">${rec.working_hours||"—"}</div></div>
-            <div style="background:#f9fafb;padding:14px;border-radius:10px;"><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;">Late</div><div style="font-size:22px;font-weight:700;color:${(rec.late_minutes||0)>0?"#f59e0b":"#16a34a"};margin-top:4px;">${formatLate(rec.late_minutes)}</div></div>
+            <div style="background:var(--surface-muted);padding:14px;border-radius:10px;"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Status</div><div style="margin-top:6px;">${statusBadge(rec.status)}</div></div>
+            <div style="background:var(--surface-muted);padding:14px;border-radius:10px;"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Check-In</div><div style="font-size:22px;font-weight:700;color:var(--brass);margin-top:4px;">${rec.check_in||"—"}</div></div>
+            <div style="background:var(--surface-muted);padding:14px;border-radius:10px;"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Check-Out</div><div style="font-size:22px;font-weight:700;color:var(--success);margin-top:4px;">${rec.check_out||"—"}</div></div>
+            <div style="background:var(--surface-muted);padding:14px;border-radius:10px;"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Hours</div><div style="font-size:22px;font-weight:700;color:var(--ink);margin-top:4px;">${rec.working_hours||"—"}</div></div>
+            <div style="background:var(--surface-muted);padding:14px;border-radius:10px;"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;">Late</div><div style="font-size:22px;font-weight:700;color:${(rec.late_minutes||0)>0?"var(--warning)":"var(--success)"};margin-top:4px;">${formatLate(rec.late_minutes)}</div></div>
         </div>`;
     } else {
         tbox.innerHTML = `<div class="no-data">No attendance record for today. Contact HR if you believe this is incorrect.</div>`;
@@ -1103,7 +1108,7 @@ async function renderAttendanceTable() {
     const body = document.getElementById("attendanceBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="12" class="no-data">No records found.</td></tr>`; return; }
     body.innerHTML = rows.map(r=>`<tr>
-        <td style="color:#9ca3af;font-size:13px;">${r.emp_id}</td>
+        <td style="color:var(--text-faint);font-size:13px;">${r.emp_id}</td>
         <td style="font-weight:600;">${r.emp_name}</td><td>${r.department}</td>
         <td>${fmt(r.att_date)}</td><td>${r.check_in||"—"}</td><td>${r.check_out||"—"}</td>
         <td>${r.working_hours||"—"}</td><td>${statusBadge(r.status)}</td>
@@ -1230,7 +1235,7 @@ async function renderRequestsTable() {
     const body=document.getElementById("requestsBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="9" class="no-data">No requests.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr>
-        <td style="font-weight:600;">${r.emp_name}<br><span style="font-size:12px;color:#9ca3af;">${r.emp_id}</span></td>
+        <td style="font-weight:600;">${r.emp_name}<br><span style="font-size:12px;color:var(--text-faint);">${r.emp_id}</span></td>
         <td>${r.department}</td><td>${fmt(r.att_date)}</td><td>${r.issue_type}</td>
         <td>${r.req_check_in||"—"}</td><td>${r.req_check_out||"—"}</td>
         <td>${statusBadge(r.status)}</td>
@@ -1263,7 +1268,7 @@ async function viewRequest(id) {
             ${(r.timeline||[]).map(t=>`<div class="timeline-item ${t.event.toLowerCase()}">
                 <div class="timeline-label">${t.event}</div>
                 <div class="timeline-time">${new Date(t.created_at).toLocaleString("en-IN")} · ${t.done_by}</div>
-                ${t.notes?`<div style="font-size:13px;color:#6b7280;margin-top:2px;">${t.notes}</div>`:""}
+                ${t.notes?`<div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${t.notes}</div>`:""}
             </div>`).join("")}
         </div>`;
     document.getElementById("requestModalActions").innerHTML=`<button class="btn-cancel" onclick="closeModal('modalRequest')">Close</button>`;
@@ -1346,14 +1351,14 @@ async function renderPayrollTable() {
     document.getElementById("pr-lop").textContent=rows.filter(r=>parseFloat(r.lop_days||0)>0).length;
 
     body.innerHTML=rows.map(r=>`<tr>
-        <td style="color:#9ca3af;font-size:13px;">${r.emp_id}</td>
+        <td style="color:var(--text-faint);font-size:13px;">${r.emp_id}</td>
         <td style="font-weight:600;">${r.emp_name}</td><td>${r.department||"—"}</td>
         <td>${r.working_days}</td><td>${r.present_days}</td><td>${r.leave_days}</td>
         <td>${parseFloat(r.lop_days||0)>0?`<span class="badge badge-red">${r.lop_days}</span>`:0}</td>
         <td>${r.overtime_hours||0}h</td>
         <td>${fmtMoney(r.gross_salary)}</td>
-        <td style="color:#dc2626;">${fmtMoney(r.total_deductions)}</td>
-        <td style="font-weight:700;color:#16a34a;">${fmtMoney(r.net_salary)}</td>
+        <td style="color:var(--danger);">${fmtMoney(r.total_deductions)}</td>
+        <td style="font-weight:700;color:var(--success);">${fmtMoney(r.net_salary)}</td>
         <td>${statusBadge(locked?"Locked":r.status)}</td>
         <td style="display:flex;gap:4px;">
             <button class="btn-outline" onclick="viewSlipByEmpMonth('${r.emp_id}','${month}')">View Slip</button>
@@ -1421,9 +1426,9 @@ async function renderSalaryStructures() {
             ? fmtMoney((+s.basic_salary||0)+(+s.hra||0)+(+s.special_allowance||0)+(+s.travel_allowance||0)+(+s.medical_allowance||0)+(+s.bonus||0)+(+s.incentives||0))
             : "—";
         return `<tr>
-            <td style="color:#9ca3af;font-size:13px;">${e.id}</td>
+            <td style="color:var(--text-faint);font-size:13px;">${e.id}</td>
             <td style="font-weight:600;">${e.full_name}</td>
-            <td style="color:#6b7280;font-size:13px;">${e.email||"—"}</td>
+            <td style="color:var(--text-muted);font-size:13px;">${e.email||"—"}</td>
             <td>${basic}</td>
             <td>${gross}</td>
             <td>
@@ -1484,11 +1489,11 @@ async function renderMySlips() {
     const body=document.getElementById("mySlipsBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="7" class="no-data">No payslips for ${yr}.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr>
-        <td style="font-size:13px;color:#9ca3af;">${r.payslip_no}</td>
+        <td style="font-size:13px;color:var(--text-faint);">${r.payslip_no}</td>
         <td>${MONTHS[parseInt(r.payroll_month.split("-")[1])-1]} ${r.payroll_month.split("-")[0]}</td>
         <td>${fmtMoney(r.gross_salary)}</td>
-        <td style="color:#dc2626;">${fmtMoney(r.total_deductions)}</td>
-        <td style="font-weight:700;color:#16a34a;">${fmtMoney(r.net_salary)}</td>
+        <td style="color:var(--danger);">${fmtMoney(r.total_deductions)}</td>
+        <td style="font-weight:700;color:var(--success);">${fmtMoney(r.net_salary)}</td>
         <td style="font-size:13px;">${new Date(r.generated_at).toLocaleDateString("en-IN")}</td>
         <td><button class="btn-primary" onclick="viewSalarySlip(${r.id})">View / Print</button></td>
     </tr>`).join("");
@@ -1508,13 +1513,13 @@ async function viewSalarySlip(id) {
     document.getElementById("slipContent").innerHTML=`
         <div class="slip-header">
             <div>
-                <h2 style="font-size:18px;color:#111827;">Panache Newage Technology Pvt. Ltd.</h2>
-                <p style="font-size:13px;color:#6b7280;margin-top:4px;">Salary Slip for ${monthLabel}</p>
+                <h2 style="font-size:18px;color:var(--ink);">Panache Newage Technology Pvt. Ltd.</h2>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Salary Slip for ${monthLabel}</p>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Payslip No.</div>
-                <div style="font-size:18px;font-weight:700;color:#2563eb;">${s.payslip_no}</div>
-                <div style="font-size:12px;color:#6b7280;margin-top:4px;">Generated: ${new Date(s.generated_at).toLocaleDateString("en-IN")}</div>
+                <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Payslip No.</div>
+                <div style="font-size:18px;font-weight:700;color:var(--brass);">${s.payslip_no}</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Generated: ${new Date(s.generated_at).toLocaleDateString("en-IN")}</div>
             </div>
         </div>
 
@@ -1567,9 +1572,9 @@ async function viewSalarySlip(id) {
         <div class="slip-words">Amount in Words: <b>${numToWords(Math.floor(s.net_salary))} Rupees Only</b></div>
 
         <div class="slip-footer">
-            <div><div style="height:36px;"></div><div style="border-top:1px solid #d1d5db;padding-top:6px;">Employee Signature</div></div>
-            <div style="text-align:center;font-size:12px;color:#9ca3af;">This is a system-generated payslip.<br>Panache Newage Technology Pvt. Ltd.</div>
-            <div style="text-align:right;"><div style="height:36px;"></div><div style="border-top:1px solid #d1d5db;padding-top:6px;">Authorized Signatory</div></div>
+            <div><div style="height:36px;"></div><div style="border-top:1px solid var(--border);padding-top:6px;">Employee Signature</div></div>
+            <div style="text-align:center;font-size:12px;color:var(--text-faint);">This is a system-generated payslip.<br>Panache Newage Technology Pvt. Ltd.</div>
+            <div style="text-align:right;"><div style="height:36px;"></div><div style="border-top:1px solid var(--border);padding-top:6px;">Authorized Signatory</div></div>
         </div>
     `;
     showView("salaryslip");
@@ -1588,11 +1593,11 @@ async function renderAuditLog() {
     const body=document.getElementById("auditBody");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="9" class="no-data">No audit logs found.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr>
-        <td style="font-weight:600;">${r.emp_name}<br><span style="font-size:12px;color:#9ca3af;">${r.emp_id}</span></td>
+        <td style="font-weight:600;">${r.emp_name}<br><span style="font-size:12px;color:var(--text-faint);">${r.emp_id}</span></td>
         <td>${fmt(r.att_date)}</td>
         <td>${r.orig_check_in||"—"}</td><td>${r.orig_check_out||"—"}</td>
-        <td style="color:#2563eb;font-weight:600;">${r.new_check_in||"—"}</td>
-        <td style="color:#2563eb;font-weight:600;">${r.new_check_out||"—"}</td>
+        <td style="color:var(--brass);font-weight:600;">${r.new_check_in||"—"}</td>
+        <td style="color:var(--brass);font-weight:600;">${r.new_check_out||"—"}</td>
         <td style="font-size:13px;">${r.change_reason||"—"}</td>
         <td>${r.approved_by}</td>
         <td style="font-size:13px;">${new Date(r.approved_at).toLocaleString("en-IN")}</td>
@@ -1682,7 +1687,7 @@ function exportCSV(type) {
         });
     }
     window.addSidebarTodo=function(){const inp=document.getElementById("sidebarTodoInput"),text=inp.value.trim();if(!text)return;const t=loadT();t.push(text);saveT(t);inp.value="";renderT();};
-    window.completeSidebarTodo=function(i){const c=document.getElementById("sidebarTodos").children[i].querySelector("div");c.style.background="#22c55e";c.style.borderColor="#22c55e";c.innerHTML=`<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;setTimeout(()=>{const t=loadT();t.splice(i,1);saveT(t);renderT();},500);};
+    window.completeSidebarTodo=function(i){const c=document.getElementById("sidebarTodos").children[i].querySelector("div");c.style.background="var(--success)";c.style.borderColor="var(--success)";c.innerHTML=`<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;setTimeout(()=>{const t=loadT();t.splice(i,1);saveT(t);renderT();},500);};
     renderT();
 })();
 
@@ -1712,7 +1717,7 @@ function logout() { localStorage.removeItem("userRole"); localStorage.removeItem
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
