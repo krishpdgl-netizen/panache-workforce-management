@@ -3,7 +3,7 @@
 <head>
         <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <meta charset="UTF-8">
@@ -13,14 +13,19 @@
         const role = localStorage.getItem("userRole");
         if (!role) { window.location.href = "index.html"; }
     </script>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
 
-        body { display:flex; background:#f4f6f9; }
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
+
+        body { display:flex; background:var(--paper); }
 
         /* SIDEBAR */
         .sidebar {
-            width: 260px; height:100vh; background:#111827;
+            width: 260px; height:100vh; background:var(--ink);
             color:white; position:fixed; padding:20px;
             display:flex; flex-direction:column;
         }
@@ -29,7 +34,7 @@
             display:block; color:white; text-decoration:none;
             padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
         }
-        .nav-menu a:hover { background:#2563eb; }
+        .nav-menu a:hover { background:var(--brass); }
 
         /* SETTINGS NAV (left panel inside main) */
         .main { margin-left:260px; width:100%; padding:25px; }
@@ -38,10 +43,10 @@
             display:flex; justify-content:space-between;
             align-items:center; margin-bottom:25px;
         }
-        .header h1 { color:#111827; }
+        .header h1 { color:var(--ink); }
         .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
-        .logout-btn { background:#dc2626; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
-        .logout-btn:hover { background:#b91c1c; }
+        .logout-btn { background:var(--danger); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+        .logout-btn:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         /* LAYOUT */
         .settings-layout {
@@ -62,12 +67,12 @@
         .settings-nav a {
             display: flex; align-items: center; gap:10px;
             padding: 11px 14px; text-decoration:none;
-            color: #374151; border-radius:9px;
+            color: var(--text); border-radius:9px;
             font-size: 14px; font-weight:500;
             margin-bottom: 4px; transition:.2s;
         }
-        .settings-nav a:hover { background:#f3f4f6; color:#111827; }
-        .settings-nav a.active { background:#eff6ff; color:#2563eb; font-weight:600; }
+        .settings-nav a:hover { background:var(--surface-muted); color:var(--ink); }
+        .settings-nav a.active { background:var(--brass-tint); color:var(--brass); font-weight:600; }
         .settings-nav .nav-icon { font-size:16px; width:20px; text-align:center; }
 
         /* SECTIONS */
@@ -81,19 +86,19 @@
         .card-header {
             display:flex; align-items:center; gap:12px;
             margin-bottom:22px; padding-bottom:16px;
-            border-bottom:1px solid #f3f4f6;
+            border-bottom:1px solid var(--surface-muted);
         }
         .card-header-icon {
             width:38px; height:38px; border-radius:10px;
-            background:#eff6ff; display:flex; align-items:center;
+            background:var(--brass-tint); display:flex; align-items:center;
             justify-content:center; font-size:18px;
         }
-        .card-header h2 { font-size:17px; color:#111827; }
-        .card-header p  { font-size:13px; color:#6b7280; margin-top:2px; }
+        .card-header h2 { font-size:17px; color:var(--ink); }
+        .card-header p  { font-size:13px; color:var(--text-muted); margin-top:2px; }
 
         /* FORM */
         .form-group { margin-bottom:18px; }
-        label { display:block; margin-bottom:6px; font-weight:600; color:#374151; font-size:13px; }
+        label { display:block; margin-bottom:6px; font-weight:600; color:var(--text); font-size:13px; }
 
         input[type="text"],
         input[type="email"],
@@ -101,48 +106,48 @@
         input[type="number"],
         select {
             width:100%; padding:11px 14px;
-            border:1.5px solid #e5e7eb; border-radius:9px;
-            font-size:14px; color:#111827;
+            border:1.5px solid var(--border-soft); border-radius:9px;
+            font-size:14px; color:var(--ink);
             transition:border-color .2s, box-shadow .2s;
         }
         input:focus, select:focus {
-            outline:none; border-color:#2563eb;
+            outline:none; border-color:var(--brass);
             box-shadow:0 0 0 3px rgba(37,99,235,0.1);
         }
-        input:disabled { background:#f9fafb; color:#9ca3af; cursor:not-allowed; }
+        input:disabled { background:var(--surface-muted); color:var(--text-faint); cursor:not-allowed; }
 
         .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 
         /* BUTTONS */
         .btn-save {
-            background:#2563eb; color:white; border:none;
+            background:var(--brass); color:white; border:none;
             padding:11px 24px; border-radius:9px; cursor:pointer;
             font-size:14px; font-weight:600; transition:.2s;
         }
-        .btn-save:hover:not(:disabled) { background:#1d4ed8; }
-        .btn-save:disabled { background:#93c5fd; cursor:not-allowed; }
+        .btn-save:hover:not(:disabled) { background:var(--brass-dark); }
+        .btn-save:disabled { background:var(--brass-tint); cursor:not-allowed; }
 
         .btn-danger {
-            background:#fee2e2; color:#dc2626; border:none;
+            background:var(--danger-tint); color:var(--danger); border:none;
             padding:8px 16px; border-radius:8px; cursor:pointer;
             font-size:13px; font-weight:600;
         }
-        .btn-danger:hover { background:#fecaca; }
+        .btn-danger:hover { background:var(--danger-tint); }
 
         /* TOGGLE SWITCHES */
         .toggle-row {
             display:flex; justify-content:space-between;
             align-items:center; padding:14px 0;
-            border-bottom:1px solid #f3f4f6;
+            border-bottom:1px solid var(--surface-muted);
         }
         .toggle-row:last-child { border-bottom:none; padding-bottom:0; }
-        .toggle-label { font-size:14px; color:#374151; font-weight:500; }
-        .toggle-desc  { font-size:12px; color:#9ca3af; margin-top:2px; }
+        .toggle-label { font-size:14px; color:var(--text); font-weight:500; }
+        .toggle-desc  { font-size:12px; color:var(--text-faint); margin-top:2px; }
 
         .toggle-switch { position:relative; width:46px; height:26px; }
         .toggle-switch input { opacity:0; width:0; height:0; }
         .toggle-slider {
-            position:absolute; inset:0; background:#d1d5db;
+            position:absolute; inset:0; background:var(--border);
             border-radius:99px; cursor:pointer; transition:.3s;
         }
         .toggle-slider:before {
@@ -150,25 +155,25 @@
             width:20px; height:20px; left:3px; top:3px;
             background:white; border-radius:50%; transition:.3s;
         }
-        .toggle-switch input:checked + .toggle-slider { background:#2563eb; }
+        .toggle-switch input:checked + .toggle-slider { background:var(--brass); }
         .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
 
         /* ROLE TABLE */
         .role-table { width:100%; border-collapse:collapse; }
         .role-table th, .role-table td {
-            padding:12px 14px; border-bottom:1px solid #f3f4f6;
+            padding:12px 14px; border-bottom:1px solid var(--surface-muted);
             text-align:left; font-size:14px;
         }
-        .role-table th { font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; background:#f9fafb; }
-        .role-table tr:hover td { background:#f9fafb; }
+        .role-table th { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; background:var(--surface-muted); }
+        .role-table tr:hover td { background:var(--surface-muted); }
 
         .badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600; }
-        .badge-admin    { background:#f3e8ff; color:#7c3aed; }
-        .badge-manager  { background:#dbeafe; color:#1d4ed8; }
-        .badge-employee { background:#dcfce7; color:#15803d; }
+        .badge-admin    { background:var(--purple-tint); color:var(--purple); }
+        .badge-manager  { background:var(--brass-tint); color:var(--brass-dark); }
+        .badge-employee { background:var(--success-tint); color:color-mix(in srgb, var(--success) 78%, black); }
 
         .role-select {
-            padding:6px 10px; border:1px solid #d1d5db;
+            padding:6px 10px; border:1px solid var(--border);
             border-radius:7px; font-size:13px; cursor:pointer;
         }
 
@@ -178,13 +183,13 @@
             font-size:13px; margin-bottom:16px; display:none;
         }
         .alert.show { display:block; }
-        .alert-success { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-        .alert-error   { background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; }
+        .alert-success { background:var(--success-tint); color:color-mix(in srgb, var(--success) 78%, black); border:1px solid color-mix(in srgb, var(--success) 50%, white); }
+        .alert-error   { background:var(--danger-tint); color:var(--danger); border:1px solid color-mix(in srgb, var(--danger) 50%, white); }
 
         /* USER AVATAR */
         .avatar {
             width:72px; height:72px; border-radius:50%;
-            background:#2563eb; color:white; font-size:26px;
+            background:var(--brass); color:white; font-size:26px;
             font-weight:700; display:flex; align-items:center;
             justify-content:center; margin-bottom:16px;
         }
@@ -198,7 +203,7 @@
         /* TOAST */
         .toast {
             position:fixed; bottom:30px; right:30px;
-            background:#111827; color:white; padding:14px 22px;
+            background:var(--ink); color:white; padding:14px 22px;
             border-radius:10px; font-size:14px; opacity:0;
             transform:translateY(10px); transition:all .3s; z-index:9999;
         }
@@ -399,7 +404,7 @@
                         </tr>
                     </thead>
                     <tbody id="roleTable">
-                        <tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">Loading users...</td></tr>
+                        <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-faint);">Loading users...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -422,22 +427,22 @@
             <a href="departments.html">Departments</a>
             <a href="project-groups.html">Project Groups</a>
             <a href="reports.html">Reports</a>
-            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="settings.html" style="background:var(--brass);">Settings</a>
             <a href="#" onclick="logout()">Logout</a>`,
         manager: `
             <a href="manager-dashboard.html">Dashboard</a>
             <a href="reports.html">Reports</a>
-            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="settings.html" style="background:var(--brass);">Settings</a>
             <a href="#" onclick="logout()">Logout</a>`,
         employee: `
             <a href="employee-dashboard.html">Dashboard</a>
             <a href="history.html">History</a>
-            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="settings.html" style="background:var(--brass);">Settings</a>
             <a href="#" onclick="logout()">Logout</a>`,
         intern: `
             <a href="intern-dashboard.html">Dashboard</a>
             <a href="history.html">History</a>
-            <a href="settings.html" style="background:#2563eb;">Settings</a>
+            <a href="settings.html" style="background:var(--brass);">Settings</a>
             <a href="#" onclick="logout()">Logout</a>`
     };
     document.getElementById("appNav").innerHTML = navLinks[userRole] || navLinks.employee;
@@ -490,7 +495,7 @@
             document.getElementById("avatarInitial").textContent = data.name.charAt(0).toUpperCase();
 
             // Role pill colour
-            const pillColors = { admin:"background:#f3e8ff;color:#7c3aed;", manager:"background:#dbeafe;color:#1d4ed8;", employee:"background:#dcfce7;color:#15803d;" };
+            const pillColors = { admin:"background:var(--purple-tint);color:var(--purple);", manager:"background:var(--brass-tint);color:var(--brass-dark);", employee:"background:var(--success-tint);color:color-mix(in srgb, var(--success) 78%, black);" };
             const pill = document.getElementById("rolePill");
             pill.textContent = data.role.charAt(0).toUpperCase() + data.role.slice(1);
             pill.style.cssText = pillColors[data.role] || "";
@@ -616,7 +621,7 @@
     function renderRoleTable(users) {
         if (!users.length) {
             document.getElementById("roleTable").innerHTML =
-                `<tr><td colspan="5" style="text-align:center;padding:20px;color:#9ca3af;">No users found.</td></tr>`;
+                `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-faint);">No users found.</td></tr>`;
             return;
         }
 
@@ -630,7 +635,7 @@
                 <td><span class="badge ${badgeClass[u.role] || ''}">${u.role}</span></td>
                 <td>
                     ${parseInt(u.id) === parseInt(userId)
-                        ? `<span style="font-size:13px;color:#9ca3af;">You</span>`
+                        ? `<span style="font-size:13px;color:var(--text-faint);">You</span>`
                         : `<select class="role-select" onchange="updateUserRole(${u.id}, this.value, this)">
                                 <option value="employee" ${u.role==='employee'?'selected':''}>Employee</option>
                                 <option value="manager"  ${u.role==='manager' ?'selected':''}>Manager</option>
@@ -686,7 +691,7 @@
 <!-- PWA: installable app support -->
 <button id="pwaInstallBtn" onclick="pwaInstallApp()"
         style="display:none;position:fixed;bottom:24px;right:24px;z-index:9998;
-               background:#2563eb;color:#fff;border:none;padding:12px 20px;
+               background:var(--brass);color:#fff;border:none;padding:12px 20px;
                border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
                box-shadow:0 4px 14px rgba(0,0,0,.2);">
     ⬇ Install App
