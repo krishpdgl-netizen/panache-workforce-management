@@ -3,7 +3,7 @@
 <head>
     <link rel="icon" type="image/png" href="static/favicon.png">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#14161B">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,13 +22,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="panache-theme.css">
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-        body { display:flex; background:#f4f6f9; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: var(--font-body); }
+        body { display:flex; background:var(--paper); }
 
         /* SIDEBAR */
         .sidebar {
-            width:260px; height:100vh; background:#111827;
+            width:260px; height:100vh; background:var(--ink);
             color:white; position:fixed; padding:20px;
             display:flex; flex-direction:column;
         }
@@ -37,7 +42,7 @@
             display:block; color:white; text-decoration:none;
             padding:12px; margin-bottom:8px; border-radius:8px; transition:.3s;
         }
-        .menu a:hover, .menu a.active { background:#2563eb; }
+        .menu a:hover, .menu a.active { background:var(--brass); }
 
         /* MAIN */
         .main { margin-left:260px; width:100%; padding:25px; }
@@ -45,13 +50,13 @@
             display:flex; justify-content:space-between;
             align-items:center; margin-bottom:25px;
         }
-        .header h1 { color:#111827; }
+        .header h1 { color:var(--ink); }
         .profile { background:white; padding:10px 20px; border-radius:10px; font-weight:bold; }
         .logout-btn {
-            background:#dc2626; color:white; border:none;
+            background:var(--danger); color:white; border:none;
             padding:10px 20px; border-radius:8px; cursor:pointer;
         }
-        .logout-btn:hover { background:#b91c1c; }
+        .logout-btn:hover { background:color-mix(in srgb, var(--danger) 80%, black); }
 
         /* CARDS */
         .cards {
@@ -62,8 +67,8 @@
             background:white; padding:20px; border-radius:15px;
             box-shadow:0 2px 10px rgba(0,0,0,.08);
         }
-        .card h2 { color:#2563eb; font-size:30px; margin-bottom:6px; }
-        .card p { color:#6b7280; font-size:14px; }
+        .card h2 { color:var(--brass); font-size:30px; margin-bottom:6px; }
+        .card p { color:var(--text-muted); font-size:14px; }
 
         /* SECTION */
         .section {
@@ -74,57 +79,57 @@
             display:flex; justify-content:space-between;
             align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;
         }
-        .section-header h2 { color:#111827; }
+        .section-header h2 { color:var(--ink); }
 
-        label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px; }
+        label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
         input[type=text], textarea, select, input[type=file] {
-            width:100%; padding:10px 12px; border:1px solid #d1d5db;
+            width:100%; padding:10px 12px; border:1px solid var(--border);
             border-radius:8px; font-size:14px; font-family:inherit;
             margin-bottom:16px; background:#fff;
         }
-        input[type=text]:focus, textarea:focus { outline:none; border-color:#2563eb; }
+        input[type=text]:focus, textarea:focus { outline:none; border-color:var(--brass); }
         textarea { min-height:160px; resize:vertical; line-height:1.6; }
 
         .btn-primary {
-            background:#2563eb; color:white; border:none;
+            background:var(--brass); color:white; border:none;
             padding:11px 20px; border-radius:8px; cursor:pointer;
             font-size:14px; font-weight:600;
         }
-        .btn-primary:hover { background:#1d4ed8; }
-        .btn-primary:disabled { background:#93c5fd; cursor:not-allowed; }
+        .btn-primary:hover { background:var(--brass-dark); }
+        .btn-primary:disabled { background:var(--brass-tint); cursor:not-allowed; }
         .btn-secondary {
-            background:#f3f4f6; color:#374151; border:none;
+            background:var(--surface-muted); color:var(--text); border:none;
             padding:10px 18px; border-radius:8px; cursor:pointer;
             font-size:14px; font-weight:600;
         }
-        .btn-secondary:hover { background:#e5e7eb; }
+        .btn-secondary:hover { background:var(--border-soft); }
         .btn-outline {
-            background:white; color:#2563eb; border:1.5px solid #2563eb;
+            background:white; color:var(--brass); border:1.5px solid var(--brass);
             padding:9px 16px; border-radius:8px; cursor:pointer;
             font-size:13px; font-weight:600;
         }
-        .btn-outline:hover { background:#eff6ff; }
+        .btn-outline:hover { background:var(--brass-tint); }
 
         .source-toggle { display:flex; gap:10px; margin-bottom:16px; }
         .source-toggle button {
-            flex:1; padding:10px; border-radius:8px; border:1.5px solid #d1d5db;
-            background:#fff; color:#374151; font-weight:600; font-size:13.5px; cursor:pointer;
+            flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--border);
+            background:#fff; color:var(--text); font-weight:600; font-size:13.5px; cursor:pointer;
         }
-        .source-toggle button.active { border-color:#2563eb; background:#eff6ff; color:#2563eb; }
+        .source-toggle button.active { border-color:var(--brass); background:var(--brass-tint); color:var(--brass); }
 
         .search-bar { display:flex; gap:10px; margin-bottom:16px; }
         .search-bar input { flex:1; margin-bottom:0; }
 
         table { width:100%; border-collapse:collapse; }
-        th, td { padding:12px; border-bottom:1px solid #eee; text-align:left; font-size:14px; }
-        th { background:#f3f4f6; font-size:12px; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
-        tr:hover td { background:#f9fafb; }
-        .empty-row td { text-align:center; color:#9ca3af; padding:30px; }
+        th, td { padding:12px; border-bottom:1px solid var(--border-soft); text-align:left; font-size:14px; }
+        th { background:var(--surface-muted); font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; }
+        tr:hover td { background:var(--surface-muted); }
+        .empty-row td { text-align:center; color:var(--text-faint); padding:30px; }
 
         /* PREVIEW */
         #previewWrap { display:none; margin-top:10px; }
         #pdfPreviewFrame {
-            width:100%; height:640px; border:1px solid #d1d5db; border-radius:10px; background:#e5e7eb;
+            width:100%; height:640px; border:1px solid var(--border); border-radius:10px; background:var(--border-soft);
         }
         .preview-actions { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
@@ -135,28 +140,28 @@
             font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.2);
             display:none;
         }
-        #toast.success { background:#16a34a; }
-        #toast.error { background:#dc2626; }
+        #toast.success { background:var(--success); }
+        #toast.error { background:var(--danger); }
 
-        .hint { font-size:12.5px; color:#9ca3af; margin-top:-10px; margin-bottom:16px; }
+        .hint { font-size:12.5px; color:var(--text-faint); margin-top:-10px; margin-bottom:16px; }
 
         /* GROUPED LOG ROWS */
         .group-row { cursor:pointer; }
-        .group-row:hover td { background:#f3f4f6 !important; }
+        .group-row:hover td { background:var(--surface-muted) !important; }
         .toggle-arrow {
             display:inline-block; width:16px; transition:transform .15s ease;
-            color:#2563eb; font-size:11px;
+            color:var(--brass); font-size:11px;
         }
         .toggle-arrow.open { transform:rotate(90deg); }
         .version-badge {
-            display:inline-block; background:#eff6ff; color:#2563eb;
+            display:inline-block; background:var(--brass-tint); color:var(--brass);
             font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:8px;
         }
-        .child-row td { background:#fafbfc; font-size:13px; }
+        .child-row td { background:var(--surface-muted); font-size:13px; }
         .child-row .v-label {
-            color:#2563eb; font-weight:700; font-size:12px; padding-left:24px;
+            color:var(--brass); font-weight:700; font-size:12px; padding-left:24px;
         }
-        .child-row td:first-child { border-left:3px solid #dbeafe; }
+        .child-row td:first-child { border-left:3px solid var(--brass-tint); }
     </style>
 </head>
 <body>
@@ -192,13 +197,13 @@
             <h2>New Print Job</h2>
         </div>
 
-        <label for="printedFor">Purpose <span style="color:#dc2626;">*</span></label>
+        <label for="printedFor">Purpose <span style="color:var(--danger);">*</span></label>
         <input type="text" id="printedFor" placeholder="e.g. Client submission, Internal record...">
 
-        <label for="givenTo">Given To <span style="color:#dc2626;">*</span></label>
+        <label for="givenTo">Given To <span style="color:var(--danger);">*</span></label>
         <input type="text" id="givenTo" placeholder="e.g. Rahul Sharma, Accounts Dept...">
 
-        <label for="docTitle">Document Title <span style="color:#dc2626;">*</span></label>
+        <label for="docTitle">Document Title <span style="color:var(--danger);">*</span></label>
         <input type="text" id="docTitle" placeholder="e.g. Office Notice — Diwali Holidays">
 
         <label>Document Source</label>
@@ -810,7 +815,7 @@
 
             const childRows = isOpen ? items.map((r, i) => `
                 <tr class="child-row">
-                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(${serialOf(r.id)})</span></td>
+                    <td class="v-label">v${i + 1} <span style="color:var(--text-faint);font-weight:400;">(${serialOf(r.id)})</span></td>
                     <td></td>
                     <td>${escapeHtml(r.printed_for)}</td>
                     <td>${escapeHtml(r.given_to)}</td>
@@ -875,7 +880,7 @@
         body.innerHTML = groups.map(items => {
             const latest = items[items.length - 1];
             const titleDisplay = escapeHtml(latest.document_title || "Untitled");
-            const userDisplay = `${escapeHtml(latest.user_name)} <span style="color:#9ca3af;">(ID ${latest.user_id})</span>`;
+            const userDisplay = `${escapeHtml(latest.user_name)} <span style="color:var(--text-faint);">(ID ${latest.user_id})</span>`;
 
             if (items.length === 1) {
                 const r = items[0];
@@ -904,7 +909,7 @@
 
             const childRows = isOpen ? items.map((r, i) => `
                 <tr class="child-row">
-                    <td class="v-label">v${i + 1} <span style="color:#9ca3af;font-weight:400;">(${serialOf(r.id)})</span></td>
+                    <td class="v-label">v${i + 1} <span style="color:var(--text-faint);font-weight:400;">(${serialOf(r.id)})</span></td>
                     <td></td>
                     <td></td>
                     <td>${escapeHtml(r.printed_for)}</td>
