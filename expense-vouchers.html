@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Vouchers | Panache</title>
+<link rel="icon" type="image/png" href="static/favicon.png">
+<script>
+    const role = localStorage.getItem("userRole");
+    if (!role) { window.location.href = "index.html"; }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --ink:          #14161B;
+    --paper:        #F5F3EE;
+    --surface:      #FFFFFF;
+    --surface-muted:#FBFAF6;
+    --border:       #E8E3D6;
+    --border-soft:  #F0ECE1;
+    --text:         #1C1E24;
+    --text-muted:   #6B6E76;
+    --text-faint:   #9A9CA3;
+    --brass:        #C79A45;
+    --brass-dark:   #8F6A2C;
+    --brass-tint:   #FBF1DC;
+    --teal:         #1F6F5C;
+    --teal-tint:    #E3F1EC;
+    --success:      #2E9563;
+    --success-tint: #E5F5EC;
+    --warning:      #C9852B;
+    --warning-tint: #FBF0DD;
+    --danger:       #D14343;
+    --danger-tint:  #FBE9E9;
+    --radius-sm:    9px;
+    --radius-md:    14px;
+    --radius-lg:    20px;
+    --shadow-sm:    0 1px 2px rgba(20,22,27,.05), 0 1px 3px rgba(20,22,27,.06);
+    --shadow-md:    0 6px 20px rgba(20,22,27,.07), 0 2px 6px rgba(20,22,27,.05);
+    --shadow-lg:    0 20px 48px rgba(20,22,27,.16);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-font-smoothing:antialiased; }
+body { background:var(--paper); font-family:var(--font-body); color:var(--text); }
+a { color:inherit; text-decoration:none; }
+button { font-family:var(--font-body); cursor:pointer; }
+::-webkit-scrollbar { width:9px; height:9px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#D8D3C4; border-radius:99px; }
+
+.topbar {
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px; background:var(--ink); color:#fff;
+}
+.topbar .brand { display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-size:19px; }
+.topbar .brand .mark { color:var(--brass); font-size:20px; }
+.topbar .back { font-size:13px; color:#D8D3C4; padding:8px 14px; border:1px solid rgba(255,255,255,.18); border-radius:99px; transition:.15s; }
+.topbar .back:hover { background:rgba(255,255,255,.08); color:#fff; }
+.topbar .who { font-size:12.5px; color:#B9B6AC; }
+
+.wrap { max-width:1180px; margin:0 auto; padding:28px 24px 80px; }
+.page-head { margin-bottom:22px; }
+.page-head h1 { font-family:var(--font-display); font-size:30px; font-weight:600; }
+.page-head p { color:var(--text-muted); font-size:14px; margin-top:4px; }
+
+.stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 18px; box-shadow:var(--shadow-sm); }
+.stat-card .lbl { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+.stat-card .val { font-family:var(--font-display); font-size:24px; font-weight:600; }
+.stat-card .sub { font-size:12px; color:var(--text-faint); margin-top:2px; }
+
+.tabs { display:flex; gap:6px; margin-bottom:22px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.tab-btn { padding:10px 18px; font-size:13.5px; font-weight:600; color:var(--text-muted); background:none; border:none; border-bottom:2px solid transparent; }
+.tab-btn.active { color:var(--brass-dark); border-bottom-color:var(--brass); }
+.tab-btn .count { display:inline-block; margin-left:6px; background:var(--danger); color:#fff; font-size:10.5px; padding:1px 6px; border-radius:99px; }
+
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:24px; }
+.card + .card { margin-top:18px; }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.field { display:flex; flex-direction:column; gap:6px; }
+.field.full { grid-column:1 / -1; }
+.field label { font-size:12.5px; font-weight:600; color:var(--text-muted); }
+.field input, .field select, .field textarea {
+    font-family:var(--font-body); font-size:14px; padding:10px 12px;
+    border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); color:var(--text);
+}
+.field textarea { resize:vertical; min-height:70px; }
+.field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--brass); background:#fff; }
+.hint { font-size:12px; color:var(--text-faint); }
+.warn-box { display:none; background:var(--warning-tint); border:1px solid var(--warning); color:var(--brass-dark); font-size:13px; padding:10px 14px; border-radius:var(--radius-sm); margin-top:4px; }
+.warn-box.show { display:block; }
+
+.btn-primary { background:var(--ink); color:#fff; border:none; padding:11px 22px; border-radius:99px; font-size:13.5px; font-weight:600; }
+.btn-primary:hover { filter:brightness(1.35); }
+.btn-primary:disabled { opacity:.6; cursor:default; }
+.btn-secondary { background:none; border:1px solid var(--border); color:var(--text); padding:10px 20px; border-radius:99px; font-size:13.5px; font-weight:600; }
+.btn-secondary:hover { background:var(--surface-muted); }
+.btn-approve { background:var(--success-tint); color:var(--success); border:1px solid var(--success); padding:7px 14px; border-radius:99px; font-size:12.5px; font-weight:700; }
+.btn-reject { background:var(--danger-tint); color:var(--danger); border:1px solid var(--danger); padding:7px 14px; border-radius:99px; font-size:12.5px; font-weight:700; }
+.btn-ghost { background:none; border:1px solid var(--border); color:var(--text-muted); padding:7px 14px; border-radius:99px; font-size:12.5px; font-weight:600; }
+.btn-ghost:hover { background:var(--surface-muted); }
+.actions-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+
+.v-list { display:flex; flex-direction:column; gap:12px; }
+.v-item { border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 18px; background:var(--surface-muted); }
+.v-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.v-no { font-size:12px; color:var(--text-faint); }
+.v-cat { font-family:var(--font-display); font-size:16px; font-weight:600; margin-top:2px; }
+.v-amt { font-family:var(--font-display); font-size:20px; font-weight:600; text-align:right; }
+.v-meta { font-size:12.5px; color:var(--text-muted); margin-top:4px; }
+.v-desc { font-size:13px; color:var(--text); margin-top:8px; }
+.bill-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.bill-links a { font-size:12px; padding:5px 10px; background:var(--brass-tint); color:var(--brass-dark); border-radius:99px; font-weight:600; }
+.bill-links a:hover { filter:brightness(0.95); }
+.flag-chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; margin-left:6px; background:var(--warning-tint); color:var(--warning); }
+
+.badge { display:inline-block; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:99px; }
+.badge-submitted { background:var(--warning-tint); color:var(--warning); }
+.badge-mgr { background:var(--teal-tint); color:var(--teal); }
+.badge-approved { background:var(--success-tint); color:var(--success); }
+.badge-rejected { background:var(--danger-tint); color:var(--danger); }
+.badge-paid { background:var(--ink); color:#fff; }
+
+.empty-state { text-align:center; padding:40px 20px; color:var(--text-faint); font-size:13.5px; }
+
+.limits-table { width:100%; border-collapse:collapse; }
+.limits-table th { text-align:left; font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--border); }
+.limits-table td { padding:8px 10px; border-bottom:1px solid var(--border-soft); font-size:13.5px; }
+.limits-table input { width:110px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(20,22,27,.55); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:var(--surface); border-radius:var(--radius-lg); padding:26px; width:420px; max-width:92vw; box-shadow:var(--shadow-lg); }
+.modal-title { font-family:var(--font-display); font-size:19px; font-weight:600; margin-bottom:14px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translate(-50%,10px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:99px; font-size:13.5px; opacity:0; pointer-events:none; transition:.25s; z-index:300; }
+.toast.show { opacity:1; transform:translate(-50%,0); }
+
+@media (max-width: 640px) {
+    .form-grid { grid-template-columns:1fr; }
+    .topbar { padding:14px 16px; }
+    .wrap { padding:20px 14px 60px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand"><span class="mark">✦</span> Panache — Expense Vouchers</div>
+    <div style="display:flex; align-items:center; gap:14px;">
+        <span class="who" id="whoLabel"></span>
+        <a class="back" id="backLink" href="employee-dashboard.html">← Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="wrap">
+    <div class="page-head">
+        <h1>Expense Reimbursement</h1>
+        <p>Submit a voucher with your bills attached, track approval status, and (for managers/admin) review and pay out claims.</p>
+    </div>
+
+    <div class="stats-row" id="statsRow" style="display:none;"></div>
+
+    <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="submit" onclick="switchTab('submit')">Submit Voucher</button>
+        <button class="tab-btn" data-tab="mine" onclick="switchTab('mine')">My Vouchers</button>
+        <button class="tab-btn" data-tab="team" onclick="switchTab('team')" id="teamTabBtn" style="display:none;">Team Approvals</button>
+        <button class="tab-btn" data-tab="finance" onclick="switchTab('finance')" id="financeTabBtn" style="display:none;">Finance &amp; Payments</button>
+        <button class="tab-btn" data-tab="limits" onclick="switchTab('limits')" id="limitsTabBtn" style="display:none;">Spend Limits</button>
+    </div>
+
+    <!-- SUBMIT -->
+    <section class="tab-panel active" id="tab-submit">
+        <div class="card">
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Scan a bill to auto-fill (optional)</label>
+                    <input type="file" id="scanInput" accept="image/*,.pdf" onchange="scanBill(this)">
+                    <span class="hint" id="scanHint">Upload a photo of the receipt and we'll try to fill in the details below.</span>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <select id="fCategory"></select>
+                </div>
+                <div class="field">
+                    <label>Expense Date</label>
+                    <input type="date" id="fDate">
+                </div>
+                <div class="field">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="fAmount" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="field">
+                    <label>Bills / Receipts</label>
+                    <input type="file" id="fFiles" multiple accept="image/*,.pdf">
+                </div>
+                <div class="field full">
+                    <label>Description</label>
+                    <textarea id="fDescription" placeholder="What was this expense for?"></textarea>
+                </div>
+                <div class="field full">
+                    <div class="warn-box" id="fWarnBox"></div>
+                </div>
+            </div>
+            <div class="actions-row">
+                <button class="btn-primary" id="submitBtn" onclick="submitVoucher()">Submit Voucher</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MY VOUCHERS -->
+    <section class="tab-panel" id="tab-mine">
+        <div class="card">
+            <div class="v-list" id="mineList"><div class="empty-state">Loading…</div></div>
+        </div>
+    </section>
+
+    <!-- TEAM APPROVALS (manager) -->
+    <section class="tab-panel" id="tab-team">
+        <div class="card">
+            <div class="v-list" id="teamList"><div class="empty-state">Loading…</div></div>
+        </div>
+    </section>
+
+    <!-- FINANCE & PAYMENTS (admin) -->
+    <section class="tab-panel" id="tab-finance">
+        <div class="card">
+            <h3 style="font-family:var(--font-display); font-size:17px; margin-bottom:12px;">Awaiting Finance Approval</h3>
+            <div class="v-list" id="financeReviewList"><div class="empty-state">Loading…</div></div>
+        </div>
+        <div class="card">
+            <h3 style="font-family:var(--font-display); font-size:17px; margin-bottom:12px;">Approved — Awaiting Payment</h3>
+            <div class="v-list" id="financePayList"><div class="empty-state">Loading…</div></div>
+        </div>
+    </section>
+
+    <!-- SPEND LIMITS (admin) -->
+    <section class="tab-panel" id="tab-limits">
+        <div class="card">
+            <table class="limits-table">
+                <thead><tr><th>Category</th><th>Daily Limit (₹)</th><th>Monthly Limit (₹)</th><th></th></tr></thead>
+                <tbody id="limitsBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="reviewModal">
+    <div class="modal-box">
+        <div class="modal-title" id="reviewModalTitle">Review Voucher</div>
+        <div class="field" style="margin-bottom:12px;">
+            <label>Approved Amount (₹)</label>
+            <input type="number" id="reviewAmount" step="0.01">
+        </div>
+        <div class="field">
+            <label>Remark (required if rejecting)</label>
+            <textarea id="reviewRemark" placeholder="Reason / comment…"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeReviewModal()">Cancel</button>
+            <button class="btn-reject" onclick="doReview('reject')">Reject</button>
+            <button class="btn-approve" onclick="doReview('approve')">Approve</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="payModal">
+    <div class="modal-box">
+        <div class="modal-title">Record Payment</div>
+        <div class="field" style="margin-bottom:12px;">
+            <label>Payment Date</label>
+            <input type="date" id="payDate">
+        </div>
+        <div class="field">
+            <label>Payment Reference (UTR / cheque no.)</label>
+            <input type="text" id="payRef" placeholder="Optional">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closePayModal()">Cancel</button>
+            <button class="btn-primary" onclick="doMarkPaid()">Mark Paid</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const BASE = "https://backend-n5lk.onrender.com";
+const CATEGORIES = ["Travel","Fuel","Accommodation","Food","Client Entertainment","Office Supplies","Communication","Training","Other"];
+
+const userId   = localStorage.getItem("userId");
+const userName = localStorage.getItem("userName") || "";
+const userRole = localStorage.getItem("userRole") || "employee";
+
+let reviewCtx = null; // { voucherId, level }
+let payCtx    = null; // { voucherId }
+
+function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+function fmtMoney(n) {
+    return "₹" + Number(n || 0).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function badge(status) {
+    const map = {
+        "Submitted": ["badge-submitted", "Awaiting Manager"],
+        "Manager Approved": ["badge-mgr", "Awaiting Finance"],
+        "Approved": ["badge-approved", "Approved — Unpaid"],
+        "Rejected": ["badge-rejected", "Rejected"],
+        "Paid": ["badge-paid", "Paid"],
+    };
+    const [cls, label] = map[status] || ["badge-submitted", status];
+    return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function init() {
+    document.getElementById("whoLabel").textContent = `${userName} · ${userRole.charAt(0).toUpperCase()+userRole.slice(1)}`;
+    document.getElementById("backLink").href = userRole === "manager" ? "manager-dashboard.html"
+        : (userRole === "admin" ? "admin-dashboard.html" : "employee-dashboard.html");
+
+    const sel = document.getElementById("fCategory");
+    sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("");
+    document.getElementById("fDate").valueAsDate = new Date();
+
+    if (userRole === "manager" || userRole === "admin") {
+        document.getElementById("teamTabBtn").style.display = "inline-block";
+        document.getElementById("statsRow").style.display = "grid";
+    }
+    if (userRole === "admin") {
+        document.getElementById("financeTabBtn").style.display = "inline-block";
+        document.getElementById("limitsTabBtn").style.display = "inline-block";
+    }
+
+    loadMyVouchers();
+    if (userRole === "manager" || userRole === "admin") loadStats();
+}
+
+function switchTab(name) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById("tab-" + name).classList.add("active");
+    if (name === "mine") loadMyVouchers();
+    if (name === "team") loadTeamApprovals();
+    if (name === "finance") loadFinanceQueues();
+    if (name === "limits") loadLimits();
+}
+
+/* ---------------- SUBMIT ---------------- */
+async function scanBill(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById("scanHint").textContent = "Reading the bill…";
+    try {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch(`${BASE}/expenses/extract-bill`, { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.success && data.data) {
+            const d = data.data;
+            if (d.category && CATEGORIES.includes(d.category)) document.getElementById("fCategory").value = d.category;
+            if (d.expense_date) document.getElementById("fDate").value = d.expense_date;
+            if (d.amount) document.getElementById("fAmount").value = d.amount;
+            if (d.description) document.getElementById("fDescription").value = d.description;
+            document.getElementById("scanHint").textContent = "Filled from the bill — please double-check before submitting.";
+        } else {
+            document.getElementById("scanHint").textContent = data.message || "Couldn't read that bill — please fill in manually.";
+        }
+    } catch (e) {
+        document.getElementById("scanHint").textContent = "Couldn't read that bill — please fill in manually.";
+    }
+}
+
+async function submitVoucher() {
+    const category = document.getElementById("fCategory").value;
+    const expense_date = document.getElementById("fDate").value;
+    const amount = document.getElementById("fAmount").value;
+    const description = document.getElementById("fDescription").value;
+    const files = document.getElementById("fFiles").files;
+
+    if (!category || !expense_date || !amount) { toast("Please fill category, date and amount."); return; }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true; btn.textContent = "Submitting…";
+
+    const fd = new FormData();
+    fd.append("user_id", userId);
+    fd.append("employee_name", userName);
+    fd.append("category", category);
+    fd.append("expense_date", expense_date);
+    fd.append("amount", amount);
+    fd.append("description", description);
+    for (const f of files) fd.append("files", f);
+
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers/submit`, { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.success) {
+            const warnBox = document.getElementById("fWarnBox");
+            let warnings = [];
+            if (data.is_duplicate_flag) warnings.push("This looks similar to a voucher you already submitted — it'll be flagged for review.");
+            if (data.over_limit_flag) warnings.push("This amount is above the policy limit for this category — it'll be flagged for review.");
+            if (warnings.length) { warnBox.textContent = warnings.join(" "); warnBox.classList.add("show"); }
+            else warnBox.classList.remove("show");
+
+            toast(`Voucher ${data.voucher_no} submitted.`);
+            document.getElementById("fAmount").value = "";
+            document.getElementById("fDescription").value = "";
+            document.getElementById("fFiles").value = "";
+            document.getElementById("scanInput").value = "";
+            document.getElementById("scanHint").textContent = "Upload a photo of the receipt and we'll try to fill in the details below.";
+            switchTab("mine");
+        } else {
+            toast(data.message || "Couldn't submit the voucher.");
+        }
+    } catch (e) {
+        toast("Network error — please try again.");
+    } finally {
+        btn.disabled = false; btn.textContent = "Submit Voucher";
+    }
+}
+
+/* ---------------- MY VOUCHERS ---------------- */
+async function loadMyVouchers() {
+    const box = document.getElementById("mineList");
+    box.innerHTML = `<div class="empty-state">Loading…</div>`;
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers?role=employee&user_id=${userId}`);
+        const rows = await res.json();
+        if (!rows.length) { box.innerHTML = `<div class="empty-state">No vouchers yet — submit your first one above.</div>`; return; }
+        box.innerHTML = rows.map(v => voucherCard(v, "mine")).join("");
+    } catch (e) {
+        box.innerHTML = `<div class="empty-state">Couldn't load your vouchers.</div>`;
+    }
+}
+
+function voucherCard(v, context) {
+    const bills = (v.bills || []).map(b => `<a href="${BASE}${b.file_url}" target="_blank">📎 ${b.file_name}</a>`).join("");
+    const flags = (v.is_duplicate_flag ? `<span class="flag-chip">Possible duplicate</span>` : "") +
+                  (v.over_limit_flag ? `<span class="flag-chip">Over limit</span>` : "");
+    let extra = "";
+
+    if (context === "mine" && v.status === "Rejected") {
+        extra = `
+        <div class="actions-row">
+            <button class="btn-ghost" onclick="resubmitVoucher(${v.id})">Resubmit</button>
+        </div>
+        <div class="hint" style="margin-top:6px;">Reason: ${v.rejection_reason || "—"}</div>`;
+    }
+    if (context === "team") {
+        extra = `
+        <div class="actions-row">
+            <button class="btn-reject" onclick="openReviewModal(${v.id}, 'manager', ${v.amount})">Reject</button>
+            <button class="btn-approve" onclick="openReviewModal(${v.id}, 'manager', ${v.amount})">Review &amp; Approve</button>
+        </div>`;
+    }
+    if (context === "finance-review") {
+        extra = `
+        <div class="actions-row">
+            <button class="btn-reject" onclick="openReviewModal(${v.id}, 'finance', ${v.approved_amount || v.amount})">Reject</button>
+            <button class="btn-approve" onclick="openReviewModal(${v.id}, 'finance', ${v.approved_amount || v.amount})">Review &amp; Approve</button>
+        </div>`;
+    }
+    if (context === "finance-pay") {
+        extra = `
+        <div class="actions-row">
+            <button class="btn-primary" onclick="openPayModal(${v.id})">Mark Paid</button>
+        </div>`;
+    }
+
+    return `
+    <div class="v-item">
+        <div class="v-top">
+            <div>
+                <div class="v-no">${v.voucher_no}${flags}</div>
+                <div class="v-cat">${v.category}${context !== "mine" ? " — " + v.employee_name : ""}</div>
+                <div class="v-meta">${v.expense_date} &nbsp;·&nbsp; ${badge(v.status)}</div>
+            </div>
+            <div class="v-amt">${fmtMoney(v.approved_amount ?? v.amount)}</div>
+        </div>
+        ${v.description ? `<div class="v-desc">${v.description}</div>` : ""}
+        ${bills ? `<div class="bill-links">${bills}</div>` : ""}
+        ${extra}
+    </div>`;
+}
+
+async function resubmitVoucher(id) {
+    if (!confirm("Resubmit this voucher for approval as-is? You can edit amounts on the form before resubmitting from an updated flow if needed.")) return;
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers/${id}/resubmit`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ user_id: Number(userId) })
+        });
+        const data = await res.json();
+        if (data.success) { toast("Voucher resubmitted."); loadMyVouchers(); }
+        else toast(data.message || "Couldn't resubmit.");
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- TEAM APPROVALS (manager) ---------------- */
+async function loadTeamApprovals() {
+    const box = document.getElementById("teamList");
+    box.innerHTML = `<div class="empty-state">Loading…</div>`;
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers?role=manager&manager_id=${userId}&status=Submitted`);
+        const rows = await res.json();
+        if (!rows.length) { box.innerHTML = `<div class="empty-state">No vouchers waiting on your review.</div>`; return; }
+        box.innerHTML = rows.map(v => voucherCard(v, "team")).join("");
+    } catch (e) { box.innerHTML = `<div class="empty-state">Couldn't load approvals.</div>`; }
+}
+
+/* ---------------- FINANCE & PAYMENTS (admin) ---------------- */
+async function loadFinanceQueues() {
+    const reviewBox = document.getElementById("financeReviewList");
+    const payBox = document.getElementById("financePayList");
+    reviewBox.innerHTML = `<div class="empty-state">Loading…</div>`;
+    payBox.innerHTML = `<div class="empty-state">Loading…</div>`;
+    try {
+        const [mgrApproved, submittedNoMgr, approved] = await Promise.all([
+            fetch(`${BASE}/expenses/vouchers?role=admin&status=Manager Approved`).then(r => r.json()),
+            fetch(`${BASE}/expenses/vouchers?role=admin&status=Submitted`).then(r => r.json()),
+            fetch(`${BASE}/expenses/vouchers?role=admin&status=Approved`).then(r => r.json()),
+        ]);
+        const orphanSubmitted = submittedNoMgr.filter(v => !v.manager_id);
+        const reviewRows = [...mgrApproved, ...orphanSubmitted];
+        reviewBox.innerHTML = reviewRows.length
+            ? reviewRows.map(v => voucherCard(v, "finance-review")).join("")
+            : `<div class="empty-state">Nothing waiting on Finance right now.</div>`;
+        payBox.innerHTML = approved.length
+            ? approved.map(v => voucherCard(v, "finance-pay")).join("")
+            : `<div class="empty-state">No approved vouchers pending payout.</div>`;
+    } catch (e) {
+        reviewBox.innerHTML = `<div class="empty-state">Couldn't load the finance queue.</div>`;
+    }
+}
+
+/* ---------------- REVIEW MODAL (manager + finance share it) ---------------- */
+function openReviewModal(voucherId, level, amount) {
+    reviewCtx = { voucherId, level };
+    document.getElementById("reviewModalTitle").textContent = level === "manager" ? "Manager Review" : "Finance Review";
+    document.getElementById("reviewAmount").value = amount || "";
+    document.getElementById("reviewRemark").value = "";
+    document.getElementById("reviewModal").classList.add("active");
+}
+function closeReviewModal() { document.getElementById("reviewModal").classList.remove("active"); reviewCtx = null; }
+
+async function doReview(action) {
+    if (!reviewCtx) return;
+    const remark = document.getElementById("reviewRemark").value.trim();
+    const approved_amount = document.getElementById("reviewAmount").value;
+    if (action === "reject" && !remark) { toast("Please add a remark explaining the rejection."); return; }
+
+    const endpoint = reviewCtx.level === "manager" ? "manager-review" : "finance-review";
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers/${reviewCtx.voucherId}/${endpoint}`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({
+                role: userRole, actor_id: Number(userId), actor_name: userName,
+                action, remark: remark || null,
+                approved_amount: approved_amount ? Number(approved_amount) : null,
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            toast(action === "approve" ? "Voucher approved." : "Voucher rejected.");
+            closeReviewModal();
+            if (reviewCtx && reviewCtx.level === "manager") loadTeamApprovals(); else loadFinanceQueues();
+            loadStats();
+        } else {
+            toast(data.message || "Couldn't complete review.");
+        }
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- MARK PAID ---------------- */
+function openPayModal(voucherId) {
+    payCtx = { voucherId };
+    document.getElementById("payDate").valueAsDate = new Date();
+    document.getElementById("payRef").value = "";
+    document.getElementById("payModal").classList.add("active");
+}
+function closePayModal() { document.getElementById("payModal").classList.remove("active"); payCtx = null; }
+
+async function doMarkPaid() {
+    if (!payCtx) return;
+    const payment_date = document.getElementById("payDate").value;
+    const payment_reference = document.getElementById("payRef").value.trim();
+    if (!payment_date) { toast("Please pick a payment date."); return; }
+    try {
+        const res = await fetch(`${BASE}/expenses/vouchers/${payCtx.voucherId}/mark-paid`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ role: userRole, actor_id: Number(userId), actor_name: userName, payment_date, payment_reference: payment_reference || null })
+        });
+        const data = await res.json();
+        if (data.success) { toast("Payment recorded."); closePayModal(); loadFinanceQueues(); loadStats(); }
+        else toast(data.message || "Couldn't record payment.");
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- STATS ---------------- */
+async function loadStats() {
+    const box = document.getElementById("statsRow");
+    try {
+        const qs = userRole === "manager" ? `role=manager&manager_id=${userId}` : `role=admin`;
+        const res = await fetch(`${BASE}/expenses/stats?${qs}`);
+        const s = await res.json();
+        box.innerHTML = `
+            <div class="stat-card"><div class="lbl">Awaiting Manager</div><div class="val">${s.pending_manager_review.count}</div><div class="sub">${fmtMoney(s.pending_manager_review.amount)}</div></div>
+            <div class="stat-card"><div class="lbl">Awaiting Finance</div><div class="val">${s.pending_finance_review.count}</div><div class="sub">${fmtMoney(s.pending_finance_review.amount)}</div></div>
+            <div class="stat-card"><div class="lbl">Approved · Unpaid</div><div class="val">${s.approved_unpaid.count}</div><div class="sub">${fmtMoney(s.approved_unpaid.amount)}</div></div>
+            <div class="stat-card"><div class="lbl">Paid This Month</div><div class="val">${s.paid_this_month.count}</div><div class="sub">${fmtMoney(s.paid_this_month.amount)}</div></div>`;
+        document.getElementById("teamTabBtn").innerHTML = `Team Approvals ${s.pending_manager_review.count ? `<span class="count">${s.pending_manager_review.count}</span>` : ""}`;
+        if (userRole === "admin") {
+            document.getElementById("financeTabBtn").innerHTML = `Finance &amp; Payments ${s.pending_finance_review.count ? `<span class="count">${s.pending_finance_review.count}</span>` : ""}`;
+        }
+    } catch (e) { /* stats are non-critical */ }
+}
+
+/* ---------------- SPEND LIMITS (admin) ---------------- */
+async function loadLimits() {
+    const body = document.getElementById("limitsBody");
+    body.innerHTML = `<tr><td colspan="4">Loading…</td></tr>`;
+    try {
+        const res = await fetch(`${BASE}/expenses/category-limits`);
+        const rows = await res.json();
+        body.innerHTML = rows.map(r => `
+            <tr>
+                <td>${r.category}</td>
+                <td><input type="number" id="dl_${r.category}" value="${r.daily_limit ?? ''}" placeholder="No limit"></td>
+                <td><input type="number" id="ml_${r.category}" value="${r.monthly_limit ?? ''}" placeholder="No limit"></td>
+                <td><button class="btn-ghost" onclick="saveLimit('${r.category}')">Save</button></td>
+            </tr>`).join("");
+    } catch (e) { body.innerHTML = `<tr><td colspan="4">Couldn't load limits.</td></tr>`; }
+}
+
+async function saveLimit(category) {
+    const daily_limit = document.getElementById(`dl_${category}`).value;
+    const monthly_limit = document.getElementById(`ml_${category}`).value;
+    try {
+        const res = await fetch(`${BASE}/expenses/category-limits`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({
+                role: userRole, category,
+                daily_limit: daily_limit ? Number(daily_limit) : null,
+                monthly_limit: monthly_limit ? Number(monthly_limit) : null,
+            })
+        });
+        const data = await res.json();
+        toast(data.success ? `${category} limit saved.` : (data.message || "Couldn't save."));
+    } catch (e) { toast("Network error."); }
+}
+
+init();
+</script>
+</body>
+</html>
