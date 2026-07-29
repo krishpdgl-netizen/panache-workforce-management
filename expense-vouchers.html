@@ -741,7 +741,13 @@ async function loadTeamApprovals() {
     const box = document.getElementById("teamList");
     box.innerHTML = `<div class="empty-state">Loading…</div>`;
     try {
-        const res = await fetch(`${BASE}/expenses/vouchers?role=manager&manager_id=${userId}&status=Submitted`);
+        // Managers only see vouchers routed to them. Admins can see and act on
+        // every pending voucher company-wide (matches the "Awaiting Manager"
+        // stat card, which is always company-wide for admins).
+        const qs = userRole === "admin"
+            ? `role=admin&status=Submitted`
+            : `role=manager&manager_id=${userId}&status=Submitted`;
+        const res = await fetch(`${BASE}/expenses/vouchers?${qs}`);
         const rows = await res.json();
         if (!rows.length) { box.innerHTML = `<div class="empty-state">No vouchers waiting on your review.</div>`; return; }
         box.innerHTML = rows.map(v => voucherCard(v, "team")).join("");
