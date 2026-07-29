@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Chat | Panache</title>
+<link rel="icon" type="image/png" href="static/favicon.png">
+<script>
+    const role = localStorage.getItem("userRole");
+    if (!role) { window.location.href = "index.html"; }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,380..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --ink: #14161B; --ink-soft: #23262D; --ink-line: rgba(255,255,255,.09);
+    --paper: #F5F3EE; --surface: #FFFFFF; --surface-muted: #FBFAF6;
+    --border: #E8E3D6; --border-soft: #F0ECE1;
+    --text: #1C1E24; --text-muted: #6B6E76; --text-faint: #9A9CA3;
+    --brass: #C79A45; --brass-dark: #8F6A2C; --brass-tint: #FBF1DC;
+    --teal: #1F6F5C; --teal-tint: #E3F1EC;
+    --success: #2E9563; --success-tint: #E5F5EC;
+    --warning: #C9852B; --warning-tint: #FBF0DD;
+    --danger: #D14343; --danger-tint: #FBE9E9;
+    --radius-sm: 9px; --radius-md: 14px; --radius-lg: 20px;
+    --shadow-sm: 0 1px 2px rgba(20,22,27,.05), 0 1px 3px rgba(20,22,27,.06);
+    --shadow-md: 0 6px 20px rgba(20,22,27,.07), 0 2px 6px rgba(20,22,27,.05);
+    --shadow-lg: 0 20px 48px rgba(20,22,27,.16);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { display:flex; background:var(--paper); font-family:var(--font-body); color:var(--text); -webkit-font-smoothing:antialiased; }
+a { color:inherit; text-decoration:none; }
+button { font-family:var(--font-body); cursor:pointer; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#D8D3C4; border-radius:99px; }
+:focus-visible { outline:2px solid var(--brass-dark); outline-offset:2px; border-radius:4px; }
+
+/* SIDEBAR (mirrors dashboards) */
+.sidebar { width:264px; height:100vh; background:var(--ink); color:#fff; padding:22px 16px 18px; position:fixed; left:0; top:0; display:flex; flex-direction:column; z-index:999; transition:transform .3s ease; }
+.logo { display:flex; align-items:baseline; gap:8px; padding:4px 10px 22px; margin-bottom:6px; border-bottom:1px solid var(--ink-line); }
+.logo .mark { color:var(--brass); font-size:20px; line-height:1; transform:translateY(-1px); }
+.logo .word { font-family:var(--font-display); font-style:italic; font-weight:560; font-size:21px; letter-spacing:.2px; }
+.logo .sub { font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:1.6px; font-weight:600; }
+.menu { flex:1; overflow-y:auto; padding-top:6px; }
+.menu a { display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.78); padding:10px 12px; margin-bottom:3px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:500; transition:background .15s ease, color .15s ease; position:relative; }
+.menu > a svg, .menu-group-items a svg { flex-shrink:0; opacity:.85; }
+.menu a:hover { background:var(--ink-soft); color:#fff; }
+.menu a.active { background:rgba(199,154,69,.14); color:#fff; }
+.menu a.active::before { content:""; position:absolute; left:-16px; top:8px; bottom:8px; width:3px; border-radius:0 4px 4px 0; background:var(--brass); }
+.nav-dot { display:none; width:7px; height:7px; border-radius:50%; background:var(--danger); margin-left:auto; flex-shrink:0; box-shadow:0 0 0 3px rgba(209,67,67,.18); }
+.menu-group { margin-bottom:2px; }
+.menu-group-header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; cursor:pointer; border-radius:var(--radius-sm); color:rgba(255,255,255,.42); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; user-select:none; margin-top:10px; transition:background .15s ease, color .15s ease; }
+.menu-group-header:hover { background:var(--ink-soft); color:rgba(255,255,255,.7); }
+.menu-group-header .chev { transition:transform .2s ease; font-size:9px; opacity:.7; }
+.menu-group.open .menu-group-header .chev { transform:rotate(90deg); }
+.menu-group-items { display:none; padding-left:2px; }
+.menu-group.open .menu-group-items { display:block; }
+.menu-group-items a { padding:9px 12px 9px 14px; font-size:13px; }
+.sidebar-toggle { display:none; position:fixed; top:14px; left:14px; z-index:1001; width:42px; height:42px; border-radius:var(--radius-sm); border:none; background:var(--ink); color:#fff; font-size:18px; cursor:pointer; align-items:center; justify-content:center; box-shadow:var(--shadow-md); }
+.sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(15,16,20,.5); z-index:998; }
+.sidebar-backdrop.active { display:block; }
+
+/* MAIN */
+.main { margin-left:264px; width:calc(100% - 264px); height:100vh; display:flex; flex-direction:column; }
+.topbar { padding:16px 26px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; background:var(--surface); }
+.topbar h1 { font-family:var(--font-display); font-size:22px; font-weight:600; }
+.topbar .who { font-size:12.5px; color:var(--text-muted); }
+.view-tabs { display:flex; gap:6px; }
+.view-tab { padding:8px 16px; font-size:13px; font-weight:600; color:var(--text-muted); background:none; border:1px solid var(--border); border-radius:99px; }
+.view-tab.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+
+.view { flex:1; overflow:hidden; display:none; }
+.view.active { display:flex; }
+
+/* CHATS VIEW */
+#view-chats { }
+.chat-list-pane { width:300px; border-right:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; }
+.chat-list-head { padding:14px 16px; display:flex; gap:8px; border-bottom:1px solid var(--border-soft); }
+.chat-list-head button { flex:1; font-size:12px; font-weight:600; padding:8px; border-radius:99px; border:1px solid var(--border); background:var(--surface-muted); color:var(--text); }
+.chat-list-head button:hover { background:var(--brass-tint); border-color:var(--brass); color:var(--brass-dark); }
+.chat-list { flex:1; overflow-y:auto; }
+.chat-list-item { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border-soft); }
+.chat-list-item:hover { background:var(--surface-muted); }
+.chat-list-item.active { background:var(--brass-tint); }
+.chat-avatar { width:38px; height:38px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:15px; flex-shrink:0; }
+.chat-item-info { flex:1; min-width:0; }
+.chat-item-name { font-size:13.5px; font-weight:600; }
+.chat-item-preview { font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px; }
+.chat-unread { background:var(--danger); color:#fff; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:99px; flex-shrink:0; }
+.chat-empty { padding:30px 20px; text-align:center; color:var(--text-faint); font-size:13px; }
+
+.chat-thread-pane { flex:1; display:flex; flex-direction:column; background:var(--paper); }
+.thread-head { padding:14px 22px; border-bottom:1px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:space-between; }
+.thread-head .name { font-family:var(--font-display); font-size:17px; font-weight:600; }
+.thread-actions { display:flex; gap:8px; }
+.btn-call { background:var(--success-tint); color:var(--success); border:1px solid var(--success); padding:8px 16px; border-radius:99px; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.btn-call:hover { filter:brightness(0.97); }
+.btn-plain { background:none; border:1px solid var(--border); color:var(--text-muted); padding:8px 14px; border-radius:99px; font-size:12.5px; font-weight:600; }
+.thread-messages { flex:1; overflow-y:auto; padding:20px 26px; display:flex; flex-direction:column; gap:12px; }
+.msg-row { display:flex; flex-direction:column; max-width:60%; }
+.msg-row.mine { align-self:flex-end; align-items:flex-end; }
+.msg-sender { font-size:11px; color:var(--text-faint); margin-bottom:3px; padding:0 4px; }
+.msg-bubble { background:var(--surface); border:1px solid var(--border); padding:10px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; box-shadow:var(--shadow-sm); }
+.msg-row.mine .msg-bubble { background:var(--ink); color:#fff; border-color:var(--ink); }
+.msg-row.system { align-self:center; max-width:80%; }
+.msg-row.system .msg-bubble { background:var(--brass-tint); color:var(--brass-dark); font-size:12px; text-align:center; }
+.msg-file a { color:inherit; text-decoration:underline; font-weight:600; }
+.msg-time { font-size:10px; color:var(--text-faint); margin-top:3px; padding:0 4px; }
+.thread-input { padding:14px 22px; border-top:1px solid var(--border); background:var(--surface); display:flex; gap:10px; align-items:flex-end; }
+.thread-input textarea { flex:1; resize:none; border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 14px; font-size:13.5px; font-family:var(--font-body); max-height:100px; background:var(--surface-muted); }
+.thread-input textarea:focus { outline:none; border-color:var(--brass); background:#fff; }
+.icon-btn { width:40px; height:40px; border-radius:50%; border:1px solid var(--border); background:var(--surface-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-btn:hover { background:var(--brass-tint); }
+.no-channel { flex:1; display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:14px; flex-direction:column; gap:10px; }
+
+/* MEETINGS VIEW */
+#view-meetings { flex-direction:column; overflow-y:auto; padding:26px; gap:18px; }
+.meet-grid { display:grid; grid-template-columns:1.1fr 1fr; gap:18px; align-items:start; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:22px; }
+.card h3 { font-family:var(--font-display); font-size:17px; font-weight:600; margin-bottom:14px; }
+.meet-item { border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; background:var(--surface-muted); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.meet-item .t { font-weight:600; font-size:13.5px; }
+.meet-item .m { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.field label { font-size:12.5px; font-weight:600; color:var(--text-muted); }
+.field input, .field select, .field textarea { font-size:14px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); font-family:var(--font-body); }
+.field input:focus, .field select:focus { outline:none; border-color:var(--brass); background:#fff; }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.user-checks { max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px; background:var(--surface-muted); }
+.user-check-row { display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:13px; }
+
+.btn-primary { background:var(--ink); color:#fff; border:none; padding:11px 22px; border-radius:99px; font-size:13.5px; font-weight:600; }
+.btn-primary:hover { filter:brightness(1.35); }
+.btn-primary:disabled { opacity:.6; }
+.btn-secondary { background:none; border:1px solid var(--border); color:var(--text); padding:10px 20px; border-radius:99px; font-size:13.5px; font-weight:600; }
+
+/* MODALS */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(20,22,27,.55); z-index:400; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:var(--surface); border-radius:var(--radius-lg); padding:24px; width:380px; max-width:92vw; max-height:80vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal-title { font-family:var(--font-display); font-size:18px; font-weight:600; margin-bottom:14px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+.pick-row { display:flex; align-items:center; gap:10px; padding:9px 6px; border-radius:var(--radius-sm); }
+.pick-row:hover { background:var(--surface-muted); cursor:pointer; }
+
+.video-overlay { display:none; position:fixed; inset:0; background:#000; z-index:500; flex-direction:column; }
+.video-overlay.active { display:flex; }
+.video-bar { background:var(--ink); color:#fff; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+.video-bar button { background:var(--danger); color:#fff; border:none; padding:8px 18px; border-radius:99px; font-weight:700; font-size:12.5px; }
+.video-overlay iframe { flex:1; border:none; width:100%; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translate(-50%,10px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:99px; font-size:13.5px; opacity:0; pointer-events:none; transition:.25s; z-index:600; }
+.toast.show { opacity:1; transform:translate(-50%,0); }
+
+@media (max-width: 900px) {
+    .meet-grid { grid-template-columns:1fr; }
+}
+@media (max-width: 768px) {
+    .sidebar { transform:translateX(-100%); box-shadow:var(--shadow-lg); }
+    .sidebar.open { transform:translateX(0); }
+    .sidebar-toggle { display:flex; }
+    .main { margin-left:0; width:100%; }
+    .topbar { padding-left:64px; }
+    .chat-list-pane { position:absolute; left:0; top:0; bottom:0; width:100%; z-index:5; }
+    .chat-list-pane.hide-mobile { display:none; }
+}
+</style>
+</head>
+<body>
+
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleMobileSidebar()" aria-label="Open menu">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+
+<div class="sidebar" id="mainSidebar">
+    <div class="logo">
+        <span class="mark">✦</span>
+        <div><div class="word">Panache</div><div class="sub">Workforce&nbsp;OS</div></div>
+    </div>
+    <div class="menu" id="sidebarMenu"></div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div>
+            <h1>Team Chat &amp; Meetings</h1>
+            <div class="who" id="whoLabel"></div>
+        </div>
+        <div class="view-tabs">
+            <button class="view-tab active" data-view="chats" onclick="switchView('chats')">Chats</button>
+            <button class="view-tab" data-view="meetings" onclick="switchView('meetings')">Meetings</button>
+        </div>
+    </div>
+
+    <!-- CHATS -->
+    <div class="view active" id="view-chats" style="flex-direction:row;">
+        <div class="chat-list-pane" id="chatListPane">
+            <div class="chat-list-head">
+                <button onclick="openNewDmModal()">+ New Chat</button>
+                <button onclick="openNewGroupModal()">+ New Group</button>
+            </div>
+            <div class="chat-list" id="chatList"><div class="chat-empty">Loading…</div></div>
+        </div>
+        <div class="chat-thread-pane" id="chatThreadPane">
+            <div class="no-channel">
+                <div style="font-family:var(--font-display); font-size:19px;">Select a chat</div>
+                <div>or start a new conversation</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEETINGS -->
+    <div class="view" id="view-meetings">
+        <div class="meet-grid">
+            <div class="card">
+                <h3>Upcoming Meetings</h3>
+                <div id="upcomingList"><div class="chat-empty">Loading…</div></div>
+                <button class="btn-secondary" style="margin-top:6px;" onclick="startInstantCall()">🎥 Start an instant call</button>
+            </div>
+            <div class="card">
+                <h3>Schedule a Meeting</h3>
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" id="mTitle" placeholder="Weekly sync">
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label>Date</label>
+                        <input type="date" id="mDate">
+                    </div>
+                    <div class="field">
+                        <label>Start Time</label>
+                        <input type="time" id="mTime" step="1800">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Duration</label>
+                    <select id="mDuration">
+                        <option value="1">30 minutes</option>
+                        <option value="2" selected>1 hour</option>
+                        <option value="3">1.5 hours</option>
+                        <option value="4">2 hours</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Attendees</label>
+                    <div class="user-checks" id="mAttendees"></div>
+                </div>
+                <button class="btn-primary" onclick="scheduleMeeting()">Schedule &amp; Create Video Link</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NEW DM MODAL -->
+<div class="modal-overlay" id="dmModal">
+    <div class="modal-box">
+        <div class="modal-title">Start a chat</div>
+        <div id="dmUserList"></div>
+        <div class="modal-actions"><button class="btn-secondary" onclick="closeModal('dmModal')">Cancel</button></div>
+    </div>
+</div>
+
+<!-- NEW GROUP MODAL -->
+<div class="modal-overlay" id="groupModal">
+    <div class="modal-box">
+        <div class="modal-title">New group</div>
+        <div class="field"><label>Group name</label><input type="text" id="groupName" placeholder="e.g. Marketing Team"></div>
+        <div class="field"><label>Members</label><div class="user-checks" id="groupUserList"></div></div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeModal('groupModal')">Cancel</button>
+            <button class="btn-primary" onclick="createGroup()">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIDEO CALL OVERLAY -->
+<div class="video-overlay" id="videoOverlay">
+    <div class="video-bar">
+        <span id="videoTitle">Video Call</span>
+        <button onclick="leaveCall()">Leave Call</button>
+    </div>
+    <iframe id="videoFrame" allow="camera; microphone; fullscreen; display-capture; autoplay"></iframe>
+</div>
+
+<script>
+const BASE = "https://backend-n5lk.onrender.com";
+const userId   = localStorage.getItem("userId");
+const userName = localStorage.getItem("userName") || "";
+const userRole = localStorage.getItem("userRole") || "employee";
+
+let allUsers = [];
+let activeChannelId = null;
+let activeChannelInfo = null;
+let lastMsgId = 0;
+let pollTimer = null;
+let listTimer = null;
+
+/* ---------------- SIDEBAR ---------------- */
+const SIDEBAR_MENUS = {
+employee: `
+    <a href="employee-dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="team-chat.html" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Team Chat</a>
+    <div class="menu-group open" data-group="MyRecords">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('MyRecords')">My Records<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="history.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>History</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="my-insurance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>My Insurance</a>
+            <a href="expense-vouchers.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Company">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Company')">Company<span class="chev">▶</span></div>
+        <div class="menu-group-items"><a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a></div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items"><a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a></div>
+    </div>
+    <a href="settings.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>`,
+
+manager: `
+    <a href="manager-dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="team-chat.html" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Team Chat</a>
+    <div class="menu-group" data-group="MyTeam">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('MyTeam')">My Team<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="team-members.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team Members</a>
+            <a href="reports.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Reports</a>
+        </div>
+    </div>
+    <div class="menu-group open" data-group="Workforce">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Workforce')">Workforce<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="insurance-manager.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>Insurance</a>
+            <a href="expense-vouchers.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers <span class="nav-dot" id="navDotExpenses"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items"><a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a></div>
+    </div>
+    <a href="settings.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>`,
+
+admin: `
+    <a href="admin-dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a>
+    <a href="team-chat.html" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Team Chat</a>
+    <div class="menu-group open" data-group="Workforce">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Workforce')">Workforce<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="insurance-manager.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>Insurance</a>
+            <a href="expense-vouchers.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers <span class="nav-dot" id="navDotExpenses"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+            <a href="admin-export.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data resource</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items"><a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a></div>
+    </div>
+    <a href="settings.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>`
+};
+SIDEBAR_MENUS.ceo = SIDEBAR_MENUS.admin;
+
+window.toggleMobileSidebar = function() {
+    document.getElementById("mainSidebar").classList.toggle("open");
+    document.getElementById("sidebarBackdrop").classList.toggle("active");
+};
+window.toggleSidebarGroup = function(name) {
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+    const el = document.querySelector(`.menu-group[data-group="${name}"]`);
+    const nowOpen = !el.classList.contains("open");
+    el.classList.toggle("open");
+    state[name] = nowOpen;
+    localStorage.setItem("sidebarGroupState", JSON.stringify(state));
+};
+
+function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2600);
+}
+function initials(name) {
+    return (name || "?").trim().split(/\s+/).slice(0,2).map(w => w[0]?.toUpperCase() || "").join("");
+}
+function escapeHtml(s) {
+    return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------------- INIT ---------------- */
+async function init() {
+    document.getElementById("sidebarMenu").innerHTML = SIDEBAR_MENUS[userRole] || SIDEBAR_MENUS.employee;
+    document.getElementById("whoLabel").textContent = `${userName} · ${userRole.charAt(0).toUpperCase()+userRole.slice(1)}`;
+
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+    document.querySelectorAll(".menu-group").forEach(g => {
+        const name = g.dataset.group;
+        if (state[name] !== undefined) g.classList.toggle("open", state[name]);
+    });
+
+    try {
+        const res = await fetch(`${BASE}/all-users`);
+        allUsers = (await res.json()).filter(u => String(u.id) !== String(userId));
+    } catch (e) { allUsers = []; }
+
+    loadChannelList();
+    listTimer = setInterval(loadChannelList, 6000);
+
+    document.getElementById("mDate").valueAsDate = new Date();
+    renderAttendeeChecks();
+}
+
+function switchView(name) {
+    document.querySelectorAll(".view-tab").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + name).classList.add("active");
+    if (name === "meetings") loadUpcoming();
+}
+
+/* ---------------- CHANNEL LIST ---------------- */
+async function loadChannelList() {
+    try {
+        const res = await fetch(`${BASE}/chat/channels?user_id=${userId}`);
+        const rows = await res.json();
+        const box = document.getElementById("chatList");
+        if (!rows.length) { box.innerHTML = `<div class="chat-empty">No chats yet — start one above.</div>`; return; }
+        box.innerHTML = rows.map(c => `
+            <div class="chat-list-item ${c.id === activeChannelId ? 'active' : ''}" onclick="openChannel(${c.id})">
+                <div class="chat-avatar">${c.type === 'group' ? '👥' : initials(c.name)}</div>
+                <div class="chat-item-info">
+                    <div class="chat-item-name">${escapeHtml(c.name)}</div>
+                    <div class="chat-item-preview">${c.last_message ? escapeHtml(c.last_message.type === 'file' ? '📎 Attachment' : c.last_message.content) : 'No messages yet'}</div>
+                </div>
+                ${c.unread_count ? `<div class="chat-unread">${c.unread_count}</div>` : ""}
+            </div>`).join("");
+    } catch (e) { /* silent, keep last known list */ }
+}
+
+/* ---------------- OPEN A CHANNEL ---------------- */
+async function openChannel(channelId) {
+    activeChannelId = channelId;
+    lastMsgId = 0;
+    if (pollTimer) clearInterval(pollTimer);
+
+    const res = await fetch(`${BASE}/chat/channels/${channelId}?user_id=${userId}`);
+    const info = await res.json();
+    if (!info.success) { toast("Couldn't open that chat."); return; }
+    activeChannelInfo = info;
+
+    document.getElementById("chatThreadPane").innerHTML = `
+        <div class="thread-head">
+            <div class="name">${info.type === 'group' ? '👥 ' : ''}${escapeHtml(info.name)}</div>
+            <div class="thread-actions">
+                <button class="btn-call" onclick="startCallInChannel()">🎥 Video Call</button>
+            </div>
+        </div>
+        <div class="thread-messages" id="threadMessages"></div>
+        <div class="thread-input">
+            <button class="icon-btn" onclick="document.getElementById('chatFileInput').click()" title="Attach file">📎</button>
+            <input type="file" id="chatFileInput" style="display:none" onchange="sendMessage(true)">
+            <textarea id="chatInput" rows="1" placeholder="Type a message…" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage(false);}"></textarea>
+            <button class="icon-btn" onclick="sendMessage(false)" title="Send">➤</button>
+        </div>`;
+
+    await pollMessages();
+    pollTimer = setInterval(pollMessages, 3000);
+    fetch(`${BASE}/chat/channels/${channelId}/read`, {
+        method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ user_id: Number(userId) })
+    });
+    loadChannelList();
+
+    if (window.innerWidth <= 768) document.getElementById("chatListPane").classList.add("hide-mobile");
+}
+
+async function pollMessages() {
+    if (!activeChannelId) return;
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/messages?since_id=${lastMsgId}&limit=50`);
+        const rows = await res.json();
+        if (!rows.length) return;
+        const box = document.getElementById("threadMessages");
+        if (!box) return;
+        const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+        rows.forEach(m => {
+            lastMsgId = Math.max(lastMsgId, m.id);
+            box.insertAdjacentHTML("beforeend", renderMessage(m));
+        });
+        if (wasAtBottom || lastMsgId === rows[rows.length-1].id) box.scrollTop = box.scrollHeight;
+    } catch (e) { /* silent */ }
+}
+
+function renderMessage(m) {
+    if (m.message_type === "system") {
+        return `<div class="msg-row system"><div class="msg-bubble">${escapeHtml(m.content)}</div></div>`;
+    }
+    const mine = String(m.sender_id) === String(userId);
+    const time = new Date(m.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    let body = escapeHtml(m.content);
+    if (m.message_type === "file" && m.file_url) {
+        body += `<div class="msg-file">📎 <a href="${BASE}${m.file_url}" target="_blank">${escapeHtml(m.file_name || 'attachment')}</a></div>`;
+    }
+    return `
+    <div class="msg-row ${mine ? 'mine' : ''}">
+        ${!mine && activeChannelInfo && activeChannelInfo.type === 'group' ? `<div class="msg-sender">${escapeHtml(m.sender_name)}</div>` : ""}
+        <div class="msg-bubble">${body}</div>
+        <div class="msg-time">${time}</div>
+    </div>`;
+}
+
+async function sendMessage(fromFile) {
+    if (!activeChannelId) return;
+    const input = document.getElementById("chatInput");
+    const fileInput = document.getElementById("chatFileInput");
+    const content = input.value.trim();
+    const file = fileInput.files[0];
+    if (!content && !file) return;
+
+    const fd = new FormData();
+    fd.append("sender_id", userId);
+    fd.append("sender_name", userName);
+    fd.append("content", content);
+    if (file) fd.append("file", file);
+
+    input.value = "";
+    fileInput.value = "";
+
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/messages`, { method: "POST", body: fd });
+        const data = await res.json();
+        if (!data.success) toast(data.message || "Couldn't send that message.");
+        else pollMessages();
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- NEW DM / GROUP ---------------- */
+function openNewDmModal() {
+    const box = document.getElementById("dmUserList");
+    box.innerHTML = allUsers.map(u => `
+        <div class="pick-row" onclick="startDm(${u.id}, '${escapeHtml(u.full_name).replace(/'/g,"\\'")}')">
+            <div class="chat-avatar" style="width:30px;height:30px;font-size:12px;">${initials(u.full_name)}</div>
+            <div>${escapeHtml(u.full_name)}<div style="font-size:11px;color:var(--text-faint);">${u.role}</div></div>
+        </div>`).join("") || `<div class="chat-empty">No other users found.</div>`;
+    document.getElementById("dmModal").classList.add("active");
+}
+function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+
+async function startDm(otherId, otherName) {
+    closeModal("dmModal");
+    try {
+        const res = await fetch(`${BASE}/chat/channels/dm`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ user_id: Number(userId), user_name: userName, other_user_id: otherId, other_user_name: otherName })
+        });
+        const data = await res.json();
+        if (data.success) { await loadChannelList(); openChannel(data.channel_id); }
+        else toast(data.message || "Couldn't start chat.");
+    } catch (e) { toast("Network error."); }
+}
+
+function openNewGroupModal() {
+    document.getElementById("groupName").value = "";
+    const box = document.getElementById("groupUserList");
+    box.innerHTML = allUsers.map(u => `
+        <label class="user-check-row"><input type="checkbox" value="${u.id}" data-name="${escapeHtml(u.full_name)}"> ${escapeHtml(u.full_name)} <span style="color:var(--text-faint); font-size:11px;">(${u.role})</span></label>`).join("");
+    document.getElementById("groupModal").classList.add("active");
+}
+
+async function createGroup() {
+    const name = document.getElementById("groupName").value.trim();
+    if (!name) { toast("Give the group a name."); return; }
+    const checks = [...document.querySelectorAll("#groupUserList input:checked")];
+    const member_ids = checks.map(c => Number(c.value));
+    const member_names = checks.map(c => c.dataset.name);
+    try {
+        const res = await fetch(`${BASE}/chat/channels/group`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ name, created_by: Number(userId), created_by_name: userName, member_ids, member_names })
+        });
+        const data = await res.json();
+        if (data.success) { closeModal("groupModal"); await loadChannelList(); openChannel(data.channel_id); }
+        else toast(data.message || "Couldn't create group.");
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- VIDEO CALLS ---------------- */
+function openVideoOverlay(link, title) {
+    document.getElementById("videoTitle").textContent = title || "Video Call";
+    const displayName = encodeURIComponent(userName);
+    document.getElementById("videoFrame").src = `${link}#userInfo.displayName="${displayName}"&config.prejoinPageEnabled=false`;
+    document.getElementById("videoOverlay").classList.add("active");
+}
+function leaveCall() {
+    document.getElementById("videoFrame").src = "about:blank";
+    document.getElementById("videoOverlay").classList.remove("active");
+}
+
+async function startCallInChannel() {
+    if (!activeChannelId || !activeChannelInfo) return;
+    const attendee_ids = (activeChannelInfo.member_ids || []).filter(id => String(id) !== String(userId));
+    try {
+        const res = await fetch(`${BASE}/meetings/instant`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({
+                organizer_id: Number(userId), organizer_name: userName,
+                title: `Call: ${activeChannelInfo.name}`, attendee_ids, channel_id: activeChannelId
+            })
+        });
+        const data = await res.json();
+        if (data.success) { openVideoOverlay(data.video_link, activeChannelInfo.name); pollMessages(); }
+        else toast(data.message || "Couldn't start the call.");
+    } catch (e) { toast("Network error."); }
+}
+
+async function startInstantCall() {
+    try {
+        const res = await fetch(`${BASE}/meetings/instant`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ organizer_id: Number(userId), organizer_name: userName, title: "Quick Call", attendee_ids: [] })
+        });
+        const data = await res.json();
+        if (data.success) openVideoOverlay(data.video_link, "Quick Call");
+        else toast(data.message || "Couldn't start the call.");
+    } catch (e) { toast("Network error."); }
+}
+
+/* ---------------- MEETINGS ---------------- */
+function renderAttendeeChecks() {
+    const box = document.getElementById("mAttendees");
+    box.innerHTML = allUsers.map(u => `
+        <label class="user-check-row"><input type="checkbox" value="${u.id}"> ${escapeHtml(u.full_name)} <span style="color:var(--text-faint); font-size:11px;">(${u.role})</span></label>`).join("");
+}
+
+async function loadUpcoming() {
+    const box = document.getElementById("upcomingList");
+    box.innerHTML = `<div class="chat-empty">Loading…</div>`;
+    try {
+        const res = await fetch(`${BASE}/meetings/upcoming?user_id=${userId}`);
+        const rows = await res.json();
+        if (!rows.length) { box.innerHTML = `<div class="chat-empty">Nothing scheduled — plan one on the right.</div>`; return; }
+        box.innerHTML = rows.map(m => `
+            <div class="meet-item">
+                <div>
+                    <div class="t">${escapeHtml(m.title)}</div>
+                    <div class="m">${m.date} · ${m.start_time}–${m.end_time}</div>
+                </div>
+                ${m.video_link ? `<button class="btn-call" onclick="openVideoOverlay('${m.video_link}', '${escapeHtml(m.title).replace(/'/g,"\\'")}')">🎥 Join</button>` : ""}
+            </div>`).join("");
+    } catch (e) { box.innerHTML = `<div class="chat-empty">Couldn't load meetings.</div>`; }
+}
+
+async function scheduleMeeting() {
+    const title = document.getElementById("mTitle").value.trim();
+    const date = document.getElementById("mDate").value;
+    const time = document.getElementById("mTime").value;
+    const durationSlots = Number(document.getElementById("mDuration").value);
+    const attendee_ids = [...document.querySelectorAll("#mAttendees input:checked")].map(c => Number(c.value));
+
+    if (!title || !date || !time) { toast("Please fill title, date and time."); return; }
+    const [hh, mm] = time.split(":").map(Number);
+    const start_slot = hh * 2 + (mm >= 30 ? 1 : 0);
+    const end_slot = Math.min(start_slot + durationSlots, 47);
+
+    const qs = new URLSearchParams({
+        title, description: "", meeting_date: date, start_slot, end_slot,
+        organizer_id: userId, location: "Video Call", attendees: JSON.stringify(attendee_ids)
+    });
+    try {
+        const res = await fetch(`${BASE}/meetings/create?${qs.toString()}`, { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+            toast("Meeting scheduled — video link ready.");
+            document.getElementById("mTitle").value = "";
+            document.querySelectorAll("#mAttendees input:checked").forEach(c => c.checked = false);
+            loadUpcoming();
+        } else toast(data.message || "Couldn't schedule that meeting.");
+    } catch (e) { toast("Network error."); }
+}
+
+init();
+</script>
+</body>
+</html>
