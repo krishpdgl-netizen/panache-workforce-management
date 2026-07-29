@@ -416,6 +416,7 @@ admin: `
     <a href="settings.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</a>`
 };
 SIDEBAR_MENUS.ceo = SIDEBAR_MENUS.admin;
+SIDEBAR_MENUS.intern = SIDEBAR_MENUS.employee;
 
 window.toggleMobileSidebar = function() {
     document.getElementById("mainSidebar").classList.toggle("open");
@@ -644,7 +645,12 @@ async function createGroup() {
 function openVideoOverlay(link, title) {
     document.getElementById("videoTitle").textContent = title || "Video Call";
     const displayName = encodeURIComponent(userName);
-    document.getElementById("videoFrame").src = `${link}#userInfo.displayName="${displayName}"&config.prejoinPageEnabled=false`;
+    // Jitsi takes display-name/config via a URL hash; Daily.co's prebuilt UI
+    // handles its own name-entry lobby, so it just gets the plain room URL.
+    const src = link.includes("jit.si")
+        ? `${link}#userInfo.displayName="${displayName}"&config.prejoinPageEnabled=false`
+        : link;
+    document.getElementById("videoFrame").src = src;
     document.getElementById("videoOverlay").classList.add("active");
 }
 function leaveCall() {
