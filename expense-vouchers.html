@@ -15,6 +15,8 @@
 <style>
 :root {
     --ink:          #14161B;
+    --ink-soft:     #23262D;
+    --ink-line:     rgba(255,255,255,.09);
     --paper:        #F5F3EE;
     --surface:      #FFFFFF;
     --surface-muted:#FBFAF6;
@@ -45,25 +47,70 @@
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html { -webkit-font-smoothing:antialiased; }
-body { background:var(--paper); font-family:var(--font-body); color:var(--text); }
+body { display:flex; background:var(--paper); font-family:var(--font-body); color:var(--text); }
 a { color:inherit; text-decoration:none; }
 button { font-family:var(--font-body); cursor:pointer; }
 ::-webkit-scrollbar { width:9px; height:9px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:#D8D3C4; border-radius:99px; }
+:focus-visible { outline:2px solid var(--brass-dark); outline-offset:2px; border-radius:4px; }
 
-.topbar {
-    position:sticky; top:0; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:16px 32px; background:var(--ink); color:#fff;
+/* ============================================================
+   SIDEBAR (mirrors employee/manager/admin dashboards)
+============================================================ */
+.sidebar {
+    width: 264px; height: 100vh; background: var(--ink); color: #fff;
+    padding: 22px 16px 18px; position: fixed; left: 0; top: 0;
+    display: flex; flex-direction: column; z-index: 999; transition: transform .3s ease;
 }
-.topbar .brand { display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-size:19px; }
-.topbar .brand .mark { color:var(--brass); font-size:20px; }
-.topbar .back { font-size:13px; color:#D8D3C4; padding:8px 14px; border:1px solid rgba(255,255,255,.18); border-radius:99px; transition:.15s; }
-.topbar .back:hover { background:rgba(255,255,255,.08); color:#fff; }
-.topbar .who { font-size:12.5px; color:#B9B6AC; }
+.logo { display:flex; align-items:baseline; gap:8px; padding:4px 10px 22px; margin-bottom:6px; border-bottom:1px solid var(--ink-line); }
+.logo .mark { color: var(--brass); font-size:20px; line-height:1; transform:translateY(-1px); }
+.logo .word { font-family: var(--font-display); font-style:italic; font-weight:560; font-size:21px; letter-spacing:.2px; }
+.logo .sub { font-size:10px; color: var(--text-faint); text-transform:uppercase; letter-spacing:1.6px; font-weight:600; }
+.menu { flex:1; overflow-y:auto; padding-top:6px; }
+.menu a {
+    display:flex; align-items:center; gap:10px; color:rgba(255,255,255,.78); text-decoration:none;
+    padding:10px 12px; margin-bottom:3px; border-radius:var(--radius-sm); font-size:13.5px; font-weight:500;
+    transition:background .15s ease, color .15s ease; position:relative;
+}
+.menu > a svg, .menu-group-items a svg { flex-shrink:0; opacity:.85; }
+.menu a:hover { background: var(--ink-soft); color:#fff; }
+.menu a.active { background:rgba(199,154,69,.14); color:#fff; }
+.menu a.active::before {
+    content:""; position:absolute; left:-16px; top:8px; bottom:8px; width:3px;
+    border-radius:0 4px 4px 0; background: var(--brass);
+}
+.nav-dot { display:none; width:7px; height:7px; border-radius:50%; background:var(--danger); margin-left:auto; flex-shrink:0; box-shadow:0 0 0 3px rgba(209,67,67,.18); }
+.menu-group { margin-bottom:2px; }
+.menu-group-header {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:10px 12px; cursor:pointer; border-radius:var(--radius-sm);
+    color:rgba(255,255,255,.42); font-size:10.5px; font-weight:700;
+    text-transform:uppercase; letter-spacing:1px; user-select:none; margin-top:10px;
+    transition:background .15s ease, color .15s ease;
+}
+.menu-group-header:hover { background: var(--ink-soft); color:rgba(255,255,255,.7); }
+.menu-group-header .chev { transition:transform .2s ease; font-size:9px; opacity:.7; }
+.menu-group.open .menu-group-header .chev { transform:rotate(90deg); }
+.menu-group-items { display:none; padding-left:2px; }
+.menu-group.open .menu-group-items { display:block; }
+.menu-group-items a { padding:9px 12px 9px 14px; font-size:13px; }
+.sidebar-toggle {
+    display:none; position:fixed; top:14px; left:14px; z-index:1001;
+    width:42px; height:42px; border-radius:var(--radius-sm); border:none;
+    background: var(--ink); color:#fff; font-size:18px; cursor:pointer;
+    align-items:center; justify-content:center; box-shadow:var(--shadow-md);
+}
+.sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(15,16,20,.5); z-index:998; }
+.sidebar-backdrop.active { display:block; }
 
-.wrap { max-width:1180px; margin:0 auto; padding:28px 24px 80px; }
+/* ============================================================
+   MAIN
+============================================================ */
+.main { margin-left: 264px; width: calc(100% - 264px); padding: 28px 34px 60px; }
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px; }
+.topbar .who { font-size:12.5px; color:var(--text-muted); }
+
 .page-head { margin-bottom:22px; }
 .page-head h1 { font-family:var(--font-display); font-size:30px; font-weight:600; }
 .page-head p { color:var(--text-muted); font-size:14px; margin-top:4px; }
@@ -146,24 +193,44 @@ button { font-family:var(--font-body); cursor:pointer; }
 .toast { position:fixed; bottom:24px; left:50%; transform:translate(-50%,10px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:99px; font-size:13.5px; opacity:0; pointer-events:none; transition:.25s; z-index:300; }
 .toast.show { opacity:1; transform:translate(-50%,0); }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-toggle { display:flex; }
+    .main { margin-left: 0; width: 100%; padding: 84px 18px 40px; }
     .form-grid { grid-template-columns:1fr; }
-    .topbar { padding:14px 16px; }
-    .wrap { padding:20px 14px 60px; }
+}
+@media (max-width: 480px) {
+    .modal-box { padding: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
 }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-    <div class="brand"><span class="mark">✦</span> Panache — Expense Vouchers</div>
-    <div style="display:flex; align-items:center; gap:14px;">
-        <span class="who" id="whoLabel"></span>
-        <a class="back" id="backLink" href="employee-dashboard.html">← Back to Dashboard</a>
+<!-- MOBILE SIDEBAR CONTROLS -->
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleMobileSidebar()" aria-label="Open menu">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="mainSidebar">
+    <div class="logo">
+        <span class="mark">✦</span>
+        <div>
+            <div class="word">Panache</div>
+            <div class="sub">Workforce&nbsp;OS</div>
+        </div>
     </div>
+    <div class="menu" id="sidebarMenu"><!-- injected by role at init() --></div>
 </div>
 
-<div class="wrap">
+<div class="main">
+    <div class="topbar">
+        <div class="who" id="whoLabel"></div>
+    </div>
+
     <div class="page-head">
         <h1>Expense Reimbursement</h1>
         <p>Submit a voucher with your bills attached, track approval status, and (for managers/admin) review and pay out claims.</p>
@@ -302,8 +369,160 @@ const userId   = localStorage.getItem("userId");
 const userName = localStorage.getItem("userName") || "";
 const userRole = localStorage.getItem("userRole") || "employee";
 
-let reviewCtx = null; // { voucherId, level }
-let payCtx    = null; // { voucherId }
+let reviewCtx = null;
+let payCtx    = null;
+
+/* ---------------- SIDEBAR (per-role menu, same markup as each dashboard) ---------------- */
+const SIDEBAR_MENUS = {
+employee: `
+    <a href="employee-dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+    </a>
+    <div class="menu-group open" data-group="MyRecords">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('MyRecords')">My Records<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="history.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>History</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="my-insurance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>My Insurance</a>
+            <a href="expense-vouchers.html" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Company">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Company')">Company<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a>
+        </div>
+    </div>
+    <a href="settings.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+    </a>`,
+
+manager: `
+    <a href="manager-dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+    </a>
+    <div class="menu-group" data-group="MyTeam">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('MyTeam')">My Team<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="team-members.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Team Members</a>
+            <a href="reports.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Reports</a>
+        </div>
+    </div>
+    <div class="menu-group open" data-group="Workforce">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Workforce')">Workforce<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="insurance-manager.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>Insurance</a>
+            <a href="expense-vouchers.html" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers <span class="nav-dot" id="navDotExpenses"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a>
+        </div>
+    </div>
+    <a href="settings.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+    </a>`,
+
+admin: `
+    <a href="admin-dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+    </a>
+    <div class="menu-group open" data-group="Workforce">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Workforce')">Workforce<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="employee-hub.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employee Hub</a>
+            <a href="attendance.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 15l2 2 4-4"/></svg>Attendance manager</a>
+            <a href="insurance-manager.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3.5v5c0 5-3.4 8.4-8 9.5-4.6-1.1-8-4.5-8-9.5v-5L12 3z"/></svg>Insurance</a>
+            <a href="expense-vouchers.html" class="active"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Expense Vouchers <span class="nav-dot" id="navDotExpenses"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Documents">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Documents')">Documents<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="letterhead.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>Letter head manager</a>
+            <a href="print-center.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print center</a>
+            <a href="admin-export.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data resource</a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Planning">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Planning')">Planning<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="calendar.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendar</a>
+            <a href="reminder.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Reminders <span class="nav-dot" id="navDotReminders"></span></a>
+            <a href="travel-request.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-3 2v1.5l4.5-1.4L16 22.5V21l-3-2v-5.5z"/></svg>Travel Requests <span class="nav-dot" id="navDotTravel"></span></a>
+        </div>
+    </div>
+    <div class="menu-group" data-group="Sales">
+        <div class="menu-group-header" onclick="toggleSidebarGroup('Sales')">Sales<span class="chev">▶</span></div>
+        <div class="menu-group-items">
+            <a href="sales-dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>Sales Dashboard</a>
+        </div>
+    </div>
+    <a href="settings.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+    </a>`
+};
+SIDEBAR_MENUS.ceo = SIDEBAR_MENUS.admin;
+
+window.toggleMobileSidebar = function() {
+    document.getElementById("mainSidebar").classList.toggle("open");
+    document.getElementById("sidebarBackdrop").classList.toggle("active");
+};
+window.toggleSidebarGroup = function(name) {
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+    const el = document.querySelector(`.menu-group[data-group="${name}"]`);
+    const nowOpen = !el.classList.contains("open");
+    el.classList.toggle("open");
+    state[name] = nowOpen;
+    localStorage.setItem("sidebarGroupState", JSON.stringify(state));
+};
 
 function toast(msg) {
     const t = document.getElementById("toast");
@@ -329,9 +548,15 @@ function badge(status) {
 }
 
 function init() {
+    document.getElementById("sidebarMenu").innerHTML = SIDEBAR_MENUS[userRole] || SIDEBAR_MENUS.employee;
     document.getElementById("whoLabel").textContent = `${userName} · ${userRole.charAt(0).toUpperCase()+userRole.slice(1)}`;
-    document.getElementById("backLink").href = userRole === "manager" ? "manager-dashboard.html"
-        : (userRole === "admin" ? "admin-dashboard.html" : "employee-dashboard.html");
+
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem("sidebarGroupState")) || {}; } catch(e) {}
+    document.querySelectorAll(".menu-group").forEach(g => {
+        const name = g.dataset.group;
+        if (state[name] !== undefined) g.classList.toggle("open", state[name]);
+    });
 
     const sel = document.getElementById("fCategory");
     sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join("");
@@ -499,7 +724,7 @@ function voucherCard(v, context) {
 }
 
 async function resubmitVoucher(id) {
-    if (!confirm("Resubmit this voucher for approval as-is? You can edit amounts on the form before resubmitting from an updated flow if needed.")) return;
+    if (!confirm("Resubmit this voucher for approval as-is?")) return;
     try {
         const res = await fetch(`${BASE}/expenses/vouchers/${id}/resubmit`, {
             method: "POST", headers: {"Content-Type":"application/json"},
@@ -577,8 +802,9 @@ async function doReview(action) {
         const data = await res.json();
         if (data.success) {
             toast(action === "approve" ? "Voucher approved." : "Voucher rejected.");
+            const lvl = reviewCtx.level;
             closeReviewModal();
-            if (reviewCtx && reviewCtx.level === "manager") loadTeamApprovals(); else loadFinanceQueues();
+            if (lvl === "manager") loadTeamApprovals(); else loadFinanceQueues();
             loadStats();
         } else {
             toast(data.message || "Couldn't complete review.");
@@ -623,10 +849,14 @@ async function loadStats() {
             <div class="stat-card"><div class="lbl">Awaiting Finance</div><div class="val">${s.pending_finance_review.count}</div><div class="sub">${fmtMoney(s.pending_finance_review.amount)}</div></div>
             <div class="stat-card"><div class="lbl">Approved · Unpaid</div><div class="val">${s.approved_unpaid.count}</div><div class="sub">${fmtMoney(s.approved_unpaid.amount)}</div></div>
             <div class="stat-card"><div class="lbl">Paid This Month</div><div class="val">${s.paid_this_month.count}</div><div class="sub">${fmtMoney(s.paid_this_month.amount)}</div></div>`;
-        document.getElementById("teamTabBtn").innerHTML = `Team Approvals ${s.pending_manager_review.count ? `<span class="count">${s.pending_manager_review.count}</span>` : ""}`;
+        const teamBtn = document.getElementById("teamTabBtn");
+        if (teamBtn) teamBtn.innerHTML = `Team Approvals ${s.pending_manager_review.count ? `<span class="count">${s.pending_manager_review.count}</span>` : ""}`;
         if (userRole === "admin") {
-            document.getElementById("financeTabBtn").innerHTML = `Finance &amp; Payments ${s.pending_finance_review.count ? `<span class="count">${s.pending_finance_review.count}</span>` : ""}`;
+            const finBtn = document.getElementById("financeTabBtn");
+            if (finBtn) finBtn.innerHTML = `Finance &amp; Payments ${s.pending_finance_review.count ? `<span class="count">${s.pending_finance_review.count}</span>` : ""}`;
         }
+        const dot = document.getElementById("navDotExpenses");
+        if (dot) dot.style.display = (s.pending_manager_review.count || s.pending_finance_review.count) ? "block" : "none";
     } catch (e) { /* stats are non-critical */ }
 }
 
