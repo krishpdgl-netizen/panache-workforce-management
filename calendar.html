@@ -675,6 +675,8 @@ function setupSidebar() {
     const links = {
         admin:    [
             { href: "admin-dashboard.html",   label: "Dashboard" },
+            { href: "team-chat.html",          label: "💬 Team Chat" },
+            { href: "expense-vouchers.html",   label: "🧾 Expense Vouchers" },
             { href: "settings.html",           label: "Settings"  },
             { href: "history.html",            label: "History"   },
             { href: "sales-dashboard.html",    label: "Sales"     },
@@ -682,6 +684,8 @@ function setupSidebar() {
         ],
         manager:  [
             { href: "manager-dashboard.html",  label: "Dashboard" },
+            { href: "team-chat.html",          label: "💬 Team Chat" },
+            { href: "expense-vouchers.html",   label: "🧾 Expense Vouchers" },
             { href: "settings.html",           label: "Settings"  },
             { href: "history.html",            label: "History"   },
             { href: "sales-dashboard.html",    label: "Sales"     },
@@ -689,6 +693,8 @@ function setupSidebar() {
         ],
         employee: [
             { href: "employee-dashboard.html", label: "Dashboard" },
+            { href: "team-chat.html",          label: "💬 Team Chat" },
+            { href: "expense-vouchers.html",   label: "🧾 Expense Vouchers" },
             { href: "settings.html",           label: "Settings"  },
             { href: "history.html",            label: "History"   },
             { href: "sales-dashboard.html",    label: "Sales"     },
@@ -696,6 +702,8 @@ function setupSidebar() {
         ],
         intern: [
             { href: "intern-dashboard.html",   label: "Dashboard" },
+            { href: "team-chat.html",          label: "💬 Team Chat" },
+            { href: "expense-vouchers.html",   label: "🧾 Expense Vouchers" },
             { href: "history.html",            label: "History"   },
             { href: "reminder.html",           label: "Reminders" },
             { href: "calendar.html",           label: "📅 Calendar", active: true },
@@ -1430,6 +1438,7 @@ async function showMeetingDetail(m) {
         </div>
         ${m.description ? `<div class="detail-row"><span class="detail-icon">📝</span><div><div class="detail-label">Description</div><div class="detail-value">${m.description}</div></div></div>` : ""}
         ${m.location    ? `<div class="detail-row"><span class="detail-icon">📍</span><div><div class="detail-label">Location</div><div class="detail-value">${m.location}</div></div></div>` : ""}
+        ${m.video_link  ? `<div class="detail-row"><span class="detail-icon">🎥</span><div><div class="detail-label">Video Call</div><a href="${m.video_link}" target="_blank" style="display:inline-block;margin-top:4px;background:var(--success);color:#fff;padding:8px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none;">Join Video Call</a></div></div>` : ""}
         <div class="detail-row">
             <span class="detail-icon">👥</span>
             <div>
