@@ -232,11 +232,13 @@
 
     <!-- ══ MY ATTENDANCE (employee) ══ -->
     <div id="view-myattendance" class="page-view">
+        <div id="cycleLabel" style="font-size:13px;color:var(--text-muted);margin-bottom:10px;"></div>
         <div class="cards">
             <div class="card green"><h2 id="ma-present">0</h2><p>Present Days</p></div>
             <div class="card red"><h2 id="ma-absent">0</h2><p>Absent Days</p></div>
             <div class="card blue"><h2 id="ma-leave">0</h2><p>Leave Days</p></div>
             <div class="card yellow"><h2 id="ma-late">0</h2><p>Late Days</p></div>
+            <div class="card orange"><h2 id="ma-halfday">0</h2><p>Half Days</p></div>
             <div class="card purple"><h2 id="ma-ot">0h</h2><p>Overtime</p></div>
         </div>
         <div class="section">
@@ -495,8 +497,9 @@
         <div id="report-late">
             <div class="section">
                 <div class="section-header"><h2>Late Employees</h2>
-                    <div style="display:flex;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
                         <input type="month" id="rep-late-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+                        <span style="font-size:11px;color:var(--text-muted);">cycle ends this month</span>
                         <button class="btn-primary" onclick="renderLateReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('late')">Export CSV</button>
                     </div>
@@ -508,8 +511,9 @@
         <div id="report-absent" style="display:none;">
             <div class="section">
                 <div class="section-header"><h2>Absentees</h2>
-                    <div style="display:flex;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
                         <input type="month" id="rep-absent-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+                        <span style="font-size:11px;color:var(--text-muted);">cycle ends this month</span>
                         <button class="btn-primary" onclick="renderAbsentReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('absent')">Export CSV</button>
                     </div>
@@ -521,8 +525,9 @@
         <div id="report-overtime" style="display:none;">
             <div class="section">
                 <div class="section-header"><h2>Overtime Summary</h2>
-                    <div style="display:flex;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
                         <input type="month" id="rep-ot-month" style="padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+                        <span style="font-size:11px;color:var(--text-muted);">cycle ends this month</span>
                         <button class="btn-primary" onclick="renderOTReport()">Generate</button>
                         <button class="btn-secondary" onclick="exportCSV('overtime')">Export CSV</button>
                     </div>
@@ -605,11 +610,13 @@
         <label>CSV File *</label>
         <input type="file" id="importScanFile" accept=".csv">
         <div style="margin-top:12px;">
-            <label>Mark absent for month (optional)</label>
-            <input type="month" id="importScanMonth">
+            <label>Mark absent for pay cycle (optional)</label>
+            <input type="month" id="importScanMonth" onchange="updateImportScanCycleLabel()">
+            <p id="importScanCycleRange" style="color:var(--text-muted, #888);font-size:12px;margin-top:4px;"></p>
             <p style="color:var(--text-muted, #888);font-size:12px;margin-top:4px;">
-                If set, any employee with no scans on a working day that month
-                (excluding weekends, holidays, and approved leave) is marked Absent.
+                The attendance cycle runs 25th – 24th. Pick the month it ends in — any employee
+                with no scans on a working day in that cycle (excluding weekends, holidays, and
+                approved leave) is marked Absent.
             </p>
         </div>
         <div id="importScanStatus" style="margin-top:10px;font-size:13px;"></div>
@@ -632,7 +639,7 @@
 
         <div id="deviceMapPending" style="display:none;background:#FFF7E6;border:1px solid #F0C36D;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
             <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Unmatched names from your last import</div>
-            <div id="deviceMapPendingList" style="font-size:13px;line-height:1.7;"></div>
+            <div id="deviceMapPendingList" style="font-size:13px;max-height:260px;overflow-y:auto;padding-right:4px;"></div>
         </div>
 
         <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
@@ -904,23 +911,38 @@ function showView(name) {
 
 function goBack() { showView(lastView && lastView!=="salaryslip" ? lastView : (isAdmin?"payroll":"myslips")); }
 
+function currentCycleLabel() {
+    // Mirrors the backend's 25th -> 24th cycle rule: on/after the 25th, you're
+    // already in next month's cycle.
+    const now = new Date();
+    let y = now.getFullYear(), m = now.getMonth() + 1; // 1-12
+    if (now.getDate() >= 25) { m += 1; if (m > 12) { m = 1; y += 1; } }
+    return `${y}-${String(m).padStart(2,"0")}`;
+}
+
 async function renderMyAttendance() {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("todayDateLabel").textContent = new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 
-    const now = new Date();
-    const month = now.toISOString().substring(0,7);
+    const cycle = currentCycleLabel();
 
-    const [summary, todayRec] = await Promise.all([
-        api(`/attendance/employee/${EMP_ID}/monthly-summary?month=${month}`),
-        api(`/attendance?emp_id=${EMP_ID}&att_date=${today}`)
+    const [summary, todayRec, cycleInfo] = await Promise.all([
+        api(`/attendance/employee/${EMP_ID}/monthly-summary?cycle=${cycle}`),
+        api(`/attendance?emp_id=${EMP_ID}&att_date=${today}`),
+        api(`/attendance/cycle-info?cycle=${cycle}`)
     ]);
+
+    if (cycleInfo && cycleInfo.start_date && cycleInfo.end_date) {
+        const lbl = document.getElementById("cycleLabel");
+        if (lbl) lbl.textContent = `Attendance cycle: ${fmt(cycleInfo.start_date)} – ${fmt(cycleInfo.end_date)}`;
+    }
 
     if (summary) {
         document.getElementById("ma-present").textContent = summary.present||0;
         document.getElementById("ma-absent").textContent  = summary.absent||0;
         document.getElementById("ma-leave").textContent   = summary.leave||0;
         document.getElementById("ma-late").textContent    = summary.late_days||0;
+        document.getElementById("ma-halfday").textContent = summary.half_day||0;
         document.getElementById("ma-ot").textContent      = (summary.overtime_hours||0)+"h";
     }
 
@@ -1111,7 +1133,18 @@ function openImportScan() {
     document.getElementById("importScanFile").value = "";
     document.getElementById("importScanMonth").value = "";
     document.getElementById("importScanStatus").textContent = "";
+    document.getElementById("importScanCycleRange").textContent = "";
     document.getElementById("modalImportScan").classList.add("active");
+}
+
+async function updateImportScanCycleLabel() {
+    const month = document.getElementById("importScanMonth").value;
+    const rangeEl = document.getElementById("importScanCycleRange");
+    if (!month) { rangeEl.textContent = ""; return; }
+    const info = await api(`/attendance/cycle-info?cycle=${month}`);
+    if (info && info.start_date && info.end_date) {
+        rangeEl.textContent = `Cycle: ${fmt(info.start_date)} – ${fmt(info.end_date)}`;
+    }
 }
 
 async function submitImportScan() {
@@ -1195,12 +1228,16 @@ async function openDeviceMap(pending) {
     const pendingList = document.getElementById("deviceMapPendingList");
     if (pending && pending.length) {
         pendingBox.style.display = "block";
-        pendingList.innerHTML = pending.map(u =>
-            `<div>${u.name} — device ID <b>${u.person_id}</b>
-                <button class="btn-secondary" style="padding:3px 10px;font-size:12px;margin-left:8px;"
+        pendingList.innerHTML = pending.map(u => `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;
+                        padding:7px 0;border-bottom:1px solid rgba(0,0,0,.06);">
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    ${u.name} <span style="color:var(--text-faint,#999);">— device ID</span> <b>${u.person_id}</b>
+                </span>
+                <button class="btn-secondary" style="padding:3px 10px;font-size:12px;flex-shrink:0;"
                     onclick="prefillDeviceMap('${u.person_id}')">Map this one</button>
-             </div>`
-        ).join("");
+            </div>
+        `).join("");
         prefillDeviceMap(pending[0].person_id);
     } else {
         pendingBox.style.display = "none";
@@ -1764,7 +1801,7 @@ function switchReportTab(name, el) {
 async function renderLateReport() {
     const m=document.getElementById("rep-late-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=asArray(await api(`/reports/attendance/late?month=${m}`));
+    const rows=asArray(await api(`/reports/attendance/late?cycle=${m}`));
     const body=document.getElementById("rep-late-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="5" class="no-data">No late records.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.late_days}</td><td>${formatLate(r.total_late_minutes)}</td><td>${formatLate(r.avg_late_minutes)}</td></tr>`).join("");
@@ -1773,7 +1810,7 @@ async function renderLateReport() {
 async function renderAbsentReport() {
     const m=document.getElementById("rep-absent-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=asArray(await api(`/reports/attendance/absentees?month=${m}`));
+    const rows=asArray(await api(`/reports/attendance/absentees?cycle=${m}`));
     const body=document.getElementById("rep-absent-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="4" class="no-data">No absences.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.absent_days}</td><td>${r.leave_days}</td></tr>`).join("");
@@ -1782,7 +1819,7 @@ async function renderAbsentReport() {
 async function renderOTReport() {
     const m=document.getElementById("rep-ot-month").value;
     if (!m) { showToast("Select a month first.","error"); return; }
-    const rows=asArray(await api(`/reports/attendance/overtime?month=${m}`));
+    const rows=asArray(await api(`/reports/attendance/overtime?cycle=${m}`));
     const body=document.getElementById("rep-ot-body");
     if (!rows.length) { body.innerHTML=`<tr><td colspan="4" class="no-data">No overtime.</td></tr>`; return; }
     body.innerHTML=rows.map(r=>`<tr><td>${r.emp_name}</td><td>${r.department}</td><td>${r.ot_days}</td><td>${r.ot_hours}h</td></tr>`).join("");
