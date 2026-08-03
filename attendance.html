@@ -332,13 +332,6 @@
 
     <!-- ══ ADMIN: ATTENDANCE MANAGEMENT ══ -->
     <div id="view-attendance" class="page-view">
-        <div class="cards">
-            <div class="card green"><h2 id="att-present">0</h2><p>Present Today</p></div>
-            <div class="card red"><h2 id="att-absent">0</h2><p>Absent Today</p></div>
-            <div class="card yellow"><h2 id="att-late">0</h2><p>Late Today</p></div>
-            <div class="card blue"><h2 id="att-leave">0</h2><p>On Leave</p></div>
-            <div class="card"><h2 id="att-total">0</h2><p>Total Records</p></div>
-        </div>
         <div class="section">
             <div class="section-header">
                 <h2>Attendance Records</h2>
@@ -615,7 +608,7 @@
             <input type="month" id="importScanMonth" onchange="updateImportScanCycleLabel()">
             <p id="importScanCycleRange" style="color:var(--text-muted, #888);font-size:12px;margin-top:4px;"></p>
             <p style="color:var(--text-muted, #888);font-size:12px;margin-top:4px;">
-                The attendance cycle runs 25th – 24th. Pick the month it ends in — any employee
+                The attendance cycle runs 26th – 25th. Pick the month it ends in — any employee
                 with no scans on a working day in that cycle (excluding weekends, holidays, and
                 approved leave) is marked Absent.
             </p>
@@ -924,7 +917,7 @@ function showView(name) {
 
     if (name==="myattendance") { renderMyAttendance(); renderCalendar(); renderHistory(); }
     if (name==="correction")   { renderMyRequests(); }
-    if (name==="attendance")   { renderAttendanceSummary(); renderAttendanceTable(); }
+    if (name==="attendance")   { renderAttendanceTable(); }
     if (name==="requests")     { renderRequestsSummary(); renderRequestsTable(); }
     if (name==="payroll")      { renderSalaryStructures(); renderPayrollTable(); }
     if (name==="myslips")      { renderMySlips(); }
@@ -936,11 +929,11 @@ function showView(name) {
 function goBack() { showView(lastView && lastView!=="salaryslip" ? lastView : (isAdmin?"payroll":"myslips")); }
 
 function currentCycleLabel() {
-    // Mirrors the backend's 25th -> 24th cycle rule: on/after the 25th, you're
+    // Mirrors the backend's 26th -> 25th cycle rule: on/after the 26th, you're
     // already in next month's cycle.
     const now = new Date();
     let y = now.getFullYear(), m = now.getMonth() + 1; // 1-12
-    if (now.getDate() >= 25) { m += 1; if (m > 12) { m = 1; y += 1; } }
+    if (now.getDate() >= 26) { m += 1; if (m > 12) { m = 1; y += 1; } }
     return `${y}-${String(m).padStart(2,"0")}`;
 }
 
@@ -1098,14 +1091,6 @@ async function cancelRequest(id) {
 }
 
 // ── ADMIN: ATTENDANCE ────────────────────────────────────────
-async function renderAttendanceSummary() {
-    const s = await api("/attendance/summary/today") || {};
-    document.getElementById("att-present").textContent = s.present||0;
-    document.getElementById("att-absent").textContent  = s.absent||0;
-    document.getElementById("att-late").textContent    = s.late||0;
-    document.getElementById("att-leave").textContent   = s.leave||0;
-    document.getElementById("att-total").textContent   = s.total_records||0;
-}
 
 async function renderAttendanceTable() {
     const fd = document.getElementById("att-filter-date").value;
@@ -1212,7 +1197,6 @@ async function submitImportScan() {
 
     closeModal("modalImportScan");
     showToast(res.message, "success");
-    renderAttendanceSummary();
     renderAttendanceTable();
 
     if (res.unmatched && res.unmatched.length) {
@@ -1262,7 +1246,6 @@ async function submitCleanupAbsent() {
         statusEl.textContent = "";
         showToast(res.message, "success");
         closeModal("modalCleanupAbsent");
-        renderAttendanceSummary();
         renderAttendanceTable();
     } else {
         statusEl.textContent = "";
@@ -1447,7 +1430,7 @@ async function saveAttendance() {
     else        res=await api("/attendance",{method:"POST",body:JSON.stringify(payload)});
     if (res?.success) {
         closeModal("modalAttendance");
-        renderAttendanceSummary(); renderAttendanceTable();
+        renderAttendanceTable();
         showToast(editId?"Record updated.":"Record added.","success");
     } else {
         const msg = res?.message || "Error saving record.";
@@ -1462,7 +1445,7 @@ async function saveAttendance() {
 async function deleteAttendance(id) {
     if (!confirm("Delete this attendance record permanently?")) return;
     const res = await api(`/attendance/${id}`,{method:"DELETE"});
-    if (res?.success) { renderAttendanceSummary(); renderAttendanceTable(); showToast("Record deleted."); }
+    if (res?.success) { renderAttendanceTable(); showToast("Record deleted."); }
     else showToast(res?.message||"Error","error");
 }
 
