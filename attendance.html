@@ -244,20 +244,6 @@
                 <h2>Today's Attendance</h2>
                 <span id="todayDateLabel" style="font-size:14px;color:var(--text-muted);"></span>
             </div>
-            <!-- PUNCH IN / OUT CARD -->
-            <div id="punchCard" style="background:var(--surface-muted);border:1.5px solid var(--border);border-radius:12px;padding:22px;margin-bottom:18px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
-                    <div>
-                        <div style="font-size:12px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Current Time (IST)</div>
-                        <div id="liveClock" style="font-size:28px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;">--:--:--</div>
-                    </div>
-                    <div id="punchStatus" style="font-size:14px;color:var(--text-muted);">Loading…</div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button id="btnCheckin"  class="btn-primary"  onclick="doPunch('in')"  style="display:none;padding:12px 28px;font-size:15px;">🟢 Punch In</button>
-                        <button id="btnCheckout" class="btn-success"  onclick="doPunch('out')" style="display:none;padding:12px 28px;font-size:15px;">🔴 Punch Out</button>
-                    </div>
-                </div>
-            </div>
             <div id="todayBox"></div>
         </div>
         <div class="section">
@@ -354,7 +340,11 @@
         <div class="section">
             <div class="section-header">
                 <h2>Attendance Records</h2>
-                <button class="btn-primary" onclick="openAddAttendance()">+ Add Record</button>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn-secondary" onclick="openDeviceMap()">Employee ID Mapping</button>
+                    <button class="btn-secondary" onclick="openImportScan()">Import Face-Scan Sheet</button>
+                    <button class="btn-primary" onclick="openAddAttendance()">+ Add Record</button>
+                </div>
             </div>
             <div class="filter-row">
                 <input type="date" id="att-filter-date" onchange="renderAttendanceTable()">
@@ -602,6 +592,72 @@
     </div>
 </div>
 
+<!-- MODAL: IMPORT FACE-SCAN SHEET -->
+<div class="modal-overlay" id="modalImportScan">
+    <div class="modal" style="width:520px;">
+        <h2>Import Monthly Face-Scan Sheet</h2>
+        <p style="color:var(--text-muted, #666);font-size:13px;margin:6px 0 14px;">
+            Upload the "Original Records Report" CSV exported from the gate face-scan machine.
+            Each employee's earliest scan of the day becomes their check-in and the latest
+            scan becomes check-out; hours, late minutes and overtime are calculated
+            automatically using the current attendance settings.
+        </p>
+        <label>CSV File *</label>
+        <input type="file" id="importScanFile" accept=".csv">
+        <div style="margin-top:12px;">
+            <label>Mark absent for month (optional)</label>
+            <input type="month" id="importScanMonth">
+            <p style="color:var(--text-muted, #888);font-size:12px;margin-top:4px;">
+                If set, any employee with no scans on a working day that month
+                (excluding weekends, holidays, and approved leave) is marked Absent.
+            </p>
+        </div>
+        <div id="importScanStatus" style="margin-top:10px;font-size:13px;"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('modalImportScan')">Cancel</button>
+            <button class="btn-primary" id="importScanSubmitBtn" onclick="submitImportScan()">Import</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: EMPLOYEE ID MAPPING (device Person ID -> system employee) -->
+<div class="modal-overlay" id="modalDeviceMap">
+    <div class="modal" style="width:640px;max-height:82vh;overflow-y:auto;">
+        <h2>Employee ID Mapping</h2>
+        <p style="color:var(--text-muted, #666);font-size:13px;margin:6px 0 14px;">
+            The face-scan device's "Person ID" is different from this system's Employee ID.
+            Map each device ID to the correct employee once — the monthly import will
+            remember it automatically after that.
+        </p>
+
+        <div id="deviceMapPending" style="display:none;background:#FFF7E6;border:1px solid #F0C36D;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+            <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Unmatched names from your last import</div>
+            <div id="deviceMapPendingList" style="font-size:13px;line-height:1.7;"></div>
+        </div>
+
+        <div style="background:var(--surface-muted);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+            <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Add / Update Mapping</div>
+            <div class="form-grid">
+                <div><label>Device Person ID *</label><input type="text" id="dm-pid" placeholder="e.g. 0406"></div>
+                <div><label>Employee *</label><select id="dm-emp"><option value="">Select employee…</option></select></div>
+                <div><label>Department</label><input type="text" id="dm-dept" placeholder="Optional"></div>
+            </div>
+            <div style="margin-top:10px;text-align:right;">
+                <button class="btn-primary" onclick="saveDeviceMap()">Save Mapping</button>
+            </div>
+        </div>
+
+        <table>
+            <thead><tr><th>Device ID</th><th>Employee</th><th>Emp ID</th><th>Department</th><th>Actions</th></tr></thead>
+            <tbody id="deviceMapBody"></tbody>
+        </table>
+
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('modalDeviceMap')">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: VIEW REQUEST -->
 <div class="modal-overlay" id="modalRequest">
     <div class="modal" style="width:560px;">
@@ -835,7 +891,7 @@ function showView(name) {
     };
     document.getElementById("pageTitle").textContent = titles[name]||"Attendance";
 
-    if (name==="myattendance") { loadPunchState(); renderMyAttendance(); renderCalendar(); renderHistory(); }
+    if (name==="myattendance") { renderMyAttendance(); renderCalendar(); renderHistory(); }
     if (name==="correction")   { renderMyRequests(); }
     if (name==="attendance")   { renderAttendanceSummary(); renderAttendanceTable(); }
     if (name==="requests")     { renderRequestsSummary(); renderRequestsTable(); }
@@ -847,94 +903,6 @@ function showView(name) {
 }
 
 function goBack() { showView(lastView && lastView!=="salaryslip" ? lastView : (isAdmin?"payroll":"myslips")); }
-
-// ── LIVE CLOCK ────────────────────────────────────────────────
-(function startClock(){
-    function tick(){
-        const now = new Date();
-        const ist = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));
-        const h=String(ist.getHours()).padStart(2,"0");
-        const m=String(ist.getMinutes()).padStart(2,"0");
-        const s=String(ist.getSeconds()).padStart(2,"0");
-        const el=document.getElementById("liveClock");
-        if (el) el.textContent=`${h}:${m}:${s}`;
-    }
-    tick();
-    setInterval(tick, 1000);
-})();
-
-// ── PUNCH IN / OUT ────────────────────────────────────────────
-async function loadPunchState() {
-    if (isAdmin) return;
-    const statusEl = document.getElementById("punchStatus");
-    const btnIn    = document.getElementById("btnCheckin");
-    const btnOut   = document.getElementById("btnCheckout");
-    if (!btnIn) return;
-
-    // Guard: EMP_ID must be a valid non-empty value
-    if (!EMP_ID) {
-        const storedKeys = `userId=${EMP_ID}, userName=${EMP_NAME}, userEmail=${EMP_EMAIL}`;
-        statusEl.innerHTML = `<span style="color:var(--danger);font-weight:600;">⚠️ Session error: employee ID not found.<br><span style="font-size:12px;font-weight:400;">Stored keys: [${storedKeys}]. Please log out and log in again.</span></span>`;
-        btnIn.style.display  = "none";
-        btnOut.style.display = "none";
-        return;
-    }
-
-    const today = new Date().toISOString().split("T")[0];
-    // Always filter by both emp_id AND att_date so we never get another employee's record
-    const rows  = asArray(await api(`/attendance?emp_id=${encodeURIComponent(EMP_ID)}&att_date=${today}`));
-    // Find the record that strictly belongs to this employee (defensive check)
-    const rec   = rows.find(r => String(r.emp_id) === String(EMP_ID)) || null;
-
-    if (!rec || !rec.check_in) {
-        // Not checked in yet — show Punch In
-        statusEl.innerHTML = `<span style="color:var(--warning);font-weight:600;">⏳ Not checked in yet</span>`;
-        btnIn.style.display  = "inline-block";
-        btnOut.style.display = "none";
-    } else if (rec.check_in && !rec.check_out) {
-        // Checked in, not out yet — show Punch Out
-        statusEl.innerHTML = `<span style="color:var(--success);font-weight:600;">✅ Checked in at <b>${rec.check_in}</b></span>${rec.late_minutes>0?`<br><span style="color:var(--warning);font-size:13px;">⚠️ ${formatLate(rec.late_minutes)} late</span>`:""}`;
-        btnIn.style.display  = "none";
-        btnOut.style.display = "inline-block";
-    } else {
-        // Both check_in and check_out exist — show summary but still allow Punch In
-        // (backend now supports re-punch which resets the day cleanly)
-        statusEl.innerHTML = `
-            <div>
-                <span style="color:var(--text-muted);font-weight:600;">
-                    ✅ Checked in: <b>${rec.check_in}</b> &nbsp;|&nbsp; Checked out: <b>${rec.check_out}</b>
-                </span><br>
-                <span style="color:var(--brass);font-size:13px;">
-                    Hours: ${rec.working_hours||"—"}${rec.overtime>0?" · OT: "+rec.overtime+"h":""}
-                </span><br>
-                <span style="color:var(--text-faint);font-size:12px;">
-                    Punching in again will restart today's record.
-                </span>
-            </div>`;
-        btnIn.style.display  = "inline-block";
-        btnOut.style.display = "none";
-    }
-}
-
-async function doPunch(type) {
-    const btnIn  = document.getElementById("btnCheckin");
-    const btnOut = document.getElementById("btnCheckout");
-    btnIn.disabled = btnOut.disabled = true;
-
-    const endpoint = type === "in" ? "/attendance/checkin" : "/attendance/checkout";
-    let res = await api(`${endpoint}?emp_id=${EMP_ID}`, {method:"POST"});
-
-    btnIn.disabled = btnOut.disabled = false;
-
-    if (res?.success) {
-        showToast(res.message || (type==="in" ? "Checked in!" : "Checked out!"), "success");
-        await loadPunchState();
-        renderMyAttendance();
-    } else {
-        showToast(res?.message || "Server error. Please try again.", "error");
-    }
-}
-
 
 async function renderMyAttendance() {
     const today = new Date().toISOString().split("T")[0];
@@ -1137,6 +1105,187 @@ function openAddAttendance() {
     document.getElementById("att-ot").value="0";
     document.getElementById("att-hours").value="";
     document.getElementById("modalAttendance").classList.add("active");
+}
+
+function openImportScan() {
+    document.getElementById("importScanFile").value = "";
+    document.getElementById("importScanMonth").value = "";
+    document.getElementById("importScanStatus").textContent = "";
+    document.getElementById("modalImportScan").classList.add("active");
+}
+
+async function submitImportScan() {
+    const fileInput = document.getElementById("importScanFile");
+    const month = document.getElementById("importScanMonth").value;
+    const statusEl = document.getElementById("importScanStatus");
+    const btn = document.getElementById("importScanSubmitBtn");
+
+    if (!fileInput.files.length) { showToast("Choose a CSV file first.", "error"); return; }
+
+    const fd = new FormData();
+    fd.append("file", fileInput.files[0]);
+    if (month) fd.append("mark_absent_for_month", month);
+
+    btn.disabled = true;
+    statusEl.textContent = "Importing... this can take a moment for a full month.";
+
+    let res;
+    try {
+        const token = localStorage.getItem("authToken") || "";
+        const r = await fetch(API + "/attendance/import-scan-log", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token },  // no Content-Type: browser sets multipart boundary
+            body: fd
+        });
+        res = await r.json();
+    } catch (e) {
+        btn.disabled = false;
+        statusEl.textContent = "";
+        showToast("Cannot reach server. Check your connection and try again.", "error");
+        return;
+    }
+
+    btn.disabled = false;
+
+    if (!res || !res.success) {
+        statusEl.textContent = "";
+        showToast(res?.message || "Import failed.", "error");
+        return;
+    }
+
+    closeModal("modalImportScan");
+    showToast(res.message, "success");
+    renderAttendanceSummary();
+    renderAttendanceTable();
+
+    if (res.unmatched && res.unmatched.length) {
+        showUnmatchedScanNames(res.unmatched);
+    }
+}
+
+function showUnmatchedScanNames(unmatched) {
+    openDeviceMap(unmatched);
+}
+
+// ── EMPLOYEE ID MAPPING ─────────────────────────────────────────
+let DEVICE_MAP_EMPLOYEES_LOADED = false;
+
+async function loadDeviceMapEmployeeOptions() {
+    if (DEVICE_MAP_EMPLOYEES_LOADED) return;
+    const sel = document.getElementById("dm-emp");
+    const list = asArray(await api("/attendance/mappable-employees"));
+    list.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.textContent = `${e.full_name} (${e.role || "—"}) — ID ${e.id}`;
+        sel.appendChild(opt);
+    });
+    DEVICE_MAP_EMPLOYEES_LOADED = true;
+}
+
+async function openDeviceMap(pending) {
+    await loadDeviceMapEmployeeOptions();
+    await renderDeviceMapTable();
+
+    document.getElementById("dm-pid").value = "";
+    document.getElementById("dm-emp").value = "";
+    document.getElementById("dm-dept").value = "";
+
+    const pendingBox  = document.getElementById("deviceMapPending");
+    const pendingList = document.getElementById("deviceMapPendingList");
+    if (pending && pending.length) {
+        pendingBox.style.display = "block";
+        pendingList.innerHTML = pending.map(u =>
+            `<div>${u.name} — device ID <b>${u.person_id}</b>
+                <button class="btn-secondary" style="padding:3px 10px;font-size:12px;margin-left:8px;"
+                    onclick="prefillDeviceMap('${u.person_id}')">Map this one</button>
+             </div>`
+        ).join("");
+        prefillDeviceMap(pending[0].person_id);
+    } else {
+        pendingBox.style.display = "none";
+        pendingList.innerHTML = "";
+    }
+
+    document.getElementById("modalDeviceMap").classList.add("active");
+}
+
+function prefillDeviceMap(pid) {
+    document.getElementById("dm-pid").value = pid;
+    document.getElementById("dm-emp").focus();
+}
+
+async function renderDeviceMapTable() {
+    const body = document.getElementById("deviceMapBody");
+    const rows = asArray(await api("/attendance/device-map"));
+    if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="5" class="no-data">No mappings yet.</td></tr>`;
+        return;
+    }
+    body.innerHTML = rows.map(r => `
+        <tr>
+            <td>${r.device_person_id}</td>
+            <td>${r.emp_name}</td>
+            <td>${r.emp_id}</td>
+            <td>${r.department || "—"}</td>
+            <td>
+                <button class="btn-secondary" style="padding:4px 10px;font-size:12px;"
+                    onclick="editDeviceMapRow('${r.device_person_id}','${r.emp_id}','${(r.department||"").replace(/'/g,"\\'")}')">Edit</button>
+                <button class="btn-danger" style="padding:4px 10px;font-size:12px;"
+                    onclick="deleteDeviceMap('${r.device_person_id}')">Delete</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function editDeviceMapRow(pid, empId, dept) {
+    document.getElementById("dm-pid").value = pid;
+    document.getElementById("dm-emp").value = empId;
+    document.getElementById("dm-dept").value = dept;
+}
+
+async function saveDeviceMap() {
+    const pid  = document.getElementById("dm-pid").value.trim();
+    const empSel = document.getElementById("dm-emp");
+    const empId = empSel.value;
+    const empName = empId ? empSel.options[empSel.selectedIndex].textContent.split(" (")[0] : "";
+    const dept = document.getElementById("dm-dept").value.trim();
+
+    if (!pid || !empId) { showToast("Device Person ID and Employee are required.", "error"); return; }
+
+    const res = await api("/attendance/device-map", {
+        method: "POST",
+        body: JSON.stringify({ device_person_id: pid, emp_id: empId, emp_name: empName, department: dept })
+    });
+
+    if (res?.success) {
+        showToast("Mapping saved.", "success");
+        document.getElementById("dm-pid").value = "";
+        document.getElementById("dm-emp").value = "";
+        document.getElementById("dm-dept").value = "";
+        renderDeviceMapTable();
+        // Drop it from the pending list if it was there
+        const pendingList = document.getElementById("deviceMapPendingList");
+        const pendingBox  = document.getElementById("deviceMapPending");
+        if (pendingBox.style.display !== "none") {
+            const remaining = [...pendingList.querySelectorAll("div")]
+                .filter(d => !d.textContent.includes(`device ID ${pid}`));
+            if (!remaining.length) pendingBox.style.display = "none";
+        }
+    } else {
+        showToast(res?.message || "Error saving mapping.", "error");
+    }
+}
+
+async function deleteDeviceMap(pid) {
+    if (!confirm(`Remove the mapping for device ID ${pid}?`)) return;
+    const res = await api(`/attendance/device-map/${encodeURIComponent(pid)}`, { method: "DELETE" });
+    if (res?.success) {
+        showToast("Mapping removed.", "success");
+        renderDeviceMapTable();
+    } else {
+        showToast(res?.message || "Error removing mapping.", "error");
+    }
 }
 
 async function editAttendance(id) {
