@@ -235,32 +235,6 @@
 
         .header-actions { display:flex; align-items:center; gap:14px; flex-wrap: wrap; }
 
-        /* QUICK PUNCH */
-        .quick-punch {
-            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
-            padding: 9px 18px; display:flex; align-items:center; gap:14px; box-shadow: var(--shadow-sm);
-        }
-        .qp-clock-wrap { text-align:center; padding-right: 12px; border-right: 1px solid var(--border-soft); }
-        .qp-clock-label { font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.8px; font-weight:700; }
-        .qp-clock { font-size:16px; font-weight:700; color:var(--text); font-variant-numeric: tabular-nums; font-family: var(--font-body); }
-        #qpStatus { font-size:12px; color:var(--text-muted); max-width:170px; line-height:1.35; font-weight: 500; }
-        .qp-pending { color: var(--warning) !important; font-weight:600; }
-        .qp-active  { color: var(--success) !important; font-weight:600; }
-        .qp-done    { color: var(--text-muted) !important; font-weight:600; }
-
-        .btn-punch-in, .btn-punch-out {
-            border:none; padding:9px 16px; border-radius: var(--radius-sm); cursor:pointer;
-            font-size:12.5px; font-weight:700; white-space:nowrap; transition: filter .15s ease, transform .1s ease;
-            display:inline-flex; align-items:center; gap:7px;
-        }
-        .btn-punch-in  { background: var(--ink); color:#fff; }
-        .btn-punch-out { background: var(--danger); color:#fff; }
-        .btn-punch-in:hover, .btn-punch-out:hover { filter: brightness(1.12); }
-        .btn-punch-in:active, .btn-punch-out:active { transform: scale(.97); }
-        .punch-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-        .btn-punch-in .punch-dot { background:#6EE7A8; }
-        .btn-punch-out .punch-dot { background:#FCA5A5; }
-
         /* PROFILE CHIP */
         .profile {
             background: var(--surface); border: 1px solid var(--border); padding: 8px 16px;
@@ -573,10 +547,6 @@
             .content-grid { grid-template-columns: 1fr; }
         }
 
-        @media (max-width: 900px) {
-            .quick-punch { display: none; }
-        }
-
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
             .sidebar.open { transform: translateX(0); }
@@ -755,16 +725,6 @@ window.toggleMobileSidebar = function() {
             <h1>Employee Dashboard</h1>
         </div>
         <div class="header-actions">
-            <!-- QUICK PUNCH WIDGET -->
-            <div id="quickPunchCard" class="quick-punch">
-                <div class="qp-clock-wrap">
-                    <div class="qp-clock-label">IST</div>
-                    <div id="qpClock" class="qp-clock">--:--:--</div>
-                </div>
-                <div id="qpStatus">Loading…</div>
-                <button id="qpBtnIn"  class="btn-punch-in"  onclick="qpDoPunch('in')"  style="display:none;"><span class="punch-dot"></span>Punch In</button>
-                <button id="qpBtnOut" class="btn-punch-out" onclick="qpDoPunch('out')" style="display:none;"><span class="punch-dot"></span>Punch Out</button>
-            </div>
             <div class="profile">
                 <b id="profileName">Loading...</b>
                 <span id="profileEmail"></span>
@@ -1529,79 +1489,6 @@ loadTeamRequests();
 })();
 </script>
 <script>
-(function() {
-    const QP_BASE   = typeof BASE !== "undefined" ? BASE : "https://backend-n5lk.onrender.com";
-    const QP_EMP_ID = localStorage.getItem("userId");
-
-    function qpTick() {
-        const el = document.getElementById("qpClock");
-        if (el) el.textContent = new Date().toLocaleTimeString("en-IN", {hour12:false, timeZone:"Asia/Kolkata"});
-    }
-    setInterval(qpTick, 1000);
-    qpTick();
-
-    function authHeaders(extra = {}) {
-        return { "Authorization": "Bearer " + (localStorage.getItem("authToken") || ""), ...extra };
-    }
-
-    async function qpApi(path, opts={}) {
-        try {
-            const r = await fetch(QP_BASE + path, { headers: authHeaders({"Content-Type":"application/json"}), ...opts });
-            return await r.json();
-        } catch (e) {
-            console.error("quick punch API error:", e);
-            return {success:false, message:"Network error"};
-        }
-    }
-
-    window.qpLoadState = async function() {
-        const statusEl = document.getElementById("qpStatus");
-        const btnIn    = document.getElementById("qpBtnIn");
-        const btnOut   = document.getElementById("qpBtnOut");
-        if (!statusEl || !QP_EMP_ID) return;
-
-        const today = new Date().toISOString().split("T")[0];
-        const rows  = await qpApi(`/attendance?emp_id=${encodeURIComponent(QP_EMP_ID)}&att_date=${today}`) || [];
-        const rec   = Array.isArray(rows) ? rows.find(r => String(r.emp_id) === String(QP_EMP_ID)) : null;
-
-        if (!rec || !rec.check_in) {
-            statusEl.innerHTML = `<span class="qp-pending">⏳ Not checked in yet</span>`;
-            btnIn.style.display  = "inline-flex";
-            btnOut.style.display = "none";
-        } else if (rec.check_in && !rec.check_out) {
-            statusEl.innerHTML = `<span class="qp-active">✅ Checked in at <b>${rec.check_in}</b></span>`;
-            btnIn.style.display  = "none";
-            btnOut.style.display = "inline-flex";
-        } else {
-            statusEl.innerHTML = `<span class="qp-done">✅ In: <b>${rec.check_in}</b> · Out: <b>${rec.check_out}</b></span>`;
-            btnIn.style.display  = "inline-flex"; // re-punch restarts today's record, same as attendance.html
-            btnOut.style.display = "none";
-        }
-    };
-
-    window.qpDoPunch = async function(type) {
-        const btnIn  = document.getElementById("qpBtnIn");
-        const btnOut = document.getElementById("qpBtnOut");
-        btnIn.disabled = btnOut.disabled = true;
-
-        const endpoint = type === "in" ? "/attendance/checkin" : "/attendance/checkout";
-        const res = await qpApi(`${endpoint}?emp_id=${QP_EMP_ID}`, {method:"POST"});
-
-        btnIn.disabled = btnOut.disabled = false;
-
-        if (res?.success) {
-            if (typeof showToast === "function") showToast(res.message || "Done", "success");
-            qpLoadState();
-        } else {
-            if (typeof showToast === "function") showToast(res?.message || "Error. Please try again.", "error");
-            else alert(res?.message || "Error. Please try again.");
-        }
-    };
-
-    qpLoadState();
-})();
-
-
 /* ================= AUTO REFRESH (Every 20 Seconds) ================= */
 
 let autoRefreshInterval;
