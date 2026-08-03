@@ -343,6 +343,7 @@
             <div class="section-header">
                 <h2>Attendance Records</h2>
                 <div style="display:flex;gap:10px;">
+                    <button class="btn-secondary" onclick="openCleanupAbsent()">Clean Up Absent Marks</button>
                     <button class="btn-secondary" onclick="openDeviceMap()">Employee ID Mapping</button>
                     <button class="btn-secondary" onclick="openImportScan()">Import Face-Scan Sheet</button>
                     <button class="btn-primary" onclick="openAddAttendance()">+ Add Record</button>
@@ -623,6 +624,29 @@
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('modalImportScan')">Cancel</button>
             <button class="btn-primary" id="importScanSubmitBtn" onclick="submitImportScan()">Import</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CLEAN UP STALE AUTO-ABSENT RECORDS -->
+<div class="modal-overlay" id="modalCleanupAbsent">
+    <div class="modal" style="width:480px;">
+        <h2>Clean Up Absent Marks</h2>
+        <p style="color:var(--text-muted, #666);font-size:13px;margin:6px 0 14px;">
+            Removes auto-generated "Absent" placeholders (from a face-scan import) in a date
+            range — handy for clearing out rows left over from a run made before a cycle change,
+            or with the wrong month picked. This never touches manual entries, corrections, or
+            any day with a real check-in on record.
+        </p>
+        <div class="form-grid">
+            <div><label>From Date *</label><input type="date" id="cleanup-from"></div>
+            <div><label>To Date *</label><input type="date" id="cleanup-to"></div>
+            <div><label>Employee (optional)</label><select id="cleanup-emp"><option value="">All employees</option></select></div>
+        </div>
+        <div id="cleanupStatus" style="margin-top:10px;font-size:13px;"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('modalCleanupAbsent')">Cancel</button>
+            <button class="btn-primary" onclick="submitCleanupAbsent()">Remove Matching Rows</button>
         </div>
     </div>
 </div>
@@ -1193,6 +1217,56 @@ async function submitImportScan() {
 
     if (res.unmatched && res.unmatched.length) {
         showUnmatchedScanNames(res.unmatched);
+    }
+}
+
+// ── CLEAN UP STALE AUTO-ABSENT RECORDS ──────────────────────────
+async function loadCleanupEmployeeOptions() {
+    const sel = document.getElementById("cleanup-emp");
+    if (sel.dataset.loaded) return;
+    const list = asArray(await api("/attendance/mappable-employees"));
+    list.forEach(e => {
+        const opt = document.createElement("option");
+        opt.value = e.id;
+        opt.textContent = `${e.full_name} — ID ${e.id}`;
+        sel.appendChild(opt);
+    });
+    sel.dataset.loaded = "1";
+}
+
+async function openCleanupAbsent() {
+    await loadCleanupEmployeeOptions();
+    document.getElementById("cleanup-from").value = "";
+    document.getElementById("cleanup-to").value = "";
+    document.getElementById("cleanup-emp").value = "";
+    document.getElementById("cleanupStatus").textContent = "";
+    document.getElementById("modalCleanupAbsent").classList.add("active");
+}
+
+async function submitCleanupAbsent() {
+    const from = document.getElementById("cleanup-from").value;
+    const to   = document.getElementById("cleanup-to").value;
+    const emp  = document.getElementById("cleanup-emp").value;
+    const statusEl = document.getElementById("cleanupStatus");
+
+    if (!from || !to) { showToast("Pick both a from and to date.", "error"); return; }
+    if (!confirm(`Remove all auto-generated Absent marks between ${from} and ${to}${emp ? " for the selected employee" : " for all employees"}?`)) return;
+
+    let qs = `from_date=${from}&to_date=${to}`;
+    if (emp) qs += `&emp_id=${emp}`;
+
+    statusEl.textContent = "Removing...";
+    const res = await api(`/attendance/clear-auto-absent?${qs}`, { method: "DELETE" });
+
+    if (res?.success) {
+        statusEl.textContent = "";
+        showToast(res.message, "success");
+        closeModal("modalCleanupAbsent");
+        renderAttendanceSummary();
+        renderAttendanceTable();
+    } else {
+        statusEl.textContent = "";
+        showToast(res?.message || "Error removing records.", "error");
     }
 }
 
