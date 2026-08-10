@@ -157,6 +157,58 @@ button { font-family:var(--font-body); cursor:pointer; }
 .toast { position:fixed; bottom:24px; left:50%; transform:translate(-50%,10px); background:var(--ink); color:#fff; padding:12px 22px; border-radius:99px; font-size:13.5px; opacity:0; pointer-events:none; transition:.25s; z-index:600; }
 .toast.show { opacity:1; transform:translate(-50%,0); }
 
+
+/* CHAT / GROUP INFO PANEL (WhatsApp-style) */
+.thread-title-btn { display:flex; align-items:center; gap:11px; background:none; border:none; padding:2px 4px; border-radius:var(--radius-sm); text-align:left; }
+.thread-title-btn:hover { background:var(--surface-muted); }
+.thread-title-btn .sub { font-size:11.5px; color:var(--text-muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:320px; }
+
+.info-pane { width:330px; flex-shrink:0; border-left:1px solid var(--border); background:var(--surface); display:none; flex-direction:column; }
+.info-pane.open { display:flex; }
+.info-head { padding:14px 18px; border-bottom:1px solid var(--border-soft); display:flex; align-items:center; gap:10px; }
+.info-head .t { font-family:var(--font-display); font-size:16px; font-weight:600; flex:1; }
+.info-close { width:32px; height:32px; border-radius:50%; border:none; background:var(--surface-muted); color:var(--text-muted); font-size:16px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.info-close:hover { background:var(--brass-tint); color:var(--brass-dark); }
+.info-body { flex:1; overflow-y:auto; }
+.info-hero { padding:26px 20px 20px; text-align:center; border-bottom:8px solid var(--paper); }
+.info-hero .big-avatar { width:96px; height:96px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:34px; font-weight:600; margin:0 auto 12px; }
+.info-hero .gname { font-family:var(--font-display); font-size:20px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; }
+.info-hero .gmeta { font-size:12.5px; color:var(--text-muted); margin-top:4px; }
+.info-hero .gcreated { font-size:11.5px; color:var(--text-faint); margin-top:8px; }
+.edit-pencil { background:none; border:none; font-size:13px; opacity:.55; padding:2px; }
+.edit-pencil:hover { opacity:1; }
+
+.info-section { padding:16px 18px; border-bottom:8px solid var(--paper); }
+.info-section:last-child { border-bottom:none; }
+.info-section h4 { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-faint); margin-bottom:12px; }
+.info-quick { display:flex; gap:8px; padding:14px 18px; border-bottom:8px solid var(--paper); }
+.info-quick button { flex:1; border:1px solid var(--border); background:var(--surface-muted); border-radius:var(--radius-md); padding:11px 6px; font-size:11.5px; font-weight:600; color:var(--text); display:flex; flex-direction:column; align-items:center; gap:5px; }
+.info-quick button:hover { background:var(--brass-tint); border-color:var(--brass); color:var(--brass-dark); }
+.info-quick button .ic { font-size:16px; }
+
+.member-row { display:flex; align-items:center; gap:10px; padding:9px 4px; border-radius:var(--radius-sm); }
+.member-row:hover { background:var(--surface-muted); }
+.member-row .nm { flex:1; min-width:0; font-size:13.5px; font-weight:500; }
+.member-row .rl { font-size:11.5px; color:var(--text-faint); font-weight:400; }
+.tag { font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; letter-spacing:.3px; }
+.tag.admin { background:var(--teal-tint); color:var(--teal); }
+.tag.you { background:var(--brass-tint); color:var(--brass-dark); }
+.member-kick { background:none; border:none; color:var(--danger); font-size:15px; opacity:.4; padding:2px 6px; }
+.member-row:hover .member-kick { opacity:1; }
+.add-member-btn { display:flex; align-items:center; gap:10px; padding:10px 4px; width:100%; background:none; border:none; font-size:13.5px; font-weight:600; color:var(--teal); text-align:left; }
+.add-member-btn .circ { width:38px; height:38px; border-radius:50%; background:var(--teal-tint); color:var(--teal); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.add-member-btn:hover { background:var(--surface-muted); border-radius:var(--radius-sm); }
+.member-search { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:99px; background:var(--surface-muted); font-family:var(--font-body); font-size:12.5px; margin-bottom:8px; }
+.member-search:focus { outline:none; border-color:var(--brass); background:#fff; }
+
+.media-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.media-tile { aspect-ratio:1; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:6px; overflow:hidden; }
+.media-tile img { width:100%; height:100%; object-fit:cover; border-radius:var(--radius-sm); }
+.media-tile .fn { font-size:9.5px; color:var(--text-muted); text-align:center; word-break:break-all; line-height:1.25; max-height:26px; overflow:hidden; }
+.media-empty { font-size:12.5px; color:var(--text-faint); }
+.danger-row { display:flex; align-items:center; gap:10px; padding:11px 4px; width:100%; background:none; border:none; font-size:13.5px; font-weight:600; color:var(--danger); text-align:left; border-radius:var(--radius-sm); }
+.danger-row:hover { background:var(--danger-tint); }
+
 @media (max-width: 900px) {
     .meet-grid { grid-template-columns:1fr; }
 }
@@ -168,6 +220,7 @@ button { font-family:var(--font-body); cursor:pointer; }
     .topbar { padding-left:64px; }
     .chat-list-pane { position:absolute; left:0; top:0; bottom:0; width:100%; z-index:5; }
     .chat-list-pane.hide-mobile { display:none; }
+    .info-pane { position:absolute; inset:0; width:100%; z-index:20; border-left:none; }
 }
 </style>
 </head>
@@ -211,6 +264,13 @@ button { font-family:var(--font-body); cursor:pointer; }
                 <div>or start a new conversation</div>
             </div>
         </div>
+        <aside class="info-pane" id="infoPane">
+            <div class="info-head">
+                <button class="info-close" onclick="closeInfoPane()" aria-label="Close">&times;</button>
+                <div class="t" id="infoPaneTitle">Group info</div>
+            </div>
+            <div class="info-body" id="infoBody"></div>
+        </aside>
     </div>
 
     <!-- MEETINGS -->
@@ -280,6 +340,19 @@ button { font-family:var(--font-body); cursor:pointer; }
     </div>
 </div>
 
+<!-- ADD MEMBERS MODAL -->
+<div class="modal-overlay" id="addMemberModal">
+    <div class="modal-box">
+        <div class="modal-title">Add members</div>
+        <input type="text" class="member-search" id="addMemberSearch" placeholder="Search people…" oninput="filterAddMemberList()">
+        <div class="user-checks" id="addMemberList" style="max-height:260px;"></div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeModal('addMemberModal')">Cancel</button>
+            <button class="btn-primary" onclick="addMembers()">Add</button>
+        </div>
+    </div>
+</div>
+
 <!-- VIDEO CALL OVERLAY -->
 <div class="video-overlay" id="videoOverlay">
     <div class="video-bar">
@@ -299,6 +372,7 @@ let allUsers = [];
 let activeChannelId = null;
 let activeChannelInfo = null;
 let lastMsgId = 0;
+let chatFiles = [];      // attachments seen in the open channel (for Media & docs)
 let pollTimer = null;
 let listTimer = null;
 
@@ -497,8 +571,10 @@ async function loadChannelList() {
 
 /* ---------------- OPEN A CHANNEL ---------------- */
 async function openChannel(channelId) {
+    const switching = activeChannelId !== channelId;
     activeChannelId = channelId;
     lastMsgId = 0;
+    chatFiles = [];
     if (pollTimer) clearInterval(pollTimer);
 
     const res = await fetch(`${BASE}/chat/channels/${channelId}?user_id=${userId}`);
@@ -506,11 +582,23 @@ async function openChannel(channelId) {
     if (!info.success) { toast("Couldn't open that chat."); return; }
     activeChannelInfo = info;
 
+    const memberList = getMembers(info);
+    const subLine = info.type === 'group'
+        ? memberList.map(m => String(m.id) === String(userId) ? 'You' : m.name.split(/\s+/)[0]).join(", ")
+        : (allUsers.find(u => String(u.id) === String((info.member_ids || []).find(id => String(id) !== String(userId))))?.role || 'Direct message');
+
     document.getElementById("chatThreadPane").innerHTML = `
         <div class="thread-head">
-            <div class="name">${info.type === 'group' ? '👥 ' : ''}${escapeHtml(info.name)}</div>
+            <button class="thread-title-btn" onclick="toggleInfoPane()" title="${info.type === 'group' ? 'Group info' : 'Contact info'}">
+                <div class="chat-avatar">${info.type === 'group' ? '👥' : initials(info.name)}</div>
+                <div>
+                    <div class="name">${escapeHtml(info.name)}</div>
+                    <div class="sub">${escapeHtml(subLine || '')}</div>
+                </div>
+            </button>
             <div class="thread-actions">
                 <button class="btn-call" onclick="startCallInChannel()">🎥 Video Call</button>
+                <button class="btn-plain" onclick="toggleInfoPane()">ⓘ Info</button>
             </div>
         </div>
         <div class="thread-messages" id="threadMessages"></div>
@@ -522,6 +610,8 @@ async function openChannel(channelId) {
         </div>`;
 
     await pollMessages();
+    if (switching) closeInfoPane();
+    else if (document.getElementById("infoPane").classList.contains("open")) renderInfoPane();
     pollTimer = setInterval(pollMessages, 3000);
     fetch(`${BASE}/chat/channels/${channelId}/read`, {
         method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ user_id: Number(userId) })
@@ -540,10 +630,13 @@ async function pollMessages() {
         const box = document.getElementById("threadMessages");
         if (!box) return;
         const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+        let gotFile = false;
         rows.forEach(m => {
             lastMsgId = Math.max(lastMsgId, m.id);
+            if (m.message_type === "file" && m.file_url) { chatFiles.push(m); gotFile = true; }
             box.insertAdjacentHTML("beforeend", renderMessage(m));
         });
+        if (gotFile && document.getElementById("infoPane").classList.contains("open")) renderInfoPane();
         if (wasAtBottom || lastMsgId === rows[rows.length-1].id) box.scrollTop = box.scrollHeight;
     } catch (e) { /* silent */ }
 }
@@ -639,6 +732,225 @@ async function createGroup() {
         if (data.success) { closeModal("groupModal"); await loadChannelList(); openChannel(data.channel_id); }
         else toast(data.message || "Couldn't create group.");
     } catch (e) { toast("Network error."); }
+}
+
+
+/* ---------------- GROUP / CONTACT INFO PANEL ---------------- */
+function getMembers(info) {
+    if (Array.isArray(info.members) && info.members.length) {
+        return info.members.map(m => ({
+            id: m.id ?? m.user_id,
+            name: m.full_name || m.name || m.user_name || "Member",
+            role: m.role || ""
+        }));
+    }
+    const ids = info.member_ids || [];
+    const names = info.member_names || [];
+    return ids.map((id, i) => {
+        const u = allUsers.find(x => String(x.id) === String(id));
+        return {
+            id,
+            name: names[i] || (String(id) === String(userId) ? userName : (u?.full_name || "Member")),
+            role: u?.role || (String(id) === String(userId) ? userRole : "")
+        };
+    });
+}
+
+function toggleInfoPane() {
+    const pane = document.getElementById("infoPane");
+    if (pane.classList.contains("open")) { closeInfoPane(); return; }
+    if (!activeChannelInfo) return;
+    pane.classList.add("open");
+    renderInfoPane();
+}
+function closeInfoPane() { document.getElementById("infoPane").classList.remove("open"); }
+
+function renderInfoPane() {
+    const info = activeChannelInfo;
+    if (!info) return;
+    const isGroup = info.type === "group";
+    const members = getMembers(info);
+    const adminId = info.created_by ?? info.creator_id;
+    const iAmAdmin = String(adminId) === String(userId);
+    document.getElementById("infoPaneTitle").textContent = isGroup ? "Group info" : "Contact info";
+
+    const created = info.created_at
+        ? new Date(info.created_at).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })
+        : null;
+    const adminName = members.find(m => String(m.id) === String(adminId))?.name;
+
+    const hero = `
+        <div class="info-hero">
+            <div class="big-avatar">${isGroup ? "👥" : initials(info.name)}</div>
+            <div class="gname">
+                ${escapeHtml(info.name)}
+                ${isGroup && iAmAdmin ? `<button class="edit-pencil" onclick="renameGroup()" title="Edit group name">✏️</button>` : ""}
+            </div>
+            <div class="gmeta">${isGroup ? `Group · ${members.length} member${members.length === 1 ? "" : "s"}` : escapeHtml(members.find(m => String(m.id) !== String(userId))?.role || "Direct message")}</div>
+            ${isGroup && (created || adminName) ? `<div class="gcreated">Created${adminName ? ` by ${escapeHtml(adminName)}` : ""}${created ? ` · ${created}` : ""}</div>` : ""}
+        </div>`;
+
+    const quick = `
+        <div class="info-quick">
+            <button onclick="startCallInChannel()"><span class="ic">🎥</span>Video call</button>
+            <button onclick="document.getElementById('chatFileInput')?.click()"><span class="ic">📎</span>Send file</button>
+            <button onclick="scrollToLatest()"><span class="ic">⬇️</span>Latest</button>
+        </div>`;
+
+    const mediaTiles = chatFiles.slice(-9).reverse().map(f => {
+        const isImg = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(f.file_name || "");
+        return `<a class="media-tile" href="${BASE}${f.file_url}" target="_blank" title="${escapeHtml(f.file_name || "attachment")}">
+            ${isImg
+                ? `<img src="${BASE}${f.file_url}" alt="${escapeHtml(f.file_name || "")}" loading="lazy">`
+                : `<div style="font-size:20px;">📄</div><div class="fn">${escapeHtml(f.file_name || "file")}</div>`}
+        </a>`;
+    }).join("");
+
+    const media = `
+        <div class="info-section">
+            <h4>Media, links &amp; docs${chatFiles.length ? ` · ${chatFiles.length}` : ""}</h4>
+            ${mediaTiles ? `<div class="media-grid">${mediaTiles}</div>` : `<div class="media-empty">Nothing shared in this chat yet.</div>`}
+        </div>`;
+
+    let membersBlock = "";
+    if (isGroup) {
+        const rows = members.map(m => {
+            const isMe = String(m.id) === String(userId);
+            const isAdmin = String(m.id) === String(adminId);
+            return `
+            <div class="member-row">
+                <div class="chat-avatar" style="width:38px;height:38px;font-size:14px;">${initials(m.name)}</div>
+                <div class="nm">${escapeHtml(isMe ? "You" : m.name)}${m.role ? `<div class="rl">${escapeHtml(m.role)}</div>` : ""}</div>
+                ${isAdmin ? `<span class="tag admin">Group admin</span>` : ""}
+                ${!isAdmin && isMe ? `<span class="tag you">You</span>` : ""}
+                ${iAmAdmin && !isMe ? `<button class="member-kick" title="Remove ${escapeHtml(m.name)}" onclick="removeMember(${m.id}, '${escapeHtml(m.name).replace(/'/g, "\\'")}')">✕</button>` : ""}
+            </div>`;
+        }).join("");
+        membersBlock = `
+        <div class="info-section">
+            <h4>${members.length} member${members.length === 1 ? "" : "s"}</h4>
+            ${members.length > 6 ? `<input type="text" class="member-search" placeholder="Search members…" oninput="filterMemberRows(this.value)">` : ""}
+            <div id="memberRows">${rows}</div>
+            ${iAmAdmin ? `<button class="add-member-btn" onclick="openAddMemberModal()"><span class="circ">+</span>Add members</button>` : ""}
+        </div>
+        <div class="info-section">
+            <button class="danger-row" onclick="leaveGroup()">🚪 Exit group</button>
+        </div>`;
+    }
+
+    document.getElementById("infoBody").innerHTML = hero + quick + membersBlock + media;
+}
+
+function scrollToLatest() {
+    const box = document.getElementById("threadMessages");
+    if (box) box.scrollTop = box.scrollHeight;
+}
+
+function filterMemberRows(q) {
+    const term = (q || "").toLowerCase();
+    document.querySelectorAll("#memberRows .member-row").forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none";
+    });
+}
+
+function openAddMemberModal() {
+    const existing = getMembers(activeChannelInfo).map(m => String(m.id));
+    const candidates = allUsers.filter(u => !existing.includes(String(u.id)));
+    const box = document.getElementById("addMemberList");
+    box.innerHTML = candidates.length
+        ? candidates.map(u => `
+            <label class="user-check-row" data-name="${escapeHtml(u.full_name).toLowerCase()}">
+                <input type="checkbox" value="${u.id}" data-name="${escapeHtml(u.full_name)}">
+                ${escapeHtml(u.full_name)} <span style="color:var(--text-faint); font-size:11px;">(${u.role})</span>
+            </label>`).join("")
+        : `<div class="chat-empty">Everyone is already in this group.</div>`;
+    document.getElementById("addMemberSearch").value = "";
+    document.getElementById("addMemberModal").classList.add("active");
+}
+
+function filterAddMemberList() {
+    const term = document.getElementById("addMemberSearch").value.toLowerCase();
+    document.querySelectorAll("#addMemberList .user-check-row").forEach(r => {
+        r.style.display = (r.dataset.name || "").includes(term) ? "" : "none";
+    });
+}
+
+async function addMembers() {
+    const checks = [...document.querySelectorAll("#addMemberList input:checked")];
+    if (!checks.length) { toast("Pick at least one person."); return; }
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/members`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                added_by: Number(userId), added_by_name: userName,
+                member_ids: checks.map(c => Number(c.value)),
+                member_names: checks.map(c => c.dataset.name)
+            })
+        });
+        const data = await res.json();
+        if (data.success) { closeModal("addMemberModal"); toast("Members added."); await refreshChannelInfo(); }
+        else toast(data.message || "Couldn't add members.");
+    } catch (e) { toast("Network error."); }
+}
+
+async function removeMember(memberId, memberName) {
+    if (!confirm(`Remove ${memberName} from ${activeChannelInfo.name}?`)) return;
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/members/remove`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ removed_by: Number(userId), removed_by_name: userName, member_id: Number(memberId), member_name: memberName })
+        });
+        const data = await res.json();
+        if (data.success) { toast(`${memberName} removed.`); await refreshChannelInfo(); }
+        else toast(data.message || "Couldn't remove that member.");
+    } catch (e) { toast("Network error."); }
+}
+
+async function renameGroup() {
+    const next = prompt("Group name", activeChannelInfo.name);
+    if (next === null) return;
+    const name = next.trim();
+    if (!name || name === activeChannelInfo.name) return;
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/rename`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, user_id: Number(userId), user_name: userName })
+        });
+        const data = await res.json();
+        if (data.success) { toast("Group renamed."); await refreshChannelInfo(); loadChannelList(); }
+        else toast(data.message || "Couldn't rename the group.");
+    } catch (e) { toast("Network error."); }
+}
+
+async function leaveGroup() {
+    if (!confirm(`Exit "${activeChannelInfo.name}"? You'll stop receiving its messages.`)) return;
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/leave`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: Number(userId), user_name: userName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeInfoPane();
+            if (pollTimer) clearInterval(pollTimer);
+            activeChannelId = null; activeChannelInfo = null; chatFiles = [];
+            document.getElementById("chatThreadPane").innerHTML = `
+                <div class="no-channel">
+                    <div style="font-family:var(--font-display); font-size:19px;">Select a chat</div>
+                    <div>or start a new conversation</div>
+                </div>`;
+            toast("You left the group.");
+            loadChannelList();
+        } else toast(data.message || "Couldn't leave the group.");
+    } catch (e) { toast("Network error."); }
+}
+
+async function refreshChannelInfo() {
+    try {
+        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}?user_id=${userId}`);
+        const info = await res.json();
+        if (info.success) { activeChannelInfo = info; renderInfoPane(); }
+    } catch (e) { /* keep what we have */ }
 }
 
 /* ---------------- VIDEO CALLS ---------------- */
