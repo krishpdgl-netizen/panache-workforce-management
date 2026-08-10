@@ -878,30 +878,44 @@ function filterAddMemberList() {
 async function addMembers() {
     const checks = [...document.querySelectorAll("#addMemberList input:checked")];
     if (!checks.length) { toast("Pick at least one person."); return; }
-    try {
-        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/members`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                added_by: Number(userId), added_by_name: userName,
-                member_ids: checks.map(c => Number(c.value)),
-                member_names: checks.map(c => c.dataset.name)
-            })
-        });
-        const data = await res.json();
-        if (data.success) { closeModal("addMemberModal"); toast("Members added."); await refreshChannelInfo(); }
-        else toast(data.message || "Couldn't add members.");
-    } catch (e) { toast("Network error."); }
+
+    let added = 0, failed = [];
+    for (const c of checks) {
+        try {
+            const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/members`, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: Number(c.value),
+                    user_name: c.dataset.name,
+                    added_by_name: userName
+                })
+            });
+            const data = await res.json();
+            if (data.success) added++; else failed.push(c.dataset.name);
+        } catch (e) { failed.push(c.dataset.name); }
+    }
+
+    closeModal("addMemberModal");
+    if (added) toast(added === 1 ? "Member added." : `${added} members added.`);
+    if (failed.length) toast(`Couldn't add: ${failed.join(", ")}`);
+    await refreshChannelInfo();
+    loadChannelList();
 }
 
 async function removeMember(memberId, memberName) {
     if (!confirm(`Remove ${memberName} from ${activeChannelInfo.name}?`)) return;
     try {
-        const res = await fetch(`${BASE}/chat/channels/${activeChannelId}/members/remove`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ removed_by: Number(userId), removed_by_name: userName, member_id: Number(memberId), member_name: memberName })
+        const qs = new URLSearchParams({
+            leaver_name: memberName,
+            removed_by: userId,
+            removed_by_name: userName
         });
+        const res = await fetch(
+            `${BASE}/chat/channels/${activeChannelId}/members/${memberId}?${qs.toString()}`,
+            { method: "DELETE" }
+        );
         const data = await res.json();
-        if (data.success) { toast(`${memberName} removed.`); await refreshChannelInfo(); }
+        if (data.success) { toast(`${memberName} removed.`); await refreshChannelInfo(); loadChannelList(); }
         else toast(data.message || "Couldn't remove that member.");
     } catch (e) { toast("Network error."); }
 }
