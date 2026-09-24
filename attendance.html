@@ -339,6 +339,8 @@
                     <button class="btn-secondary" onclick="openCleanupAbsent()">Clean Up Absent Marks</button>
                     <button class="btn-secondary" onclick="openDeviceMap()">Employee ID Mapping</button>
                     <button class="btn-secondary" onclick="openImportScan()">Import Face-Scan Sheet</button>
+                    <button class="btn-secondary" onclick="downloadAttendanceSummary()">Download Summary Excel</button>
+                    <button class="btn-warning" onclick="openOfficeOffDay()">Mark Office Off Day</button>
                     <button class="btn-primary" onclick="openAddAttendance()">+ Add Record</button>
                 </div>
             </div>
@@ -665,6 +667,10 @@
                 <div><label>Device Person ID *</label><input type="text" id="dm-pid" placeholder="e.g. 0406"></div>
                 <div><label>Employee *</label><select id="dm-emp"><option value="">Select employee…</option></select></div>
                 <div><label>Department</label><input type="text" id="dm-dept" placeholder="Optional"></div>
+                <div><label>Batch Timing *</label><select id="dm-batch">
+                    <option value="batch_1">Batch 1 — 9:00 AM to 6:00 PM</option>
+                    <option value="batch_2">Batch 2 — 9:30 AM to 6:30 PM</option>
+                </select></div>
             </div>
             <div style="margin-top:10px;text-align:right;">
                 <button class="btn-primary" onclick="saveDeviceMap()">Save Mapping</button>
@@ -672,12 +678,28 @@
         </div>
 
         <table>
-            <thead><tr><th>Device ID</th><th>Employee</th><th>Emp ID</th><th>Department</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Device ID</th><th>Employee</th><th>Emp ID</th><th>Department</th><th>Batch</th><th>Actions</th></tr></thead>
             <tbody id="deviceMapBody"></tbody>
         </table>
 
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('modalDeviceMap')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: OFFICE OFF DAY -->
+<div class="modal-overlay" id="modalOfficeOff">
+    <div class="modal" style="width:520px;">
+        <h2>Mark Office Off Day</h2>
+        <p style="color:var(--text-muted,#666);font-size:13px;margin:6px 0 16px;">This marks the selected date as an office-wide off day for everyone. It will be excluded from absence calculations and attendance summaries.</p>
+        <div class="form-grid">
+            <div><label>Date *</label><input type="date" id="office-off-date"></div>
+            <div><label>Reason / Name *</label><input type="text" id="office-off-name" placeholder="e.g. Office Holiday"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal('modalOfficeOff')">Cancel</button>
+            <button class="btn-warning" onclick="saveOfficeOffDay()">Mark Office Off</button>
         </div>
     </div>
 </div>
@@ -1280,6 +1302,7 @@ async function openDeviceMap(pending) {
     document.getElementById("dm-pid").value = "";
     document.getElementById("dm-emp").value = "";
     document.getElementById("dm-dept").value = "";
+    document.getElementById("dm-batch").value = "batch_1";
 
     const pendingBox  = document.getElementById("deviceMapPending");
     const pendingList = document.getElementById("deviceMapPendingList");
@@ -1313,7 +1336,7 @@ async function renderDeviceMapTable() {
     const body = document.getElementById("deviceMapBody");
     const rows = asArray(await api("/attendance/device-map"));
     if (!rows.length) {
-        body.innerHTML = `<tr><td colspan="5" class="no-data">No mappings yet.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="no-data">No mappings yet.</td></tr>`;
         return;
     }
     body.innerHTML = rows.map(r => `
@@ -1332,10 +1355,11 @@ async function renderDeviceMapTable() {
     `).join("");
 }
 
-function editDeviceMapRow(pid, empId, dept) {
+function editDeviceMapRow(pid, empId, dept, batch) {
     document.getElementById("dm-pid").value = pid;
     document.getElementById("dm-emp").value = empId;
     document.getElementById("dm-dept").value = dept;
+    document.getElementById("dm-batch").value = batch || "batch_1";
 }
 
 async function saveDeviceMap() {
@@ -1344,12 +1368,13 @@ async function saveDeviceMap() {
     const empId = empSel.value;
     const empName = empId ? empSel.options[empSel.selectedIndex].textContent.split(" (")[0] : "";
     const dept = document.getElementById("dm-dept").value.trim();
+    const batch = document.getElementById("dm-batch").value;
 
     if (!pid || !empId) { showToast("Device Person ID and Employee are required.", "error"); return; }
 
     const res = await api("/attendance/device-map", {
         method: "POST",
-        body: JSON.stringify({ device_person_id: pid, emp_id: empId, emp_name: empName, department: dept })
+        body: JSON.stringify({ device_person_id: pid, emp_id: empId, emp_name: empName, department: dept, batch })
     });
 
     if (res?.success) {
@@ -1357,6 +1382,7 @@ async function saveDeviceMap() {
         document.getElementById("dm-pid").value = "";
         document.getElementById("dm-emp").value = "";
         document.getElementById("dm-dept").value = "";
+        document.getElementById("dm-batch").value = "batch_1";
         renderDeviceMapTable();
         // Drop it from the pending list if it was there
         const pendingList = document.getElementById("deviceMapPendingList");
@@ -1379,6 +1405,63 @@ async function deleteDeviceMap(pid) {
         renderDeviceMapTable();
     } else {
         showToast(res?.message || "Error removing mapping.", "error");
+    }
+}
+
+async function downloadAttendanceSummary() {
+    let cycle = "";
+    try {
+        const info = await api("/attendance/cycle-info");
+        cycle = info?.cycle || "";
+    } catch (_) {}
+    cycle = prompt("Attendance cycle (YYYY-MM, 26th to 25th):", cycle || new Date().toISOString().slice(0,7));
+    if (!cycle || !/^\d{4}-\d{2}$/.test(cycle)) return;
+
+    try {
+        const token = localStorage.getItem("authToken") || "";
+        const r = await fetch(API + `/attendance/summary/excel?cycle=${encodeURIComponent(cycle)}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (!r.ok) {
+            let msg = "Could not generate the attendance summary.";
+            try { const j = await r.json(); msg = j.detail || j.message || msg; } catch (_) {}
+            showToast(msg, "error"); return;
+        }
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `attendance_summary_${cycle}.xlsx`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        showToast("Attendance summary Excel downloaded.", "success");
+    } catch (e) {
+        showToast("Could not download the Excel file.", "error");
+    }
+}
+
+function openOfficeOffDay() {
+    const d = new Date();
+    document.getElementById("office-off-date").value = d.toISOString().slice(0,10);
+    document.getElementById("office-off-name").value = "Office Off Day";
+    document.getElementById("modalOfficeOff").classList.add("active");
+}
+
+async function saveOfficeOffDay() {
+    const holiday_date = document.getElementById("office-off-date").value;
+    const name = document.getElementById("office-off-name").value.trim();
+    if (!holiday_date || !name) { showToast("Date and reason are required.", "error"); return; }
+    if (!confirm(`Mark ${holiday_date} as an office-wide off day for everyone?`)) return;
+    const res = await api("/holidays", {
+        method: "POST",
+        body: JSON.stringify({ holiday_date, name, holiday_type: "Office Off" })
+    });
+    if (res?.success) {
+        closeModal("modalOfficeOff");
+        showToast("Office off day marked for everyone.", "success");
+        renderAttendanceTable();
+    } else {
+        showToast(res?.message || "Could not mark office off day.", "error");
     }
 }
 
